@@ -1,0 +1,24 @@
+                    CGR.ID          External.ID             SampleType  Source.Material Extraction.Batch.ID
+ Blank_PC02199         :  1   Blank       :  1   artificialcolony: 14   Buccal:322      PC02199: 57        
+ DZ35298_0005_MB0000602:  1   DZ35298_0005:  1   ExtractionBlank :  1   gDNA  : 28      PC01034: 55        
+ DZ35298_0016_MB0000603:  1   DZ35298_0016:  1   robogut         : 14   Saliva:189      PC01032: 52        
+ DZ35298_0019_MB0000606:  1   DZ35298_0019:  1   Study           :510                   PC04758: 32        
+ DZ35298_0022_MB0000607:  1   DZ35298_0022:  1                                          PC08111: 32        
+ DZ35298_0023_PC01032  :  1   DZ35298_0023:  1                                          PC13240: 30        
+ (Other)               :533   (Other)     :533                                          (Other):281        
+     Source.PCR.Plate                                Run.ID         Project.ID  Collection.Method Instrument
+ PC19941_A_01:  1     190405_M01354_0116_000000000-CDD59:179   NP0440-MB4:539   Control  : 29     KF:352    
+ PC19941_A_03:  1     190405_M03599_0183_000000000-CDNFK:180                    OMNIgene :248     QS:187    
+ PC19941_A_04:  1     190408_M01354_0117_000000000-CDPN9:180                    ScopeCell:262               
+ PC19941_A_05:  1                                                                                           
+ PC19941_A_06:  1                                                                                           
+ PC19941_A_07:  1                                                                                           
+ (Other)     :533                                                                                           
+        Month        Storage       Subject   
+ ExtMonth0 :234   20     :113   Control: 29  
+ ExtMonth01: 57   80     :397   SP2002 : 18  
+ ExtMonth03: 64   Control: 29   SP2003 : 18  
+ ExtMonth06: 61                 SP2004 : 18  
+ ExtMonth12:123                 SP2009 : 18  
+                                SP2010 : 18  
+                                (Other):420  

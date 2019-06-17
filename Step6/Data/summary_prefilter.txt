@@ -1,0 +1,24 @@
+             CGR.ID          External.ID                SampleType  Source.Material Extraction.Batch.ID
+ NTC_None       :  6   Blank       : 21   artificialcolony   : 14   Buccal:333      PC02199: 58        
+ Water_None     :  6   NTC         :  6   ExtractionBlank    : 18   Empty :  6      PC01034: 57        
+ Blank_PC01032  :  2   Water       :  6   ExtractionReplicate:  3   gDNA  : 28      PC01032: 54        
+ Blank_PC01034  :  2   DZ35298_0005:  1   PCRNTCBlank        :  6   Saliva:202      PC08111: 33        
+ Blank_PC02199  :  2   DZ35298_0016:  1   PCRWaterBlank      :  6   Water :  6      PC04758: 32        
+ Blank_MB0000602:  1   DZ35298_0019:  1   robogut            : 14                   PC13240: 31        
+ (Other)        :556   (Other)     :539   Study              :514                   (Other):310        
+     Source.PCR.Plate                                Run.ID         Project.ID  Collection.Method   Instrument 
+ PC19941_A_01:  1     190405_M01354_0116_000000000-CDD59:191   NP0440-MB4:575   Control  : 61     Control: 12  
+ PC19941_A_02:  1     190405_M03599_0183_000000000-CDNFK:192                    OMNIgene :251     KF     :364  
+ PC19941_A_03:  1     190408_M01354_0117_000000000-CDPN9:192                    ScopeCell:263     QS     :199  
+ PC19941_A_04:  1                                                                                              
+ PC19941_A_05:  1                                                                                              
+ PC19941_A_06:  1                                                                                              
+ (Other)     :569                                                                                              
+        Month        Storage       Subject   
+ Control   : 12   20     :113   Control: 61  
+ ExtMonth0 :245   80     :401   SP2002 : 18  
+ ExtMonth01: 58   Control: 61   SP2003 : 18  
+ ExtMonth03: 65                 SP2004 : 18  
+ ExtMonth06: 67                 SP2005 : 18  
+ ExtMonth12:128                 SP2009 : 18  
+                                (Other):424  

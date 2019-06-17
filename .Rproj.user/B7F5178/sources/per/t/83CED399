@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1554090637570.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "975164421",
+    "id" : "83CED399",
+    "lastKnownWriteTime" : 1554094017,
+    "last_content_update" : 1554307917984,
+    "path" : "C:/Program Files/Git/Coding/MicrobiomeAnalysis/qiime2_mb/QIIME2/V2/Step6_QCAnalysis.Rmd",
+    "project_path" : "Step6_QCAnalysis.Rmd",
+    "properties" : {
+        "chunk_output_type" : "console",
+        "cursorPosition" : "184,0",
+        "scrollLine" : "173"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}
