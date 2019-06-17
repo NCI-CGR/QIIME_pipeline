@@ -86,7 +86,7 @@ taxonomy_qzv_dir=${QZV_RESULTS_DIR}/taxonomy_qzv_results
 # Stage 5 Parameters
 sampling_depth=10000
 rarefaction_param=rarefaction
-max_depth=62000
+max_depth=54000
 refernce_1=${RESOURCES_DIR}/gg-13-8-99-nb-classifier.qza
 refernce_2=${RESOURCES_DIR}/silva-119-99-nb-classifier.qza
 taxonomy_1=taxonomy_greengenes
