@@ -37,7 +37,9 @@ Source: sTVOM
 
 Date Reported:
 
-Version: Version2
+Pipeline: Version2
+
+QIIME: 2017.11
 
 #Metadata
 ##Summary
@@ -48,12 +50,12 @@ Sample types for the project included study samples, robogut, artifical colony, 
 Prior to filtering, these were the number of samples observed:
 
 ###After Filtering
-After filtering to a minimum of 10,000 reads, with a sampling depth for alpa-beta diversity set to 10,000 and rarefaction set to 54,000, these were the number of samples observed:
+After filtering to a minimum of 10,000 reads, only taxa with a mean absolute abundance greater than 0.1% were included. Taxonomically, only taxa in the Bacteria kingdom, that were not in the chrloroplast class or mitochondrial family were included. Rarefying to 20,000 was implemented, to more clearly cluster samples according to biological origin, by drawing without replacement from each sample so that all samples have the same total count. The maximum rarefaction rate was set to 54,000 (the highest count of all samples) for this particular dataset. A citation on measurements of richness can be found here: https://onlinelibrary.wiley.com/doi/full/10.1046/j.1461-0248.2001.00230.x
 
-Within the study samples, subject counts were as follows:
+After filtering, these were the number of samples observed:
 
 ###Variables
-The cohort was broken down by variables:
+The filtered cohort was broken down by the following variables:
 
 
 #Analysis Parameters

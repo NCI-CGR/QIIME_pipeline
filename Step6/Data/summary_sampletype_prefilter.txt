@@ -1,4 +1,4 @@
-   artificialcolony     ExtractionBlank ExtractionReplicate         PCRNTCBlank       PCRWaterBlank 
-                 14                  18                   3                   6                   6 
-            robogut               Study 
-                 14                 514 
+   artificialcolony     ExtractionBlank ExtractionReplicate         PCRNTCBlank 
+                 14                  18                   3                   6 
+      PCRWaterBlank             robogut               Study 
+                  6                  14                 514 

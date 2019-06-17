@@ -30,7 +30,7 @@ print "ANS: ";
 #$manifest_ori .=".txt";
 
 ###Testing
-my $project_dir =("T:\\DCEG\\Projects\\Microbiome\\CGR_MB\\MicroBiome\\Testing\\Project_NP0440_MB4_SSC");
+my $project_dir =("T:\\DCEG\\Projects\\Microbiome\\CGR_MB\\MicroBiome\\Project_NP0440_MB4_Complete");
 my $manifest_ori="NP0440_MB4.txt";
 
 ######################################################################################
@@ -50,20 +50,29 @@ print "######################################\n";
 print "#              Process                #\n";
 print "######################################\n";
 
-#Create directories within Input folder
-makedirect_input($project_dir);
+print "Do you want to create a new manifest (1) or run the entire pipeline (2)\n";
+print "ANS: ";
+my $pipeline=<STDIN>; chomp $pipeline;
 
-#Create QIIME2 manifest
-manifest_qiime2($project_dir, $manifest_ori);
+if($pipeline==2){
+	#Create directories within Input folder
+	makedirect_input($project_dir);
 
-#Create split manifests with metadata
-manifest_meta($project_dir, $manifest_ori, @runid_unique);
+	#Create QIIME2 manifest
+	manifest_qiime2($project_dir, $manifest_ori);
 
-#Creates directories for flowcells
-makedirect_output($project_dir,\@runid_unique);
+	#Create split manifests with metadata
+	manifest_meta($project_dir, $manifest_ori, @runid_unique);
 
-#Create split manifests with softlinks
-fastqfiles($project_dir, \@runid_unique);
+	#Creates directories for flowcells
+	makedirect_output($project_dir,\@runid_unique);
+
+	#Create split manifests with softlinks
+	fastqfiles($project_dir, \@runid_unique);
+} else{
+	#Create QIIME2 manifest
+	manifest_qiime2($project_dir, $manifest_ori);
+}
 
 sub makedirect_input{
 	#Initialize / Read in variables
@@ -190,9 +199,8 @@ sub manifest_qiime2{
 		#For the header row
 		if ($i==1){
 			print $fh "#SampleID\t";
-			print $fh "CGR ID\t";
 			
-			my $n=1; #Skip "SampleID header - changed to CGR ID"
+			my $n=1; #1 to Skip "SampleID" header
 			until ($n+1 > scalar(@columns)){
 				print $fh "$columns[$n]\t";
 				$n++;
@@ -201,11 +209,6 @@ sub manifest_qiime2{
 			$i++;
 		} else{
 		
-			#Created new SampleID name from ExternalID (col1)_ SourcePCRPlate (col4), print to QIIME2 file
-			print $fh "$columns[1]";
-			print $fh "_";
-			print $fh "$columns[4]\t";
-			
 			#Print other data to QIIME2 File
 			my $n=0;
 			until ($n+1 > scalar(@columns)){
