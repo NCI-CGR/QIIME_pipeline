@@ -69,10 +69,7 @@ cmd="cp ${output_table_merged_temp_qza} ${output_table_merged_final_qza}"
 echo $cmd
 eval $cmd
 
-
-
 ###############
-
 # Rep-Seqs Merging	
 	
 	

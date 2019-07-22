@@ -15,8 +15,8 @@ Phred_score=33
 
 #################################################
 # TO UPDATE
-PROJECT_DIR=/DCEG/Projects/Microbiome/CGR_MB/MicroBiome/Testing/Project_NP0440_MB4_SSC
-MANIFEST_FILE=${PROJECT_DIR}/NP0440_MB4.txt
+PROJECT_DIR=/DCEG/Projects/Microbiome/CGR_MB/MicroBiome/Project_NP0084_MB6
+MANIFEST_FILE=${PROJECT_DIR}/NP0084-MB6.txt
 
 #################################################
 # Input Directories/Files
@@ -57,6 +57,7 @@ log_dir_stage_3=${LOG_DIR}/stage3_qiime2
 # Stage 3 Parameters
 table_dada2_merged_temp_param=table_dada2_merged_temp
 table_dada2_merged_final_param=table_dada2_merged_final
+table_dada2_merged_final_filt_param=table_dada2_merged_final_filt
 repseqs_dada2_merged_temp_param=repseqs_dada2_merged_temp
 repseqs_dada2_merged_final_param=repseqs_dada2_merged_final
 

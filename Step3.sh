@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. /DCEG/Projects/Microbiome/CGR_MB/MicroBiome/sc_scripts_qiime2_pipeline/V2/Global.sh
+. /DCEG/Projects/Microbiome/CGR_MB/MicroBiome/sc_scripts_qiime2_pipeline/V2/Global.rc
 
 
 output_table_merged_final_qza=${table_dada2_qza_merged_parts_final_dir}/${table_dada2_merged_final_param}.qza
@@ -16,21 +16,34 @@ if [ $TOTAL_RUNS -gt 1 ]; then
 		-q ${QUEUE} \
 		-o ${log_dir_stage_3}/stage3_qiime2.stdout \
 		-e ${log_dir_stage_3}/stage3_qiime2.stderr \
-		-N stage3_qiime2 \
+		-N stage3_mult_qiime2 \
 		-S /bin/sh \
-		${SCRIPT_DIR}/substeps/Step3_1.sh"
+		${SCRIPT_DIR}/substeps/Step3_1.sh \
+		${SCRIPT_DIR}/substeps/Step3_2.sh"
 	echo $cmd
 	eval $cmd
 	echo
 
 #If there is only one flow cell
 else
-	cmd="cp ${table_dada2_qza_split_parts_dir}/${table_dada2_param}_1.qza ${output_table_merged_final_qza}"
+	#cmd="cp ${table_dada2_qza_split_parts_dir}/${table_dada2_param}_1.qza ${output_table_merged_final_qza}"
+	#echo $cmd
+	#eval $cmd
+
+	cmd="qsub -cwd \
+	-pe by_node 10 \
+	-q ${QUEUE} \
+	-o ${log_dir_stage_3}/stage3_qiime2.stdout \
+	-e ${log_dir_stage_3}/stage3_qiime2.stderr \
+	-N stage3_single_qiime2 \
+	-S /bin/sh \
+	${SCRIPT_DIR}/substeps/Step3_2.sh"
 	echo $cmd
 	eval $cmd
 
-	cmd="cp ${repseqs_dada2_qza_split_parts_dir}/${repseqs_dada2_param}_1.qza ${output_repseqs_merged_final_qza}"
-	echo $cmd
-	eval $cmd
+
+	#cmd="cp ${repseqs_dada2_qza_split_parts_dir}/${repseqs_dada2_param}_1.qza ${output_repseqs_merged_final_qza}"
+	#echo $cmd
+	#eval $cmd
 	echo "All Done"
 fi
