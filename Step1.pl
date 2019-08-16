@@ -7,18 +7,25 @@ use File::Copy;
 use List::MoreUtils qw(uniq);
 use Win32::OLE;
 
+# BB: Rationale for Perl vs. other?
+
 ######################################################################################
 								##NOTES##
 ######################################################################################
 ##This script is to complete the pre-processng tasks needed for the QIIME2 pipeline
 ##Search for ###TESTING to find testing variables
 
+# BB: include usage, input, output
+
 ######################################################################################
 								##Main Code##
 ######################################################################################
 my (@runid_unique, @projectid, @fastq_files);
 
+# BB: Remove all interactive queries.  Add user-configurable options to yaml.
+
 #Ask user where the project directory is
+# BB: In general, comments should tell you "why", not "what".
 print "Where is the project directory?\n";
 print "ANS: ";
 my $project_dir = <STDIN>; chomp $project_dir;
@@ -32,6 +39,8 @@ $manifest_ori .=".txt";
 ###Testing
 #my $project_dir =("T:\\DCEG\\Projects\\Microbiome\\CGR_MB\\MicroBiome\\Project_NP0440_MB4_Complete");
 #my $manifest_ori="NP0440_MB4.txt";
+# BB: Rather than hard-coding variables, have a testing config file and expected outputs for automated comparisons.
+# BB: This should be done entirely in unix, so there should be no windows-style paths.  Changing platforms within a single pipeline can introduce unexpected results.
 
 ######################################################################################
 								##Subroutines##
@@ -74,6 +83,8 @@ if($pipeline==2){
 	manifest_qiime2($project_dir, $manifest_ori);
 }
 
+# BB: Design subroutines to be testable and single-purpose.  Consider how each subroutine can be unit tested.
+# BB: Let's be careful not to duplicate effort - snakemake will be used for directory management.  Let's try to leverage that as much as possible.
 sub makedirect_input{
 	#Initialize / Read in variables
 	my ($project_dir)=@_;
@@ -171,7 +182,7 @@ sub makedirect_input{
 		mkdir($dir_path);
 	}
 	print "\n\n***********************************";
-	print "Step 1 COMPLETE - Generated directories";
+	print "Step 1 COMPLETE - Generated directories";  # BB: change all "step" annotation to something more descriptive.
 }
 
 sub manifest_qiime2{

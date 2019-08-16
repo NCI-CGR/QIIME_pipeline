@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# BB: deprecated.
+
 #################################################
 # QIIME version
 qiime_version=2017.11
