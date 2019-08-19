@@ -4,11 +4,7 @@ output: word_document
 editor_options: 
   chunk_output_type: console
 ---
-#############################################################################################
-#Background
-##Project ID: NP0440-MB04
-##Date: 5/19/19
-##Project info: Stability study of sTVOM data, to include comparisons between collection methods (OMNI and SCOPE), storage temperatures (-80 or -20), and storage times (baseline, month 1, month 6, month 12). Standard comparison of controls to study subjects, and intersubject variability also included.
+#QC Analysis of microbiome projects for CGR Production team
 
 #############################################################################################
 #To Update
@@ -16,14 +12,10 @@ editor_options:
 project_name="Project_NP0440_MB4_Complete"
 sample_depth = 20000
 ```
+#############################################################################################
 
-#1. Load required libraries
+#1. Load required libraries and source code
 ```{r}
-#Old version of vegan
-#require(devtools)
-#install_version("vegan", version ="2.4-5", repos = "http://cran.us.r-project.org")
-#http://joey711.github.io/phyloseq-demo/phyloseq-demo.html
-
 library(tm)
 library(vegan)
 library("biom")
@@ -38,13 +30,19 @@ library(gridExtra)
 library("../Data.table")
 
 #Source MiSeqR
-#http://deneflab.github.io/MicrobeMiseq/
 source("sources/miseqR.R")
+
+#Other packages that were used in testing, but not necessary for final report
 #source("sources/Microbiome.Barplot.R")
 #source("sources/Summarize.Taxa.R")
 #source("sources/Make.Percent.R")
 #source("sources/TidyConvert.R")
+#require(devtools)
+#install_version("vegan", version ="2.4-5", repos = "http://cran.us.r-project.org")
 
+#Resources
+#http://deneflab.github.io/MicrobeMiseq/
+#http://joey711.github.io/phyloseq-demo/phyloseq-demo.html
 ```
 
 #2 Create PhySeq Object
