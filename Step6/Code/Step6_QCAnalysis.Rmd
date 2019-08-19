@@ -108,41 +108,29 @@ a<-summary(sample_data(physeq_filt)$Subject)
 capture.output(a, file = "../Data/summary_subject_prefilter.txt")
 ```
 
-#4. Determine read counts and plot
+#4. Read counts
 ```{r}
 # Make a data frame with a column for the read counts of each sample
 sample_sum_df <- data.frame(sum = sample_sums(physeq_filt),sample_data(physeq_filt))
-colnames(sample_sum_df)
 
 # Histogram of sample read counts by sampletype
-p1<-ggplot(sample_sum_df, aes(x = sum, color=SampleType)) + 
-  geom_histogram(fill="white",binwidth = 2500) +
+p1<-ggplot(sample_sum_df, aes(x = sum)) + 
+  geom_histogram(binwidth = 2500,color="black",aes(fill=SampleType)) +
+  geom_vline(aes(xintercept=median(sum,na.rm=T)),color="yellow",size=2)+
   xlab("Read counts") +
   ggtitle("Distribution of sample sequencing depth - Pre-Filtering")+
   theme(axis.title.y = element_blank())
+p1
 
-# Histogram of sample read counts by sample type
-p2<-ggplot(sample_sum_df, aes(x = sum, color=Subject)) + 
-  geom_histogram(fill="white",binwidth = 2500) +
-  xlab("Read counts") +
-  theme(axis.title.y = element_blank())
-
-#Title
-#title <- ggdraw() + draw_label("Distribution of sample sequencing depth - Pre-Filtering", fontface='bold')
-
-#plot
-#p <- plot_grid(p1, p2)
-
-# send to CL
-#p_final <- plot_grid(title, p, ncol=1, rel_heights=c(0.1, 1)) # rel_heights values control title
-
-#Save file
+#Plot
+title <- ggdraw() + draw_label("Distribution of sample sequencing depth - Pre-Filtering", fontface='bold')
 file_name =("../Graphs/SeqDepth_prefilter.tiff")
 tiff(file_name, width=800)
 print(p1)
 dev.off()
 
 ```
+remove sequencing depth by subject
 
 #5. Filter taxa >.001 and samples with less than 1000 reads
 ```{r}
@@ -159,7 +147,6 @@ physeq_filt #note new sample number
 ```{r}
 # Make a data frame with a column for the read counts of each sample
 sample_sum_df <- data.frame(sum = sample_sums(physeq_filt),sample_data(physeq_filt))
-colnames(sample_sum_df)
 
 # Histogram of sample read counts by sampletype
 p1<-ggplot(sample_sum_df, aes(x = sum, color=SampleType)) + 

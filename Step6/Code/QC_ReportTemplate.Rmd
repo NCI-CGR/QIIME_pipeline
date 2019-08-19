@@ -62,7 +62,7 @@ The filtered cohort was broken down by the following variables:
 
 #Results
 ##Sequencing Depth
-This image shows the sequencing depth prior to sample filtering:
+This image shows the sequencing depth prior to sample filtering, with IQR (median) value indicated in yellow :
 ![](../Graphs/SeqDepth_prefilter.tiff)
 
 This image shows the depth after sample filtering:
