@@ -33,8 +33,11 @@ sample_depth = 20000
 #-Pre-Filtering data summary text file
 #-Pre-Filtering data summary text file, by Sample Type
 #-Pre-Filtering data summary text file, by Subject
-#-Pre-Filtering data historgraph by sample type
-#
+#-Pre-Filtering data histograph by sample type
+#-Post-Filtering data histograph by sample type
+#-Post-Filtering data summary text file
+#-Post-Filtering data summary text file, by Sample Type
+#-Post-Filtering data summary text file, by Subject
 
 ```
 
@@ -142,39 +145,8 @@ physeq_filt = prune_samples(sample_sums(physeq_filt) > seq_depth, physeq_filt)
 #physeq_filt #note new sample number
 ```
 
-#6. Review filtered read counts and plot
+#6. Filtered read summary
 ```{r}
-# Make a data frame with a column for the read counts of each sample
-sample_sum_df <- data.frame(sum = sample_sums(physeq_filt),sample_data(physeq_filt))
-
-# Histogram of sample read counts by sampletype
-p1<-ggplot(sample_sum_df, aes(x = sum, color=SampleType)) + 
-  geom_histogram(fill="white",binwidth = 2500) +
-  xlab("Read counts") +
-  ggtitle("Distribution of sample sequencing depth - Post-Filtering") +
-  theme(axis.title.y = element_blank())
-
-# Histogram of sample read counts by sample type
-p2<-ggplot(sample_sum_df, aes(x = sum, color=Subject)) + 
-  geom_histogram(fill="white",binwidth = 2500) +
-  xlab("Read counts") +
-  theme(axis.title.y = element_blank())
-
-#Title
-#title <- ggdraw() + draw_label("Distribution of sample sequencing depth - Post Filtering", fontface='bold')
-
-#plot
-#p <- plot_grid(p1, p2)
-
-#Print to CL
-#p_final<- plot_grid(title, p, ncol=1, rel_heights=c(0.1, 1)) # rel_heights values control title
-
-#Save file
-file_name =("../Graphs/SeqDepth_filter.tiff")
-tiff(file_name, width=800)
-print(p1)
-dev.off()
-
 #Print summaries
 s<-summary(sample_data(physeq_filt))
 capture.output(s, file = "../Data/summary_filter.txt")
@@ -182,6 +154,21 @@ a<-summary(sample_data(physeq_filt)$SampleType)
 capture.output(a, file = "../Data/summary_sampletype_postfilter.txt")
 a<-summary(sample_data(physeq_filt)$Subject)
 capture.output(a, file = "../Data/summary_subject_postfilter.txt")
+
+# Make a data frame with a column for the read counts of each sample
+sample_sum_df <- data.frame(sum = sample_sums(physeq_filt),sample_data(physeq_filt))
+
+# Histogram of sample read counts by sampletype
+p1<-ggplot(sample_sum_df, aes(x = sum)) + 
+  geom_histogram(binwidth = 2500,color="black",aes(fill=SampleType)) +
+  geom_vline(aes(xintercept=median(sum,na.rm=T)),color="yellow",size=2) +
+  xlab("Read Counts") +
+  ggtitle("Distribution of sample sequencing depth - Post-Filtering") +
+  theme(axis.title.y = element_blank())
+file_name =("../Graphs/SeqDepth_filter.tiff")
+tiff(file_name, width=800)
+print(p1)
+dev.off()
 ```
 
 #7 Subset filtered data, sample to specified depth
