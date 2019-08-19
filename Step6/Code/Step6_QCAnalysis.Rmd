@@ -30,6 +30,10 @@ sample_depth = 20000
 
 #Output
 #-Pre-Filtering data summary text file
+#-Pre-Filtering data summary text file, by Sample Type
+#-Pre-Filtering data summary text file, by Subject
+#
+#
 
 ```
 
@@ -88,23 +92,20 @@ capture.output(s, file = "../Data/summary_prefilter.txt")
 #https://github.com/jbisanz/qiime2R
 ```
 
-#3 Prune for bacteria only, Create prefilter summary files
+#3 Initial pruning
 ```{r}
-#Only bacteria
+#Exclude all data that is not bacteria
 physeq_filt <- physeq_complete %>%
   subset_taxa(
     Kingdom == "k__Bacteria" &
     Family  != "k__Bacteria; p__Proteobacteria; c__Alphaproteobacteria; o__Rickettsiales; f__mitochondria" &
     Class   != "k__Bacteria; p__Cyanobacteria; c__Chloroplast"
   )
-physeq_filt
 
-#Print summaries
 a<-summary(sample_data(physeq_filt)$SampleType)
 capture.output(a, file = "../Data/summary_sampletype_prefilter.txt")
 a<-summary(sample_data(physeq_filt)$Subject)
 capture.output(a, file = "../Data/summary_subject_prefilter.txt")
-
 ```
 
 #4. Determine read counts and plot
