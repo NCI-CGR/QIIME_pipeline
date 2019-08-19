@@ -35,7 +35,7 @@ library(phyloseq)
 library(qiime2R)
 library(tibble)
 library(gridExtra)
-library("data.table")
+library("../Data.table")
 
 #Source MiSeqR
 #http://deneflab.github.io/MicrobeMiseq/
@@ -76,7 +76,7 @@ physeq_complete<-phyloseq(otu_table(otus$data, taxa_are_rows = T), phy_tree(tree
 physeq_complete #verify results are as expected
 
 s<-summary(sample_data(physeq_complete))
-capture.output(s, file = "Data/summary_prefilter.txt")
+capture.output(s, file = "../Data/summary_prefilter.txt")
 ```
 
 #3 Prune for bacteria only, Create prefilter summary files
@@ -92,9 +92,9 @@ physeq_filt
 
 #Print summaries
 a<-summary(sample_data(physeq_filt)$SampleType)
-capture.output(a, file = "Data/summary_sampletype_prefilter.txt")
+capture.output(a, file = "../Data/summary_sampletype_prefilter.txt")
 a<-summary(sample_data(physeq_filt)$Subject)
-capture.output(a, file = "Data/summary_subject_prefilter.txt")
+capture.output(a, file = "../Data/summary_subject_prefilter.txt")
 
 ```
 
@@ -127,7 +127,7 @@ p2<-ggplot(sample_sum_df, aes(x = sum, color=Subject)) +
 #p_final <- plot_grid(title, p, ncol=1, rel_heights=c(0.1, 1)) # rel_heights values control title
 
 #Save file
-file_name =("Graphs/SeqDepth_prefilter.tiff")
+file_name =("../Graphs/SeqDepth_prefilter.tiff")
 tiff(file_name, width=800)
 print(p1)
 dev.off()
@@ -174,18 +174,18 @@ p2<-ggplot(sample_sum_df, aes(x = sum, color=Subject)) +
 #p_final<- plot_grid(title, p, ncol=1, rel_heights=c(0.1, 1)) # rel_heights values control title
 
 #Save file
-file_name =("Graphs/SeqDepth_filter.tiff")
+file_name =("../Graphs/SeqDepth_filter.tiff")
 tiff(file_name, width=800)
 print(p1)
 dev.off()
 
 #Print summaries
 s<-summary(sample_data(physeq_filt))
-capture.output(s, file = "Data/summary_filter.txt")
+capture.output(s, file = "../Data/summary_filter.txt")
 a<-summary(sample_data(physeq_filt)$SampleType)
-capture.output(a, file = "Data/summary_sampletype_postfilter.txt")
+capture.output(a, file = "../Data/summary_sampletype_postfilter.txt")
 a<-summary(sample_data(physeq_filt)$Subject)
-capture.output(a, file = "Data/summary_subject_postfilter.txt")
+capture.output(a, file = "../Data/summary_subject_postfilter.txt")
 ```
 
 #7 Subset filtered data, sample to specified depth
@@ -259,7 +259,7 @@ p<- plot_ordination(
   geom_point(colour = "grey90", size = 1.5)
 
 ## Save file
-file_name =("Graphs/sampletype_bray.tiff")
+file_name =("../Graphs/sampletype_bray.tiff")
 tiff(file_name, width=800)
 print(p)
 dev.off()
@@ -283,7 +283,7 @@ p<- plot_ordination(
   geom_point(colour = "grey90", size = 1.5)
 
 #Save file
-file_name =("Graphs/reps_bray.tiff")
+file_name =("../Graphs/reps_bray.tiff")
 tiff(file_name, width=800)
 print(p)
 dev.off()
@@ -312,7 +312,7 @@ p<- plot_ordination(
   geom_point(colour = "grey90", size = 1.5) 
 
 #Save file
-file_name =("Graphs/sampletype_weightunifrac.tiff")
+file_name =("../Graphs/sampletype_weightunifrac.tiff")
 tiff(file_name, width=800)
 print(p)
 dev.off()
@@ -336,7 +336,7 @@ p<- plot_ordination(
   geom_point(colour = "grey90", size = 1.5) 
 
 #Save file
-file_name =("Graphs/reps_weightunifrac.tiff")
+file_name =("../Graphs/reps_weightunifrac.tiff")
 tiff(file_name, width=800)
 print(p)
 dev.off()
@@ -350,14 +350,14 @@ physeq_scale <- physeq_filt %>% scale_reads(n=1000)
 
 #Sample Type
 p<- plot_richness(physeq_scale, x="SampleType") + geom_boxplot()
-file_name =("Graphs/sampletype_alphadiv.tiff")
+file_name =("../Graphs/sampletype_alphadiv.tiff")
 tiff(file_name, width=800)
 print(p)
 dev.off()
 
 #SubjectID - not used
 #p<- plot_richness(physeq_scale, x="Subject") + geom_boxplot()
-#file_name =("Graphs/subjectid_alphadiv.tiff")
+#file_name =("../Graphs/subjectid_alphadiv.tiff")
 #tiff(file_name, width=1000)
 #print(p)
 #dev.off()
@@ -372,7 +372,7 @@ physeq_scale30 = prune_taxa(TopNOTUs, physeq_filt_samples)
 #Plot top 30 OTUS by Genus
 p<-plot_bar(physeq_scale30, "Genus", fill = "Genus", title="Top 30 OTUs Across Study Samples")+geom_bar(stat="identity")+theme(axis.text.x=element_blank())
 
-file_name =("Graphs/study_topgenus.tiff")
+file_name =("../Graphs/study_topgenus.tiff")
 tiff(file_name, width=1000)
 print(p)
 dev.off()
@@ -386,15 +386,15 @@ physeq_scale <- physeq_filt_samples %>%
 
 
 #Extraction Batch
-p<- plot_richness(physeq_scale, x="ExtractionBatchID") + geom_boxplot()
-file_name =("Graphs/alpha_extractionbatch.tiff")
+p<- plot_richness(physeq_scale, x="ExtractionBatchID") + geom_boxplot()+ theme(axis.text.x=element_blank())
+file_name =("../Graphs/alpha_extractionbatch.tiff")
 tiff(file_name, width=1500)
 print(p)
 dev.off()
 
 #Sequencing Batch
-p<- plot_richness(physeq_scale, x="RunID") + geom_boxplot()
-file_name =("Graphs/alpha_sequencingbatch.tiff")
+p<- plot_richness(physeq_scale, x="RunID") + geom_boxplot() + theme(axis.text.x=element_blank())
+file_name =("../Graphs/alpha_sequencingbatch.tiff")
 tiff(file_name, width=800)
 print(p)
 dev.off()
@@ -413,21 +413,21 @@ physeq_scale <- physeq_filt_samples %>%
 
 #Month
 p<- plot_richness(physeq_scale, x="Month") + geom_boxplot()
-file_name =("Graphs/alpha_month.tiff")
+file_name =("../Graphs/alpha_month.tiff")
 tiff(file_name, width=800)
 print(p)
 dev.off()
 
 #Instrument
 p<- plot_richness(physeq_scale, x="Instrument") + geom_boxplot()
-file_name =("Graphs/alpha_instrument.tiff")
+file_name =("../Graphs/alpha_instrument.tiff")
 tiff(file_name, width=800)
 print(p)
 dev.off()
 
 #Collection Method
 p<- plot_richness(physeq_scale, x="CollectionMethod") + geom_boxplot()
-file_name =("Graphs/alpha_collection.tiff")
+file_name =("../Graphs/alpha_collection.tiff")
 tiff(file_name, width=800)
 print(p)
 dev.off()
@@ -437,7 +437,7 @@ physeq_subset<- subset_samples(physeq_scale30, Storage=="-80*C")
 p<- plot_bar(physeq_subset, "Instrument", fill="Genus", facet_grid=~CollectionMethod~Month, title="Genus Abundances by Collection Type/ Month/ Instrument at -80*C")+geom_bar(stat="identity")
 
 #Save file
-file_name =("Graphs/summary_genus_-80C.tiff")
+file_name =("../Graphs/summary_genus_-80C.tiff")
 tiff(file_name, width=800)
 print(p)
 dev.off()
@@ -447,7 +447,7 @@ physeq_subset<- subset_samples(physeq_scale30, Storage=="-20*C")
 p<- plot_bar(physeq_subset, "Instrument", fill="Genus", facet_grid=~Storage~CollectionMethod, title="Genus Abundances by Collection Type/ Month/ Instrument at -20*C")+geom_bar(stat="identity")
 
 #Save file
-file_name =("Graphs/summary_genus_-20C.tiff")
+file_name =("../Graphs/summary_genus_-20C.tiff")
 tiff(file_name, width=800)
 print(p)
 dev.off()
@@ -457,7 +457,7 @@ dev.off()
 #Data values
 ```{r}
 a<-sample_data(physeq_filt)
-write.table(a,"Data/Tab_input.txt")
+write.table(a,"../Data/Tab_input.txt")
 ```
 
 #Save workspace

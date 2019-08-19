@@ -1,0 +1,152 @@
+---
+output:
+  word_document: default
+editor_options: 
+  chunk_output_type: console
+---
+```{r, include=FALSE}
+#1. Load required libraries
+#Old version of vegan
+#require(devtools)
+#install_version("vegan", version ="2.4-5", repos = "http://cran.us.r-project.org")
+
+library(tm)
+library(vegan)
+library("biom")
+library(tidyr)
+library(ggplot2)
+library(cowplot)
+library(scales)
+library(phyloseq)
+library(backports)
+library(qiime2R)
+library(tibble)
+
+#Source MiSeqR
+#http://deneflab.github.io/MicrobeMiseq/
+source("sources/miseqR.R")
+load("workspace.RData")
+```
+QC Report
+
+
+#Project Information
+ProjectID: NP0440-MB4
+
+CGR Study ID(s): sTVOM-001
+
+Date Reported:
+
+CGR Analysis Pipeline Version: 2
+
+QIIME2 Version: 2017.11
+
+#Metadata
+##Summary
+###Sample Type
+Sample types for the project included study samples, robogut, artifical colony, extraction blank, sequencing blank, and no-template controls (NTCs).
+
+###Before filtering
+Prior to filtering, these were the number of samples observed:
+
+###After Filtering
+After filtering to a minimum of 10,000 reads, only taxa with a mean absolute abundance greater than 0.1% were included. Taxonomically, only taxa in the Bacteria kingdom (excluding those in the chloroplast class and mitochondrial family) were included. Rarefying was performed to 20,000 mapped reads, to more clearly cluster samples according to biological origin, by downsampling (drawing without replacement) so that all samples had the same total count. This allows for comparisons of samples, or groups, with large differences in average library size (the maximum was over 54,000 reads), thereby lowering the false discovery rate. Citations related to the analysis are listed here:
+-Rarefying: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5335496/
+-Measurements of richness: https://onlinelibrary.wiley.com/doi/full/10.1046/j.1461-0248.2001.00230.x
+
+After filtering, these were the number of samples observed:
+
+###Variables
+The filtered cohort was broken down by the following variables:
+
+
+#Results
+##Sequencing Depth
+This image shows the sequencing depth prior to sample filtering:
+![](../Graphs/SeqDepth_prefilter.tiff)
+
+This image shows the depth after sample filtering:
+![](../Graphs/SeqDepth_filter.tiff)
+
+##Alpha Diversity
+Several alpha metrics are included: Observed, Chao1, Abundance-based Coverage Estimator (ACE), Shannon, Simpson, Inverse Simpson Index (InvSimpson), and Fisher. The Y-axis represents the unit for each of the individual metrics, which varies. Observed represents the number of observed species for each class, whereas both Chao1 and ACE estimate the richness of the samples. Chao1 estimates total species richness by comparing species found in only one samples, versus those found in two samples, whereas ACE incorporates data from species with fewer than 10 instances. Both the Shannon and Simpson indexes are diversity index’s, where the Shannon’s Index is more sensitive to species richness while Simpson’s Index is more sensitive to species evenness. Shannon’s Index calculates the predictability of species in a sample, with less diverse species having a higher predictability score. Simpson’s Diversity Index represents the probability that two randomly chosen individuals belong to difference species. In both indices, as species richness and evenness increase, so diversity increases, as well as their values. The Inverse Simpson Index is an indication of the richness in a community with uniform evenness that would have the same level of diversity. Fisher's diversity index is a logarithmic calculation that determines the number of species predicted to have an iterative (1-n) number of individuals within the sample.
+
+Citations for these tools can be found here: 
+•	Chao1 and ACE: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC93182/ 
+•	Shannon index: https://www.itl.nist.gov/div898/software/dataplot/refman2/auxillar/shannon.htm 
+•	Simpson’s index: https://geographyfieldwork.com/Simpson'sDiversityIndex.htm, https://www.nature.com/articles/s41598-018-36355-7?WT.feed_name=subjects_computational-biology-and-bioinformatics
+
+These diversity metrics were performed at the sample type level, as well as by extraction and sequencing batches, to ensure consistency between processing.
+
+###By Sample Types
+This image shows alpha diversity metrics by sample type:
+![](../Graphs/sampletype_alphadiv.tiff)
+
+Viewing the dataset by extraction and sequencing batches, helps to ensure consistency between processing:
+
+###By Extraction Batch:
+Each column represents one extraction batch.
+![](../Graphs/alpha_extractionbatch.tiff)
+
+###By Sequencing Batch:
+Each column represents one sequencing run.
+![](../Graphs/alpha_sequencingbatch.tiff)
+
+
+###Top OTUs by Genus
+The top 30 OTUs across all study samples, in terms of abundance, were graphed by Genus. This allows for a quick preview of genus that may be present due to contamination:
+![](../Graphs/study_topgenus.tiff)
+
+
+##Beta Diversity - pCOA Graphs
+Beta diversity was measured using both quantitative (weighted UniFrac and Bray-Curtis and weighted UniFrac) and qualitative measures (unweighted UniFrac and Binomial). Quantitative measures are ideally suited to revealing community differences that are due to changes in relative taxon abundance (e.g., when a particular set of taxa flourish because a limiting nutrient source becomes abundant). Quantitative measures are shown below . 
+
+###Bray Curtis
+Bray-Curtis dissimilarity creates a matrix of the differences in microbial abundances between two samples. A 0 indicates that the samples share the same species at the same abundances, whereas a 1 indicates that both samples have complete different speices abundances.
+
+####Results by Sample Type:
+
+![](../Graphs/sampletype_bray.tiff)
+
+####Results by subject (Replicates Only):
+
+![](../Graphs/reps_bray.tiff)
+
+
+###Weighted Unifrac
+The UniFrac measures the phylogenetic distance between sets of taxa in a phylogenetic tree as the fraction of the branch length of the tree that leads to descendants from either one environment. It differs from dissimilarity measures such as Bray-Curtis, in that it incorporates information on the relative relatedness of community members by incorporating phylogenetic distances between observed organisms in the computation. Finally, the weighted UniFrac metric accounts for the relative abundance of each of the taxa within the communities.
+
+####Results by Sample Type:
+
+![](../Graphs/sampletype_weightunifrac.tiff)
+
+
+####Results by subject (Replicates Only):
+![](../Graphs/reps_weightunifrac.tiff)
+
+
+#Additional Information
+Viewing the dataset by other feature variables, provided the following insights:
+###Collection Method
+The alpha diversity metrics do not show significant differences in the mean values between the OMNIgene and Scope samples
+![](../Graphs/alpha_collection.tiff)
+
+###Extraction Instrument
+Similarly, there is little variation between the sxtraction instrument that was used.
+![](../Graphs/alpha_instrument.tiff)
+
+###Extraction Month
+The extraciton month also showed little variance.
+![](../Graphs/alpha_month.tiff)
+
+###Extraction Month / Collection Method (at -20*C)
+When reviewing absolute abundance by collection method at 20*C for each of the extraction instruments, it appears that the KingFisher has a higher overall abundance, with clear differences in the distributions of genus.
+![](../Graphs/summary_genus_-20C.tiff)
+
+###Extraction Month / Collection Method / Extraction Instrument (at -80*C)
+By month, it appears that Month 12 has a higher absolute abundance than any other month. QIASymphony shows higher abundance at both month 0 and month 12. Finally, the Scope mouthwash protocol shows higher abundance at each month, than the OMNIgene, consistent with the graph above.
+![](../Graphs/summary_genus_-80C.tiff)
+
+
+
+
