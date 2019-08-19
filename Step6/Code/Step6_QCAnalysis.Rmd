@@ -4,7 +4,6 @@ output: word_document
 editor_options: 
   chunk_output_type: console
 ---
-#QC Analysis of microbiome projects for CGR Production team
 
 #############################################################################################
 #To Update
@@ -13,6 +12,26 @@ project_name="Project_NP0440_MB4_Complete"
 sample_depth = 20000
 ```
 #############################################################################################
+
+#Requirements
+```{r}
+#Usage:
+#-QC Analysis of microbiome projects for CGR Production team to generate QC/Data Delivery reports
+
+#Input (user provided):
+#-project name
+#-sample depth
+
+#Input (files):
+#-otu table
+#-rooted tree
+#-taxonomy file
+#-metadata QIIME2 file
+
+#Output
+#-Pre-Filtering data summary text file
+
+```
 
 #1. Load required libraries and source code
 ```{r}
@@ -27,7 +46,6 @@ library(phyloseq)
 library(qiime2R)
 library(tibble)
 library(gridExtra)
-library("../Data.table")
 
 #Source MiSeqR
 source("sources/miseqR.R")
@@ -47,34 +65,27 @@ source("sources/miseqR.R")
 
 #2 Create PhySeq Object
 ```{r}
-#https://github.com/jbisanz/qiime2R
-#Create location link
 project_location = paste("T:\\DCEG\\Projects\\Microbiome\\CGR_MB\\MicroBiome\\",project_name,sep="")
 
-#Read OTUS
+#Read in files
 otus <- read_qza(paste(project_location,"\\Output\\qza_results\\table_dada2_qza_merged_parts_final\\table_dada2_merged_final.qza",sep=""))
-
-#Read rooted tree
 tree <- read_qza(paste(project_location,"\\Output\\qza_results\\phylogeny_qza_results\\rooted_tree.qza",sep=""))
-
-#Read Greengenes taxonomy file
 taxonomy <- read_qza(paste(project_location,"\\Output\\qza_results\\taxonomy_qza_results\\taxonomy_greengenes.qza",sep=""))
-##Edit dtable
+metadata <-read.table(paste(project_location,"\\Input\\manifest_qiime2.tsv",sep=""),sep='\t', header=T, row.names=1, comment="")
+metadata<-metadata[-1,]#remove the second line that specifies the data type
+
+#Split the taxonomy file into readable levels for taxonomic assignment
 tax_table<-do.call(rbind, strsplit(as.character(taxonomy$data$Taxon), "; "))
   colnames(tax_table)<-c("Kingdom","Phylum","Class","Order","Family","Genus","Species")
   rownames(tax_table)<-taxonomy$data$Feature.ID
 
-#read metadata
-metadata <-read.table(paste(project_location,"\\Input\\manifest_qiime2.tsv",sep=""),sep='\t', header=T, row.names=1, comment="")
-metadata<-metadata[-1,]#remove the second line that specifies the data type
-
-#Create phylo object
+#Create phylo object and output initial summary info for production QC to review
 physeq_complete<-phyloseq(otu_table(otus$data, taxa_are_rows = T), phy_tree(tree$data), tax_table(tax_table), sample_data(metadata))
-
-physeq_complete #verify results are as expected
-
 s<-summary(sample_data(physeq_complete))
 capture.output(s, file = "../Data/summary_prefilter.txt")
+
+#Resources
+#https://github.com/jbisanz/qiime2R
 ```
 
 #3 Prune for bacteria only, Create prefilter summary files
