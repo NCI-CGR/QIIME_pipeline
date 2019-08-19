@@ -105,15 +105,16 @@ physeq_filt <- physeq_complete %>%
     Family  != "k__Bacteria; p__Proteobacteria; c__Alphaproteobacteria; o__Rickettsiales; f__mitochondria" &
     Class   != "k__Bacteria; p__Cyanobacteria; c__Chloroplast"
   )
+```
 
+#4. Pre-filtered read summary
+```{r}
+#Print summaries
 a<-summary(sample_data(physeq_filt)$SampleType)
 capture.output(a, file = "../Data/summary_sampletype_prefilter.txt")
 a<-summary(sample_data(physeq_filt)$Subject)
 capture.output(a, file = "../Data/summary_subject_prefilter.txt")
-```
 
-#4. Read counts
-```{r}
 # Make a data frame with a column for the read counts of each sample
 sample_sum_df <- data.frame(sum = sample_sums(physeq_filt),sample_data(physeq_filt))
 
