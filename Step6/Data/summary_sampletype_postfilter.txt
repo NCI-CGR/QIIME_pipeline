@@ -1,2 +1,4 @@
-artificialcolony  ExtractionBlank          robogut            Study 
-              14                1               14              510 
+artificialcolony  ExtractionBlank          robogut 
+              14                1               14 
+           Study 
+             510 

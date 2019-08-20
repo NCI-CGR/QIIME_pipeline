@@ -187,7 +187,7 @@ physeq_filt_reps <- physeq_filt %>%
   )
 
 # Scale reads to even depth that user can vary by project
-physeq_scale <- physeq_filt %>% scale_reads(n=sample_depth) 
+physeq_filt_samples <- physeq_filt %>% scale_reads(n=sample_depth) 
 sample_data(physeq_scale)$SampleType <- factor(
   sample_data(physeq_scale)$SampleType, 
   levels = unique(sample_data(physeq_scale)$SampleType)
@@ -204,7 +204,7 @@ sample_data(physeq_scale_reps)$Subject <- factor(
 )
 ```
 
-#7 Plot PCOA Data - All samples (Sample Type, Replicates)
+#8 Plot PCOA Data
 ```{r}
 #######################
 ## Bray-Curtis
@@ -312,7 +312,7 @@ print(p)
 dev.off()
 ```
 
-#8 Alpha Diversity - All samples
+#9 Alpha Diversity - All samples
 ```{r}
 #https://joey711.github.io/phyloseq/plot_bar-examples.html
 # Scale reads to even depth 
@@ -333,7 +333,7 @@ dev.off()
 #dev.off()
 ```
 
-#9 View top Genus - All study samples
+#10 View top Genus - All study samples
 ```{r}
 #Filter the top OTUS
 TopNOTUs = names(sort(taxa_sums(physeq_filt_samples), TRUE)[1:30])
@@ -348,7 +348,7 @@ print(p)
 dev.off()
 ```
 
-#10 Alpha Metrics
+#11 Alpha Metrics
 ```{r}
 # Scale reads to even depth 
 physeq_scale <- physeq_filt_samples %>%
