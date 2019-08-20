@@ -172,46 +172,32 @@ print(p1)
 dev.off()
 ```
 
-#7 Subset filtered data, sample to specified depth
+#7 Subset filtered data
 ```{r}
 #Only samples
 physeq_filt_samples <- physeq_filt %>%
   subset_samples(
     SampleType == "Study" 
   )
-physeq_filt_samples #verify sample number
-
-#Only controls
-physeq_filt_cont <- physeq_filt %>%
-  subset_samples(
-    SampleType != "Study"
-  )
-physeq_filt_cont #verify sample number
 
 #Only replicates
 physeq_filt_reps <- physeq_filt %>%
   subset_samples(
     Replicate == "Y" 
   )
-physeq_filt_reps #verify sample number
 
-# Scale reads to even depth 
+# Scale reads to even depth that user can vary by project
 physeq_scale <- physeq_filt %>% scale_reads(n=sample_depth) 
-physeq_scale_reps <- physeq_filt_reps %>% scale_reads(n=sample_depth) 
-
-
-# Fix sample type levels in sample_data
 sample_data(physeq_scale)$SampleType <- factor(
   sample_data(physeq_scale)$SampleType, 
   levels = unique(sample_data(physeq_scale)$SampleType)
 )
 
-# Fix sample type levels in sample_data
+physeq_scale_reps <- physeq_filt_reps %>% scale_reads(n=sample_depth) 
 sample_data(physeq_scale_reps)$SampleType <- factor(
   sample_data(physeq_scale_reps)$SampleType, 
   levels = unique(sample_data(physeq_scale_reps)$SampleType)
 )
-# Fix Subject levels in sample_data
 sample_data(physeq_scale_reps)$Subject <- factor(
   sample_data(physeq_scale_reps)$Subject, 
   levels = unique(sample_data(physeq_scale_reps)$Subject)
