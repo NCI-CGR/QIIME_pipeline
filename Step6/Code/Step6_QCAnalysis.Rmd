@@ -11,6 +11,7 @@ editor_options:
 project_name="Project_NP0440_MB4_Complete"
 seq_depth = 10000
 sample_depth = 20000
+include_reps = "N" #(Y or N)
 ```
 #############################################################################################
 
@@ -54,6 +55,7 @@ library(phyloseq)
 library(qiime2R)
 library(tibble)
 library(gridExtra)
+library(GGally)
 
 #Source MiSeqR
 source("sources/miseqR.R")
@@ -187,10 +189,10 @@ physeq_filt_reps <- physeq_filt %>%
   )
 
 # Scale reads to even depth that user can vary by project
-physeq_filt_samples <- physeq_filt %>% scale_reads(n=sample_depth) 
-sample_data(physeq_scale)$SampleType <- factor(
-  sample_data(physeq_scale)$SampleType, 
-  levels = unique(sample_data(physeq_scale)$SampleType)
+physeq_filt_samples <- physeq_filt_samples %>% scale_reads(n=sample_depth) 
+sample_data(physeq_filt_samples)$SampleType <- factor(
+  sample_data(physeq_filt_samples)$SampleType, 
+  levels = unique(sample_data(physeq_filt_samples)$SampleType)
 )
 
 physeq_scale_reps <- physeq_filt_reps %>% scale_reads(n=sample_depth) 
@@ -211,52 +213,55 @@ sample_data(physeq_scale_reps)$Subject <- factor(
 #######################
 # Ordinate for sample type
 physeq_pcoa <- ordinate(
-  physeq = physeq_scale, 
+  physeq = physeq_filt, 
   method = "PCoA", 
   distance = "bray"
 )
-## Plot by SampleType
-p<- plot_ordination(
-  physeq = physeq_scale,
-  ordination = physeq_pcoa,
-  color = "SampleType",
-  title = "PCoA of Sample Type (Bray-Curtis)"
-) + 
-  scale_color_manual(values = c("#a65628", "red", "#ffae19",
-    "#4daf4a", "#1919ff", "darkorchid3", "magenta")
-  ) +
-  geom_point(aes(color = SampleType), alpha = 0.7, size = 6) +
-  geom_point(colour = "grey90", size = 1.5)
 
-## Save file
+physeq_pcoa_sub<-as.data.frame((physeq_pcoa$vectors[,1:5])) #select PC1-PC5
+physeq_pcoa_sub<-merge(physeq_pcoa_sub,metadata[,c("RunID","SampleType")],by=0)
+p<-ggpairs(physeq_pcoa_sub,columns=2:6,
+        mapping= ggplot2::aes(colour=SampleType))
 file_name =("../Graphs/sampletype_bray.tiff")
 tiff(file_name, width=800)
 print(p)
 dev.off()
 
 
-# Ordinate for Replicates
+# Ordinate for samples only, by run ID
 physeq_pcoa <- ordinate(
-  physeq = physeq_scale_reps, 
+  physeq = physeq_filt_samples, 
   method = "PCoA", 
   distance = "bray"
 )
 
-# Plot by SubjectID
-p<- plot_ordination(
-  physeq = physeq_scale_reps,
-  ordination = physeq_pcoa,
-  color = "Subject",
-  title = "PCoA by Subject for Replicates (Bray-Curtis)"
-)  +
-  geom_point(aes(color = Subject), alpha = 0.7, size = 6) +
-  geom_point(colour = "grey90", size = 1.5)
-
-#Save file
-file_name =("../Graphs/reps_bray.tiff")
+physeq_pcoa_sub<-as.data.frame((physeq_pcoa$vectors[,1:5])) #select PC1-PC5
+physeq_pcoa_sub<-merge(physeq_pcoa_sub,metadata[,c("RunID","ExtractionBatchID")],by=0)
+p<-ggpairs(physeq_pcoa_sub,columns=2:6,
+        mapping= ggplot2::aes(colour=RunID))
+file_name =("../Graphs/samplesonly_runid_bray.tiff")
 tiff(file_name, width=800)
 print(p)
 dev.off()
+
+# Ordinate for Replicates
+if (include_reps = "Y"){
+ physeq_pcoa <- ordinate(
+  physeq = physeq_scale_reps, 
+  method = "PCoA", 
+  distance = "bray"
+ )
+ 
+ physeq_pcoa_sub<-as.data.frame((physeq_pcoa$vectors[,1:5])) #select PC1-PC5
+ physeq_pcoa_sub<-merge(physeq_pcoa_sub,metadata[,c("RunID","SubjectID")],by=0)
+ p<-ggpairs(physeq_pcoa_sub,columns=2:6,
+         mapping= ggplot2::aes(colour=SubjectID))
+ file_name =("../Graphs/repsonly_runid_bray.tiff")
+ tiff(file_name, width=800)
+ print(p)
+ dev.off()
+}
+
 
 #######################
 ## Weighted
