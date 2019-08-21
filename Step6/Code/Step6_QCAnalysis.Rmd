@@ -174,7 +174,7 @@ print(p1)
 dev.off()
 ```
 
-#7 Subset filtered data
+#7 Scale and Subset filtered data
 ```{r}
 #Only samples
 physeq_filt_samples <- physeq_filt %>%
