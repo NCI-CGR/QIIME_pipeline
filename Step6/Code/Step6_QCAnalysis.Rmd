@@ -189,6 +189,8 @@ physeq_filt_reps <- physeq_filt %>%
   )
 
 # Scale reads to even depth that user can vary by project
+physeq_scale <- physeq_filt %>% scale_reads(n=sample_depth) 
+ 
 physeq_scale_samples <- physeq_filt_samples %>% scale_reads(n=sample_depth) 
 sample_data(physeq_scale_samples)$SampleType <- factor(
   sample_data(physeq_scale_samples)$SampleType, 
@@ -324,23 +326,17 @@ if (include_reps == "Y"){
 
 #9 Alpha Diversity - All samples
 ```{r}
-#https://joey711.github.io/phyloseq/plot_bar-examples.html
-# Scale reads to even depth 
-physeq_scale <- physeq_filt %>% scale_reads(n=1000) 
-
 #Sample Type
-p<- plot_richness(physeq_scale, x="SampleType") + geom_boxplot()
+p<- plot_richness(physeq_scale, x="SampleType", 
+                  measures=c("Observed", "ACE", "Shannon", "Simpson", "InvSimpson", "Fisher")) + 
+ geom_boxplot()
 file_name =("../Graphs/sampletype_alphadiv.tiff")
 tiff(file_name, width=800)
 print(p)
 dev.off()
 
-#Subject - not used
-#p<- plot_richness(physeq_scale, x="Subject") + geom_boxplot()
-#file_name =("../Graphs/Subject_alphadiv.tiff")
-#tiff(file_name, width=1000)
-#print(p)
-#dev.off()
+#Reference
+#https://joey711.github.io/phyloseq/plot_bar-examples.html
 ```
 
 #10 View top Genus - All study samples
