@@ -189,10 +189,10 @@ physeq_filt_reps <- physeq_filt %>%
   )
 
 # Scale reads to even depth that user can vary by project
-physeq_filt_samples <- physeq_filt_samples %>% scale_reads(n=sample_depth) 
-sample_data(physeq_filt_samples)$SampleType <- factor(
-  sample_data(physeq_filt_samples)$SampleType, 
-  levels = unique(sample_data(physeq_filt_samples)$SampleType)
+physeq_scale_samples <- physeq_filt_samples %>% scale_reads(n=sample_depth) 
+sample_data(physeq_scale_samples)$SampleType <- factor(
+  sample_data(physeq_scale_samples)$SampleType, 
+  levels = unique(sample_data(physeq_scale_samples)$SampleType)
 )
 
 physeq_scale_reps <- physeq_filt_reps %>% scale_reads(n=sample_depth) 
@@ -230,7 +230,7 @@ dev.off()
 
 # Ordinate for samples only, by run ID
 physeq_pcoa <- ordinate(
-  physeq = physeq_filt_samples, 
+  physeq = physeq_scale_samples, 
   method = "PCoA", 
   distance = "bray"
 )
@@ -245,7 +245,7 @@ print(p)
 dev.off()
 
 # Ordinate for Replicates
-if (include_reps = "Y"){
+if (include_reps == "Y"){
  physeq_pcoa <- ordinate(
   physeq = physeq_scale_reps, 
   method = "PCoA", 
@@ -253,68 +253,67 @@ if (include_reps = "Y"){
  )
  
  physeq_pcoa_sub<-as.data.frame((physeq_pcoa$vectors[,1:5])) #select PC1-PC5
- physeq_pcoa_sub<-merge(physeq_pcoa_sub,metadata[,c("RunID","SubjectID")],by=0)
+ physeq_pcoa_sub<-merge(physeq_pcoa_sub,metadata[,c("RunID","Subject")],by=0)
  p<-ggpairs(physeq_pcoa_sub,columns=2:6,
-         mapping= ggplot2::aes(colour=SubjectID))
+         mapping= ggplot2::aes(colour=Subject))
  file_name =("../Graphs/repsonly_runid_bray.tiff")
  tiff(file_name, width=800)
  print(p)
  dev.off()
 }
 
-
 #######################
 ## Weighted
 #######################
-# Ordinate
+# Ordinate for sample type
 physeq_pcoa <- ordinate(
-  physeq = physeq_scale, 
+  physeq = physeq_filt, 
   method = "PCoA", 
   distance = "wunifrac"
 )
 
-# Plot by SampleType
-p<- plot_ordination(
-  physeq = physeq_scale,
-  ordination = physeq_pcoa,
-  color = "SampleType",
-  title = "PCoA of Sample Type (Weighted Unifrac)"
-) + 
-  scale_color_manual(values = c("#a65628", "red", "#ffae19",
-    "#4daf4a", "#1919ff", "darkorchid3", "magenta")
-  ) +
-  geom_point(aes(color = SampleType), alpha = 0.7, size = 6) +
-  geom_point(colour = "grey90", size = 1.5) 
-
-#Save file
+physeq_pcoa_sub<-as.data.frame((physeq_pcoa$vectors[,1:5])) #select PC1-PC5
+physeq_pcoa_sub<-merge(physeq_pcoa_sub,metadata[,c("RunID","SampleType")],by=0)
+p<-ggpairs(physeq_pcoa_sub,columns=2:6,
+        mapping= ggplot2::aes(colour=SampleType))
 file_name =("../Graphs/sampletype_weightunifrac.tiff")
 tiff(file_name, width=800)
 print(p)
 dev.off()
 
-
-#Ordinate for replicates
+# Ordinate for samples only, by run ID
 physeq_pcoa <- ordinate(
-  physeq = physeq_scale_reps, 
+  physeq = physeq_scale_samples, 
   method = "PCoA", 
   distance = "wunifrac"
 )
 
-# Plot by Subject
-p<- plot_ordination(
-  physeq = physeq_scale_reps,
-  ordination = physeq_pcoa,
-  color = "Subject",
-  title = "PCoA by Subject ID for Replicates (Weighted Unifrac)"
-) +
-  geom_point(aes(color = Subject), alpha = 0.7, size = 6) +
-  geom_point(colour = "grey90", size = 1.5) 
-
-#Save file
-file_name =("../Graphs/reps_weightunifrac.tiff")
+physeq_pcoa_sub<-as.data.frame((physeq_pcoa$vectors[,1:5])) #select PC1-PC5
+physeq_pcoa_sub<-merge(physeq_pcoa_sub,metadata[,c("RunID","ExtractionBatchID")],by=0)
+p<-ggpairs(physeq_pcoa_sub,columns=2:6,
+        mapping= ggplot2::aes(colour=RunID))
+file_name =("../Graphs/samplesonly_runid_weightedunifrac.tiff")
 tiff(file_name, width=800)
 print(p)
 dev.off()
+
+# Ordinate for Replicates
+if (include_reps == "Y"){
+ physeq_pcoa <- ordinate(
+  physeq = physeq_scale_reps, 
+  method = "PCoA", 
+  distance = "wunifrac"
+ )
+ 
+ physeq_pcoa_sub<-as.data.frame((physeq_pcoa$vectors[,1:5])) #select PC1-PC5
+ physeq_pcoa_sub<-merge(physeq_pcoa_sub,metadata[,c("RunID","Subject")],by=0)
+ p<-ggpairs(physeq_pcoa_sub,columns=2:6,
+         mapping= ggplot2::aes(colour=Subject))
+ file_name =("../Graphs/repsonly_runid_weightedunifrac.tiff")
+ tiff(file_name, width=800)
+ print(p)
+ dev.off()
+}
 ```
 
 #9 Alpha Diversity - All samples
@@ -330,9 +329,9 @@ tiff(file_name, width=800)
 print(p)
 dev.off()
 
-#SubjectID - not used
+#Subject - not used
 #p<- plot_richness(physeq_scale, x="Subject") + geom_boxplot()
-#file_name =("../Graphs/subjectid_alphadiv.tiff")
+#file_name =("../Graphs/Subject_alphadiv.tiff")
 #tiff(file_name, width=1000)
 #print(p)
 #dev.off()
