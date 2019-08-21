@@ -221,7 +221,8 @@ physeq_pcoa <- ordinate(
 physeq_pcoa_sub<-as.data.frame((physeq_pcoa$vectors[,1:5])) #select PC1-PC5
 physeq_pcoa_sub<-merge(physeq_pcoa_sub,metadata[,c("RunID","SampleType")],by=0)
 p<-ggpairs(physeq_pcoa_sub,columns=2:6,
-        mapping= ggplot2::aes(colour=SampleType))
+        mapping= ggplot2::aes(colour=SampleType),
+        title="Bray-Curtis: Sample Type")
 file_name =("../Graphs/sampletype_bray.tiff")
 tiff(file_name, width=800)
 print(p)
@@ -238,7 +239,8 @@ physeq_pcoa <- ordinate(
 physeq_pcoa_sub<-as.data.frame((physeq_pcoa$vectors[,1:5])) #select PC1-PC5
 physeq_pcoa_sub<-merge(physeq_pcoa_sub,metadata[,c("RunID","ExtractionBatchID")],by=0)
 p<-ggpairs(physeq_pcoa_sub,columns=2:6,
-        mapping= ggplot2::aes(colour=RunID))
+        mapping= ggplot2::aes(colour=RunID),
+        title="Bray-Curtis: Study Samples only by Run ID")
 file_name =("../Graphs/samplesonly_runid_bray.tiff")
 tiff(file_name, width=800)
 print(p)
@@ -255,7 +257,8 @@ if (include_reps == "Y"){
  physeq_pcoa_sub<-as.data.frame((physeq_pcoa$vectors[,1:5])) #select PC1-PC5
  physeq_pcoa_sub<-merge(physeq_pcoa_sub,metadata[,c("RunID","Subject")],by=0)
  p<-ggpairs(physeq_pcoa_sub,columns=2:6,
-         mapping= ggplot2::aes(colour=Subject))
+         mapping= ggplot2::aes(colour=Subject),
+         title="Bray-Curtis: Replicates only by SubjectID")
  file_name =("../Graphs/repsonly_runid_bray.tiff")
  tiff(file_name, width=800)
  print(p)
@@ -275,7 +278,8 @@ physeq_pcoa <- ordinate(
 physeq_pcoa_sub<-as.data.frame((physeq_pcoa$vectors[,1:5])) #select PC1-PC5
 physeq_pcoa_sub<-merge(physeq_pcoa_sub,metadata[,c("RunID","SampleType")],by=0)
 p<-ggpairs(physeq_pcoa_sub,columns=2:6,
-        mapping= ggplot2::aes(colour=SampleType))
+        mapping= ggplot2::aes(colour=SampleType),
+        title="Weighted Unifrac: Sample Type")
 file_name =("../Graphs/sampletype_weightunifrac.tiff")
 tiff(file_name, width=800)
 print(p)
@@ -291,7 +295,8 @@ physeq_pcoa <- ordinate(
 physeq_pcoa_sub<-as.data.frame((physeq_pcoa$vectors[,1:5])) #select PC1-PC5
 physeq_pcoa_sub<-merge(physeq_pcoa_sub,metadata[,c("RunID","ExtractionBatchID")],by=0)
 p<-ggpairs(physeq_pcoa_sub,columns=2:6,
-        mapping= ggplot2::aes(colour=RunID))
+        mapping= ggplot2::aes(colour=RunID),
+        title="Weighted Unifrac: Study Samples only by Run ID")
 file_name =("../Graphs/samplesonly_runid_weightedunifrac.tiff")
 tiff(file_name, width=800)
 print(p)
@@ -308,7 +313,8 @@ if (include_reps == "Y"){
  physeq_pcoa_sub<-as.data.frame((physeq_pcoa$vectors[,1:5])) #select PC1-PC5
  physeq_pcoa_sub<-merge(physeq_pcoa_sub,metadata[,c("RunID","Subject")],by=0)
  p<-ggpairs(physeq_pcoa_sub,columns=2:6,
-         mapping= ggplot2::aes(colour=Subject))
+         mapping= ggplot2::aes(colour=Subject),
+        title="Weighted Unifrac: Replicates only by SubjectID")
  file_name =("../Graphs/repsonly_runid_weightedunifrac.tiff")
  tiff(file_name, width=800)
  print(p)
