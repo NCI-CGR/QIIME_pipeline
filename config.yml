@@ -1,6 +1,6 @@
 # Step 1
 $project_dir = "T:\DCEG\Projects\Microbiome\CGR_MB\MicroBiome\Project_NP0501_MB1and2";
-$manifest_ori=;
+$manifest_ori= "NP0501_MB1and2.txt";
 
 # Step 2-5
 ## QIIME version
