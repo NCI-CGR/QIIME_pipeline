@@ -1,7 +1,11 @@
-# QIIME version
+# Step 1
+$project_dir = "T:\DCEG\Projects\Microbiome\CGR_MB\MicroBiome\Project_NP0501_MB1and2";
+$manifest_ori=;
+
+# Step 2-5
+## QIIME version
 qiime_version=2017.11
 
-# Parameters
+## Parameters
 QUEUE=seq-gvcf.q
 Phred_score=33
-

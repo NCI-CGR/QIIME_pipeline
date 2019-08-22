@@ -14,7 +14,8 @@ use Win32::OLE;
 ##This script is to complete the pre-processng tasks needed for the QIIME2 pipeline
 
 #input:
-##
+## -project directory location
+## -text file manifest name
 
 #output:
 ##
@@ -24,19 +25,7 @@ use Win32::OLE;
 ######################################################################################
 my (@runid_unique, @projectid, @fastq_files);
 
-# BB: Remove all interactive queries.  Add user-configurable options to yaml.
-
-#Ask user where the project directory is
-# BB: In general, comments should tell you "why", not "what".
-print "Where is the project directory?\n";
-print "ANS: ";
-my $project_dir = <STDIN>; chomp $project_dir;
-
-#Ask user what type of file is being used
-print "\n\nWhat is the name of the manifest file (without .txt)?\n";
-print "ANS: ";
-my $manifest_ori=<STDIN>; chomp $manifest_ori;
-$manifest_ori .=".txt";
+my ($project_dir, $manifest_ori)=<STDIN>;
 
 ###Testing
 #my $project_dir =("T:\\DCEG\\Projects\\Microbiome\\CGR_MB\\MicroBiome\\Project_NP0440_MB4_Complete");
