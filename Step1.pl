@@ -7,15 +7,17 @@ use File::Copy;
 use List::MoreUtils qw(uniq);
 use Win32::OLE;
 
-# BB: Rationale for Perl vs. other?
-
 ######################################################################################
 								##NOTES##
 ######################################################################################
+#usage:
 ##This script is to complete the pre-processng tasks needed for the QIIME2 pipeline
-##Search for ###TESTING to find testing variables
 
-# BB: include usage, input, output
+#input:
+##
+
+#output:
+##
 
 ######################################################################################
 								##Main Code##
