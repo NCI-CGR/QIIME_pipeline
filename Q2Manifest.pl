@@ -1,0 +1,53 @@
+#!/DCEG/Resources/Tools/perl/5.18.0/bin/perl -w
+use strict;
+use warnings;
+
+sub manifest_qiime2{
+	#Initialize variables / Read in variables
+	my ($project_dir, $manifest_ori)=@_;
+	my $i=1;
+
+	#Set pathway for original manifest
+	my $manifest_path=$project_dir; $manifest_path.="\\";
+	$manifest_path.= $manifest_ori;
+
+	#Set pathway and name for qiime2 file
+	my $MANIFEST_FILE_QIIME = $project_dir; $MANIFEST_FILE_QIIME .="\\Input\\manifest_qiime2.tsv";
+	open my $fh, ">$MANIFEST_FILE_QIIME";
+
+	#Open, read original manifest file
+	open my $in, "<:encoding(utf8)", $manifest_path or die "$manifest_path: $!";
+	my @lines = <$in>; close $in;
+	chomp @lines;
+
+	#Run through each line and save relevant information
+	foreach (@lines) {
+		my @columns = split('\t',$_);
+
+		#For the header row
+		if ($i==1){
+			print $fh "#SampleID\t";
+
+			my $n=1; #1 to Skip "SampleID" header
+			until ($n+1 > scalar(@columns)){
+				print $fh "$columns[$n]\t";
+				$n++;
+			}
+			print $fh "\n";
+			$i++;
+		} else{
+
+			#Print other data to QIIME2 File
+			my $n=0;
+			until ($n+1 > scalar(@columns)){
+				print $fh "$columns[$n]\t";
+				$n++;
+			}
+			print $fh "\n";
+			$i++;
+		}
+	}
+
+	print "\n\n***********************************";
+	print "Step 2 COMPLETE - Generated QIIME2 manifest\n";
+}
