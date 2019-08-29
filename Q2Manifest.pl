@@ -56,3 +56,4 @@ sub manifest_qiime2{
 		}
 	}
 }
+exit;
