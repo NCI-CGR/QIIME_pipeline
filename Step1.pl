@@ -33,9 +33,6 @@ my ($project_dir, $manifest_ori)=<STDIN>;
 								##Subroutines##
 ######################################################################################
 
-#Create directories within Input folder
-makedirect_input($project_dir);
-
 #Create QIIME2 manifest
 manifest_qiime2($project_dir, $manifest_ori);
 
@@ -53,106 +50,6 @@ manifest_qiime2($project_dir, $manifest_ori);
 
 # BB: Design subroutines to be testable and single-purpose.  Consider how each subroutine can be unit tested.
 # BB: Let's be careful not to duplicate effort - snakemake will be used for directory management.  Let's try to leverage that as much as possible.
-sub makedirect_input{
-	#Initialize / Read in variables
-	my ($project_dir)=@_;
-	my $dir_path;
-
-	#Make Input directories nested under Project
-	my $inp_dir = $project_dir;
-	$inp_dir.= "\\Input";
-	mkdir($inp_dir);
-
-	#Make directories nested under Input
-	my @directory_list = ("\\tmp", "\\manifest_file_split_parts", "\\manifest_file_split_parts_fastq_import", "\\Fasta");
-
-	#Create new directories from list
-	foreach my $dir_new (@directory_list){
-
-		#Add Input to the directory path
-		$dir_path = $inp_dir;
-		$dir_path .= $dir_new;
-
-		#Make new directory
-		mkdir($dir_path);
-	}
-
-	#MakeOutput directories nested under Project
-	my $outp_dir = $project_dir;
-	$outp_dir .= "\\Output";
-	mkdir($outp_dir);
-
-	#Make directories nested under Output
-	@directory_list = ("\\Log", "\\qza_results", "\\qzv_results");
-
-	#Create new directories from list
-	foreach my $dir_new (@directory_list){
-
-		#Add Input to the directory path
-		$dir_path = $outp_dir;
-		$dir_path .= $dir_new;
-
-		#Make new directory
-		mkdir($dir_path);
-	}
-
-	#Make QZA directories
-	$outp_dir = $project_dir;
-	$outp_dir.= "\\Output\\qza_results";
-
-	#Make directories nested under Input \ QZA
-	@directory_list = ("\\abundance_qza_results", "\\demux_qza_split_parts", "\\phylogeny_qza_results", "\\repseqs_dada2_qza_merged_parts_final","\\repseqs_dada2_qza_merged_parts_tmp", "\\repseqs_dada2_qza_split_parts", "\\table_dada2_qza_merged_parts_final", "\\table_dada2_qza_merged_parts_tmp", "\\table_dada2_qza_split_parts", "\\taxonomy_qza_results");
-
-	#Create new directories from list
-	foreach my $dir_new (@directory_list){
-
-		#Add Input to the directory path
-		$dir_path = $outp_dir;
-		$dir_path .= $dir_new;
-
-		#Make new directory
-		mkdir($dir_path);
-	}
-
-	#Make QZV directories
-	$outp_dir = $project_dir;
-	$outp_dir.= "\\Output\\qzv_results";
-
-	#Make directories nested under Input \ QZV
-	@directory_list = ("\\demux_qzv_split_parts", "\\otu_relative_abundance_results", "\\rarefaction_qzv_results", "\\repseqs_dada2_qzv_merged_parts_final", "\\table_dada2_qzv_merged_parts_final","\\taxonomy_qzv_results", "\\taxonomy_relative_abundance_results");
-
-	#Make new directories from list
-	foreach my $dir_new (@directory_list){
-
-		#Add Input to the directory path
-		$dir_path = $outp_dir;
-		$dir_path .= $dir_new;
-
-		#Make new directory
-		mkdir($dir_path);
-	}
-
-	#Make Log directories
-	$outp_dir = $project_dir;
-	$outp_dir.= "\\Output\\Log";
-
-	#Make directories nested under Input \ Log
-	@directory_list = ("\\stage2_qiime2", "\\stage3_qiime2", "\\stage4_qiime2", "\\stage5_qiime2");
-
-	#Make new directories from list
-	foreach my $dir_new (@directory_list){
-
-		#Add Input to the directory path
-		$dir_path = $outp_dir;
-		$dir_path .= $dir_new;
-
-		#Make new directory
-		mkdir($dir_path);
-	}
-	print "\n\n***********************************";
-	print "Step 1 COMPLETE - Generated directories";  # BB: change all "step" annotation to something more descriptive.
-}
-
 sub manifest_qiime2{
 	#Initialize variables / Read in variables
 	my ($project_dir, $manifest_ori)=@_;
