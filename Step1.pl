@@ -33,9 +33,6 @@ my ($project_dir, $manifest_ori)=<STDIN>;
 								##Subroutines##
 ######################################################################################
 
-#Create QIIME2 manifest
-manifest_qiime2($project_dir, $manifest_ori);
-
 #Create split manifests with metadata
 manifest_meta($project_dir, $manifest_ori, @runid_unique);
 

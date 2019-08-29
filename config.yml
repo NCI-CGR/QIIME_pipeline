@@ -1,11 +1,11 @@
 # Step 1
-$project_dir = "T:\DCEG\Projects\Microbiome\CGR_MB\MicroBiome\Project_NP0501_MB1and2";
-$manifest_ori= "NP0501_MB1and2.txt";
+project_dir: '/DCEG/Projects/Microbiome/CGR_MB/MicroBiome/Testing/Project_NP0084-MB4/'
+metadata_manifest: 'NP0084-MB4_08_29_19_metadata.txt'
 
 # Step 2-5
 ## QIIME version
-qiime_version=2017.11
+qiime_version: 2017.11
 
 ## Parameters
-QUEUE=seq-gvcf.q
-Phred_score=33
+QUEUE: seq-gvcf.q
+Phred_score: 33

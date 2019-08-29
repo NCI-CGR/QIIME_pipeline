@@ -1,7 +1,16 @@
-rule x:
+import os
+
+# reference the config file
+configfile: "config.yml"
+
+# import variables from the config file
+proj_dir = config['project_dir']
+metadata_manifest = config['metadata_manifest']
+
+rule qiime2_manifest:
     input:
-        "data/genome.fa",
+        meta_man=proj_dir+metadata_manifest
     output:
-        "mapped_reads/A.bam"
+        'Input/manifest_qiime2.tsv'
     shell:
-        "bwa mem {input} | samtools view -Sb - > {output}"
+        "perl Q2Manifest.pl proj_dir meta_man"
