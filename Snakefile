@@ -12,6 +12,6 @@ rule qiime2_manifest:
         proj_dir=proj_dir,
         meta_man=proj_dir+metadata_manifest
     output:
-        'manifest_qiime2.tsv'
+        proj_dir + 'manifest_qiime2.tsv'
     shell:
         'perl Q2Manifest.pl {input.proj_dir} {metadata_manifest}'
