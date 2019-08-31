@@ -11,8 +11,10 @@ metadata_manifest = config['metadata_manifest']
 rule qiime2_manifest:
     input:
         proj_dir=directory({proj_dir}),
-        meta_man=proj_dir+metadata_manifest
+        meta_man_fullpath=proj_dir+metadata_manifest
+    params:
+        meta_man=metadata_manifest
     output:
         proj_dir + 'manifest_qiime2.tsv'
     shell:
-        'perl Q2Manifest.pl {input.proj_dir} {metadata_manifest}'
+        'perl Q2Manifest.pl {input.proj_dir} {params.meta_man}'
