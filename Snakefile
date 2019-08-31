@@ -1,7 +1,8 @@
 import os
 
 # reference the config file
-configfile: "config.yml"
+conf = os.environ.get("conf")
+configfile: conf
 
 # import variables from the config file
 proj_dir = config['project_dir']
