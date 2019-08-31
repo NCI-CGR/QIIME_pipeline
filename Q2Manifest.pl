@@ -12,9 +12,20 @@ my $project_dir =$ARGV[0];
 my $manifest_fullpath=$ARGV[1];
 my $manifest_input=$ARGV[2];
 
-manifest_qiime2 ($project_dir,$manifest_fullpath, $manifest_input);
+my @lines;
 
-sub manifest_qiime2{
+read_manifest ($manifest_fullpath, \@lines);
+#create_manifest(_);
+
+sub read_manifest{
+	my ($manifest_fullpath, $lines)=@_;
+
+	open my $in, "<:encoding(UTF-8)", $manifest_fullpath or die "$manifest_fullpath: $!";
+	@$lines = <$in>; close $in;
+	chomp @$lines;
+}
+
+sub create_manifest{
 	my ($project_dir, $manifest_fullpath, $manifest_input)=@_;
 
 	my $MANIFEST_FILE_QIIME = $project_dir; $MANIFEST_FILE_QIIME .="//manifest_qiime2.tsv";
