@@ -10,7 +10,7 @@ metadata_manifest = config['metadata_manifest']
 
 rule qiime2_manifest:
     input:
-        proj_dir=proj_dir,
+        proj_dir=directory({proj_dir}),
         meta_man=proj_dir+metadata_manifest
     output:
         proj_dir + 'manifest_qiime2.tsv'
