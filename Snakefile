@@ -15,6 +15,7 @@ rule qiime2_manifest:
     params:
         meta_man=metadata_manifest
     output:
-        proj_dir + 'manifest_qiime2.tsv'
+        q2_man=proj_dir + 'Input/manifest_qiime2.tsv'
     shell:
-        'perl Q2Manifest.pl {input.proj_dir} {params.meta_man}'
+        'dos2unix {input.meta_man_fullpath};\
+        perl Q2Manifest.pl {input.proj_dir} {input.meta_man_fullpath} {params.meta_man} {output.q2_man}'
