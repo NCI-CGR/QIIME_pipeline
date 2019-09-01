@@ -3,10 +3,16 @@ use strict;
 use warnings;
 
 #input
-#output
-#usage
+##Requires 3 CML arguements -
+##1) full path to project directory
+##2) full path to the manifest file
+##3) full path to output file
 
-@ARGV==3 or die "wrong number of arguments";
+#output
+##QIIME2 TSV formatted metadata file, in /path/to/projectdirectory/Input
+
+@ARGV==3 or die "
+Usage: $0 /path/to/projectdirectory /path/to/manifest /path/to/outputfile";
 
 my $project_dir =$ARGV[0];
 my $manifest_fullpath=$ARGV[1];
@@ -90,4 +96,5 @@ sub create_manifest{
 		print $fh "\n";
 	}
 }
+
 exit;
