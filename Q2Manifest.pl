@@ -15,8 +15,8 @@ my $manifest_output=$ARGV[2];
 my @lines; my $flag=0;
 
 read_manifest ($manifest_fullpath, \@lines);
-check_input(\@lines);
-create_manifest($manifest_output,\@lines);
+check_input(\$flag,\@lines);
+if($flag!=1){create_manifest($manifest_output,\@lines);}
 
 sub read_manifest{
 	my ($manifest_fullpath, $lines)=@_;
@@ -27,7 +27,7 @@ sub read_manifest{
 }
 
 sub check_input{
-	my ( $lines)=@_;
+	my ($flag, $lines)=@_;
 	my $n=1;
 	my @header; my @sampleids; my @metavalues;
 	my %seen;
@@ -52,6 +52,7 @@ sub check_input{
 	#If any other value found, error for the user to check the manifest re-try
 	if($header[0] ne "#SampleID"){
 		print "First column must be #SampleID - check file and re-submit";
+		$$flag=1;
 	}
 
 	#Sample IDs must be unique or the manifest will not be accepted.
@@ -67,6 +68,7 @@ sub check_input{
 	if(scalar @duplicates>0){
 		print "\nThere were duplicate ID's found in your manifest - correct and resubmit:\n";
 		print join( ',', @duplicates); print"\n\n";
+		$$flag=1;
 	}
 
 	#All other cell rules
