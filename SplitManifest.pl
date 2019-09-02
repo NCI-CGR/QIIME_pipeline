@@ -6,10 +6,12 @@ use CPAN;
 use List::MoreUtils qw(uniq);
 
 #input:
-##
+##Requires 2 CML arguements-
+##1) full path to QIIIME2 TSV manifests
+##2) full path to split manifest file(s)
 
 #output:
-##
+## split txt manifest file(s), N=# of flowcells
 
 #usage:
 @ARGV==2 or die "
