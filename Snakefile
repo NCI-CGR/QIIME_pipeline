@@ -11,7 +11,7 @@ metadata_manifest = config['metadata_manifest']
 
 rule all:
     input:
-        split_man=proj_dir + 'Input/manifest_file_split_parts_fastq_import/manifest_file_split_parts_fastq_import_{sample_list}.txt'
+        expand('{proj_dir}Input/manifest_file_split_parts_fastq_import/manifest_file_split_parts_fastq_import_{samples}.txt',proj_dir=proj_dir,samples=sample_list)
 
 rule qiime2_manifest:
     input:
@@ -27,6 +27,6 @@ rule split_part_manifest:
     input:
         q2_man=proj_dir + 'Input/manifest_qiime2.tsv'
     output:
-        split_man=proj_dir + 'Input/manifest_file_split_parts_fastq_import/manifest_file_split_parts_fastq_import_{sample_list}.txt'
+        split_man=proj_dir + 'Input/manifest_file_split_parts_fastq_import/manifest_file_split_parts_fastq_import_{samples}.txt'
     shell:
         'perl SplitManifest.pl {input.q2_man} {output.split_man}'
