@@ -70,8 +70,11 @@ sub check_input{
 
 	#All header varibles and SampleIDs col must be unique and cannot be empty.
 	#If there are duplicate sample ID's, error for the user to fix and re-try
-	my @duplicates;
+	my @duplicates; my $emptycount=0;
 	foreach my $sample (@sampleids){
+		if(length($sample)<1){
+			$emptycount++;
+		}
 		$seen{$sample}++;
 		if($seen{$sample}>1){
 			push(@duplicates,$sample);
@@ -79,6 +82,9 @@ sub check_input{
 	}
 
 	foreach my $headerval (@header){
+		if(length($headerval)<1){
+			$emptycount++;
+		}
 		$seen{$headerval}++;
 		if($seen{$headerval}>1){
 			push(@duplicates,$headerval);
@@ -88,6 +94,11 @@ sub check_input{
 	if(scalar @duplicates>0){
 		print "\nThere were duplicate ID's or header names found in your manifest - correct and resubmit:\n";
 		print join( ',', @duplicates); print"\n\n";
+		$$flag=1;
+	}
+
+	if($emptycount>0){
+		print "\nThere were blank ID's or header names found in your manifest - correct and resubmit:\n";
 		$$flag=1;
 	}
 
