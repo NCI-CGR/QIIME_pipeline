@@ -14,9 +14,9 @@ use warnings;
 @ARGV==3 or die "
 Usage: $0 /path/to/projectdirectory /path/to/manifest /path/to/outputfile";
 
-my $project_dir =$ARGV[0];
-my $manifest_fullpath=$ARGV[1];
-my $manifest_output=$ARGV[2];
+my $project_dir =$ARGV[0]; #Ex: /DCEG/Projects/Microbiome/CGR_MB/MicroBiome/Testing/Project_NP0084-MB4/
+my $manifest_fullpath=$ARGV[1]; #Ex: {$project_dir}/NP0084-MB4_08_29_19_metadata_test.txt
+my $manifest_output=$ARGV[2]; #Ex: {$project_dir}/Input/manifest_qiime2.tsv
 
 my @lines; my $flag=0;
 
@@ -30,6 +30,13 @@ sub read_manifest{
 	open my $in, "<:encoding(UTF-8)", $manifest_fullpath or die "$manifest_fullpath: $!";
 	@$lines = <$in>; close $in;
 	chomp @$lines;
+
+	#Example file
+	#SampleID	External-ID	Sample-Type	Source-Material	Source-PCR-Plate	Run-ID	Project-ID	Reciept	Sample_Cat	SubjectID	Sample_Aliquot	Ext_Company	Ext_Kit	Ext_Robot	Homo_Method	Homo-Holder	Homo-Holder2	AFA Setting1	AFA Setting2	Extraction Batch	Residual or Original	Row	Column
+	#SC249358	DZ35322 0006_01	ArtificialColony	CGR	PC04924_A_01	180112_M01354_0104_000000000-BFN3F	NP0084-MB4	sFEMB-001-R-002	ExtControl	DZ35322	0	CGR	DSP Virus	QIASymphony	V Adaptor	Tubes	NA	NA	NA	2	Original	A	1
+	#SC249359-PC04924-B-01	Stool_20	Stool	CGR	PC04924_B_01	180112_M01354_0104_000000000-BFN3F	NP0084-MB4	sFEMB-001-R-002	Study	IE_Stool	20	CGR	DSP Virus	QIASymphony	V Adaptor	Tubes	NA	NA	NA	2	Original	B	1
+
+	#NOTE: Headers SampleID through Receipt are constant - all other variables may change depending on projects neeeds
 }
 
 sub check_input{
@@ -43,26 +50,26 @@ sub check_input{
 
 		if ($n==1){
 			foreach (@rows){
-				push (@header,$_);
+				push (@header,$_); #Header row has specific reqs
 			}
 		} else{
-			push(@sampleids,$rows[0]); shift @rows;
-			foreach (@rows){ #may not be needed unless we want to check cat vs num?
-				push(@metavalues,$_);
+			push(@sampleids,$rows[0]); shift @rows; #SampleID col has specific reqs
+			foreach (@rows){
+				push(@metavalues,$_); #all other columns have specific reqs
 			};
 		};
 		$n++;
 	}
 
-	#First variable must be SampleID or the manifest will not be accepted.
-	#If any other value found, error for the user to check the manifest re-try
+	#First variable of header row must be #SampleID.
+	#If any other value found, error for the user to fix the manifest and re-try
 	if($header[0] ne "#SampleID"){
 		print "First column must be #SampleID - check file and re-submit";
 		$$flag=1;
 	}
 
-	#Sample IDs must be unique or the manifest will not be accepted.
-	#If there are duplicate sample ID's, print them to user and re-try
+	#SampleIDs col must be unique.
+	#If there are duplicate sample ID's, error for the user to fix and re-try
 	my @duplicates;
 	foreach my $sample (@sampleids){
 		$seen{$sample}++;
