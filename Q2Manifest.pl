@@ -21,7 +21,7 @@ my $manifest_output=$ARGV[2]; #Ex: {$project_dir}/Input/manifest_qiime2.tsv
 my @lines; my $flag=0;
 
 read_manifest ($manifest_fullpath, \@lines);
-check_input(\$flag,\@lines);
+check_input($project_dir,\$flag,\@lines);
 if($flag!=1){create_manifest($manifest_output,\@lines);}
 
 sub read_manifest{
@@ -40,7 +40,7 @@ sub read_manifest{
 }
 
 sub check_input{
-	my ($flag, $lines)=@_;
+	my ($project_dir,$flag, $lines)=@_;
 	my $n=1;
 	my @header; my @sampleids; my @metavalues;
 	my %seen;
@@ -63,58 +63,83 @@ sub check_input{
 
 	#First variable of header row must be #SampleID.
 	#If any other value found, error for the user to fix the manifest and re-try
+	my $checkheader=0;
 	if($header[0] ne "#SampleID"){
-		print "First column must be #SampleID - check file and re-submit";
+		$checkheader=1;
 		$$flag=1;
 	}
 
 	#All header varibles and SampleIDs col must be unique and cannot be empty.
 	#If there are duplicate sample ID's, error for the user to fix and re-try
-	my @duplicates; my $emptycount=0;
+	my @checkduplicates; my $checkempty=0;
 	foreach my $sample (@sampleids){
 		if(length($sample)<1){
-			$emptycount++;
+			$checkempty++;
+			$$flag=1;
 		}
 		$seen{$sample}++;
 		if($seen{$sample}>1){
-			push(@duplicates,$sample);
+			push(@checkduplicates,$sample);
+			$$flag=1;
 		}
 	}
 
 	foreach my $headerval (@header){
 		if(length($headerval)<1){
-			$emptycount++;
+			$checkempty++;
+			$$flag=1;
 		}
 		$seen{$headerval}++;
 		if($seen{$headerval}>1){
-			push(@duplicates,$headerval);
+			push(@checkduplicates,$headerval);
+			$$flag=1;
 		}
-	}
-
-	if(scalar @duplicates>0){
-		print "\nThere were duplicate ID's or header names found in your manifest - correct and resubmit:\n";
-		print join( ',', @duplicates); print"\n\n";
-		$$flag=1;
-	}
-
-	if($emptycount>0){
-		print "\nThere were blank ID's or header names found in your manifest - correct and resubmit:\n";
-		$$flag=1;
 	}
 
 	#All other cell rules
-	foreach my $metadata (@@metavalues){
-
-		if ( $s =~ /^[0-9,.E]+$/ ) {
-			if(length($s)>15){ #Numeric metadata values have a 15 digit length
-				print "\nNumeric metadata values must be less than 15 digits - correct and resubmit\n";
-				$$flag==1;
+	my @checknumlength; my @checkna;
+	foreach my $metadata (@metavalues){
+		if ($metadata =~ /^[0-9,.E]+$/ ) {
+			if(length($metadata)>15){ #Numeric metadata values have a 15 digit length
+				push(@checknumlength,$metadata);
+				$$flag=1;
 			}
 		} else{
 			if($metadata=~"NAN" || $metadata=~"nan"){ #QIIME will accept, but gives warning for downstream problems
-				print "\nMetadata can only contain empty cells or NA for missing data - NAN/nan are not accepted"
+				push (@checkna, $metadata);
+				$$flag=1;
 			}
 		}
+	}
+
+	#Print out errors found to output file
+	if($$flag==1){
+		#my $errorfile = $project_dir .= "errors.txt";
+		open my $fh,">$project_dir/errors.csv";
+
+		if($checkheader==1){
+			print $fh "First column must be #SampleID - check file and re-submit\n\n";
+		}
+
+		if(scalar @checkduplicates>0){
+			print $fh "There were duplicate ID's or header names found in your manifest - correct and resubmit:\n";
+			print $fh join( ',', @checkduplicates); print $fh "\n\n";
+		}
+
+		if($checkempty>0){
+			print $fh "There were blank ID's or header names found in your manifest - correct and resubmit\n\n";
+		}
+
+		if (scalar @checknumlength>0){
+			print $fh "Numeric metadata values must be less than 15 digits - correct and resubmit\n";
+			print $fh join( ',', @checknumlength); print$fh "\n\n";
+		}
+
+		if(scalar @checkna>0){
+			print $fh "Metadata can only contain empty cells or NA for missing data - NAN/nan are not accepted\n";
+			print $fh join( ',', @checkna); print$fh "\n\n";
+		}
+
 	}
 }
 
