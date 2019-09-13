@@ -103,6 +103,19 @@ sub check_input{
 	}
 
 	#All other cell rules
+	foreach my $metadata (@@metavalues){
+
+		if ( $s =~ /^[0-9,.E]+$/ ) {
+			if(length($s)>15){ #Numeric metadata values have a 15 digit length
+				print "\nNumeric metadata values must be less than 15 digits - correct and resubmit\n";
+				$$flag==1;
+			}
+		} else{
+			if($metadata=~"NAN" || $metadata=~"nan"){ #QIIME will accept, but gives warning for downstream problems
+				print "\nMetadata can only contain empty cells or NA for missing data - NAN/nan are not accepted"
+			}
+		}
+	}
 }
 
 sub create_manifest{
