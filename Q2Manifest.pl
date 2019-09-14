@@ -4,12 +4,22 @@ use warnings;
 
 #input
 ##Requires 3 CML arguements -
-##1) full path to project directory
-##2) full path to the manifest file
-##3) full path to output file
+	#1) full path to project directory
+	#2) full path to the manifest file
+	#3) full path to output file
+##Example file
+	#SampleID	External-ID	Sample-Type	Source-Material	Source-PCR-Plate	Run-ID	Project-ID	Reciept	Sample_Cat	SubjectID	Sample_Aliquot	Ext_Company	Ext_Kit	Ext_Robot	Homo_Method	Homo-Holder	Homo-Holder2	AFA Setting1	AFA Setting2	Extraction Batch	Residual or Original	Row	Column
+	#SC249358	DZ35322 0006_01	ArtificialColony	CGR	PC04924_A_01	180112_M01354_0104_000000000-BFN3F	NP0084-MB4	sFEMB-001-R-002	ExtControl	DZ35322	0	CGR	DSP Virus	QIASymphony	V Adaptor	Tubes	NA	NA	NA	2	Original	A	1
+	#SC249359-PC04924-B-01	Stool_20	Stool	CGR	PC04924_B_01	180112_M01354_0104_000000000-BFN3F	NP0084-MB4	sFEMB-001-R-002	Study	IE_Stool	20	CGR	DSP Virus	QIASymphony	V Adaptor	Tubes	NA	NA	NA	2	Original	B	1
+
 
 #output
 ##QIIME2 TSV formatted metadata file, in /path/to/projectdirectory/Input
+##Example file
+	#SampleID	External-ID	Sample-Type	Source-Material	Source-PCR-Plate	Run-ID	Project-ID	Reciept	Sample_Cat	SubjectID	Sample_Aliquot	Ext_Company	Ext_Kit	Ext_Robot	Homo_Method	Homo-Holder	Homo-Holder2	AFA Setting1	AFA Setting2	Extraction Batch	Residual or Original	Row	Column
+	#SC249358	DZ35322 0006_01	ArtificialColony	CGR	PC04924_A_01	180112_M01354_0104_000000000-BFN3F	NP0084-MB4	sFEMB-001-R-002	ExtControl	DZ35322	0	CGR	DSP Virus	QIASymphony	V Adaptor	Tubes	NA	NA	NA	2	Original	A	1
+	#SC249359-PC04924-B-01	Stool_20	Stool	CGR	PC04924_B_01	180112_M01354_0104_000000000-BFN3F	NP0084-MB4	sFEMB-001-R-002	Study	IE_Stool	20	CGR	DSP Virus	QIASymphony	V Adaptor	Tubes	NA	NA	NA	2	Original	B	1
+
 
 @ARGV==3 or die "
 Usage: $0 /path/to/projectdirectory /path/to/manifest /path/to/outputfile";
@@ -30,11 +40,6 @@ sub read_manifest{
 	open my $in, "<:encoding(UTF-8)", $manifest_fullpath or die "$manifest_fullpath: $!";
 	@$lines = <$in>; close $in;
 	chomp @$lines;
-
-	#Example file
-	#SampleID	External-ID	Sample-Type	Source-Material	Source-PCR-Plate	Run-ID	Project-ID	Reciept	Sample_Cat	SubjectID	Sample_Aliquot	Ext_Company	Ext_Kit	Ext_Robot	Homo_Method	Homo-Holder	Homo-Holder2	AFA Setting1	AFA Setting2	Extraction Batch	Residual or Original	Row	Column
-	#SC249358	DZ35322 0006_01	ArtificialColony	CGR	PC04924_A_01	180112_M01354_0104_000000000-BFN3F	NP0084-MB4	sFEMB-001-R-002	ExtControl	DZ35322	0	CGR	DSP Virus	QIASymphony	V Adaptor	Tubes	NA	NA	NA	2	Original	A	1
-	#SC249359-PC04924-B-01	Stool_20	Stool	CGR	PC04924_B_01	180112_M01354_0104_000000000-BFN3F	NP0084-MB4	sFEMB-001-R-002	Study	IE_Stool	20	CGR	DSP Virus	QIASymphony	V Adaptor	Tubes	NA	NA	NA	2	Original	B	1
 
 	#NOTE: Headers SampleID through Receipt are constant - all other variables may change depending on projects neeeds
 }
@@ -139,6 +144,8 @@ sub check_input{
 			print $fh "Metadata can only contain empty cells or NA for missing data - NAN/nan are not accepted\n";
 			print $fh join( ',', @checkna); print$fh "\n\n";
 		}
+
+		die "\n$0: Errors in input manifest file. Review error log: $project_dir/errors.csv";
 
 	}
 }
