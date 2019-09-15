@@ -1,8 +1,10 @@
 # Step 1
 project_dir: '/DCEG/Projects/Microbiome/CGR_MB/MicroBiome/Testing/Project_NP0084-MB4/'
-metadata_manifest: 'NP0084-MB4_08_29_19_metadata.txt'
+metadata_manifest: 'NP0084-MB4_08_29_19_metadata_test.txt'
 
 # Step 2-5
+fastq_abs_path: '/DCEG/CGF/Sequencing/Illumina/MiSeq/PostRun_Analysis/Data/'
+
 ## QIIME version
 qiime_version: '2017.11'
 

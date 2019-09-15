@@ -6,27 +6,29 @@ use CPAN;
 use List::MoreUtils qw(uniq);
 
 #input:
-##Requires 2 CML arguements-
-##1) full path to QIIIME2 TSV manifests
-##2) full path to split manifest file(s)
+##Requires 3 CML arguements-
+	#1) fastq data abs file path
+	#2) full path to QIIIME2 TSV manifests
+	#3) full path to split manifest file(s)
 
 #output:
 ## split txt manifest file(s), N=# of flowcells
 
 #usage:
-@ARGV==2 or die "
-Usage: $0 /path/to/QIIME2_TSV_manifest /path/to/outputfile";
+@ARGV==3 or die "
+Usage: $0 /DCEG/CGF/Sequencing/Illumina/MiSeq/PostRun_Analysis/Data/ /path/to/QIIME2_TSV_manifest /path/to/outputfile";
 
 ######################################################################################
 								##Main Code##
 ######################################################################################
-my $manifest_fullpath=$ARGV[0];
-my $manifest_splitman=$ARGV[1];
+my $fastq_abs_path=$ARGV[0];
+my $manifest_fullpath=$ARGV[1];
+my $manifest_splitman=$ARGV[2];
 
 my @lines;
 
 read_manifest ($manifest_fullpath, \@lines);
-create_manifest($manifest_splitman,\@lines);
+create_manifest($fastq_abs_path, $manifest_splitman, \@lines);
 
 ######################################################################################
 								##Subroutines##
@@ -41,7 +43,7 @@ sub read_manifest{
 
 sub create_manifest{
 	#Initialize variables / Read in variables
-	my ($manifest_splitman,$lines)=@_;
+	my ($fastq_abs_path, $manifest_splitman, $lines)=@_;
 	my (@sampleid, @runid, @projectid);
 
 	foreach (@lines){
@@ -70,7 +72,8 @@ sub create_manifest{
 
 				#Generate file path
 				#my $FastP_rel = "T:\\DCEG\\CGF\\Sequencing\\Illumina\\MiSeq\\PostRun_Analysis\\Data\\$runid[$i]\\CASAVA\\L1\\Project_$projectid[$i]\\$sample_name\\";
-				my $FastP_abs = "/DCEG/CGF/Sequencing/Illumina/MiSeq/PostRun_Analysis/Data/$runid[$i]/CASAVA/L1/Project_$projectid[$i]/Sample_$sampleid[$i]/";
+				my $FastP_abs = $fastq_abs_path;
+				$FastP_abs .= "$runid[$i]/CASAVA/L1/Project_$projectid[$i]/Sample_$sampleid[$i]/";
 
 				#Open File Directory and copy fastq file names
 				opendir(DIR, $FastP_abs) or die "Can't open directory $FastP_abs!";
