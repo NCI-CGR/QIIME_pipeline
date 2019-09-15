@@ -4,7 +4,12 @@ import os
 conf = os.environ.get("conf")
 configfile: conf
 sample_list = ['1','2','3','4']
-#sample_list = ['1']
+
+def collect_runids(meta_man_fullpath):
+	runid_list = [x.split('\t')[5] for x in open(meta_man_fullpath).readlines()]
+	runid_list.pop(0)
+	runid_list=set(runid_list)
+	return runid_list
 
 # import variables from the config file
 proj_dir = config['project_dir']
@@ -14,7 +19,7 @@ rule all:
     input:
         #q2_man=proj_dir + 'Input/manifest_qiime2.tsv'
         #expand('{proj_dir}Input/manifest_file_split_parts_fastq_import/manifest_file_split_parts_fastq_import_{samples}.txt',proj_dir=proj_dir,samples=sample_list),
-        expand('{proj_dir}Input/Fasta/fasta_dir_split_part_{samples}/',proj_dir=proj_dir,samples=sample_list)
+        #xpand('{proj_dir}Input/Fasta/fasta_dir_split_part_{samples}/',proj_dir=proj_dir,samples=sample_list)
 
 rule qiime2_manifest:
     input:
