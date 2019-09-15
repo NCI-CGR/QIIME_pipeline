@@ -69,6 +69,7 @@ rule qiime2_manifest:
     output:
         q2_man=proj_dir + 'Input/manifest_qiime2.tsv',
     shell:
+        'source /etc/profile.d/modules.sh; module load perl/5.18.0;'
         'perl Q2Manifest.pl {input.proj_dir} {input.meta_man_fullpath} {output.q2_man}'
 
 rule split_part_manifest:
@@ -79,6 +80,7 @@ rule split_part_manifest:
     params:
         fastq_abs_path=fastq_abs_path
     shell:
+        'source /etc/profile.d/modules.sh; module load perl/5.18.0;'
         'perl SplitManifest.pl {params.fastq_abs_path} {input.q2_man} {output.split_man_files}'
 
 rule create_symlinks:
