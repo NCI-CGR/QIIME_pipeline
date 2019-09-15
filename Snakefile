@@ -15,7 +15,7 @@ def collect_runids(meta_man_fullpath):
 	runid_list=set(runid_list)
 	return runid_list
 
-def symlinks_list(proj_dir,runid_list):
+def symlinks(proj_dir,runid_list):
     #Example src (source location):
     #{fastq_abs_path}180112_M01354_0104_000000000-BFN3F/CASAVA/L1/Project_NP0084-MB4/Sample_SC249358/SC249358_GAAGAAGCGGTA_L001_R1_001.fastq.gz
 
@@ -43,10 +43,6 @@ def symlinks_list(proj_dir,runid_list):
         with open(proj_dir + "Input/fasta/dst_list.txt", 'w') as f:
             for dst in dst_list:
                 f.write("%s\n" % dst)
-    return src_list,dst_list
-
-def symlinks_create(proj_dir,runid_list):
-    src_list,dst_list=symlinks_list(proj_dir,runid_list)
 
     i=0
     for src in src_list:
@@ -94,4 +90,4 @@ rule create_symlinks:
     output:
         symlink_file_list=proj_dir + 'Input/fasta/dst_list.txt'
     run:
-        symlinks_create(proj_dir,runid_list)
+        symlinks(proj_dir,runid_list)
