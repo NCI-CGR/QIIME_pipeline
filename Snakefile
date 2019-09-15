@@ -13,13 +13,14 @@ def collect_runids(meta_man_fullpath):
 # import variables from the config file
 proj_dir = config['project_dir']
 metadata_manifest = config['metadata_manifest']
+fastq_abs_path=config['fastq_abs_path']
 
 runid_list = collect_runids(proj_dir+metadata_manifest)
 
 rule all:
     input:
-        q2_man=proj_dir + 'Input/manifest_qiime2.tsv'
-        #expand('{proj_dir}Input/manifest_file_split_parts_fastq_import/manifest_file_split_parts_fastq_import_{samples}.txt',proj_dir=proj_dir,samples=runid_list),
+        #q2_man=proj_dir + 'Input/manifest_qiime2.tsv',
+        expand('{proj_dir}Input/split_parts_manifests/split_parts_manifest_{runid}.txt',proj_dir=proj_dir,runid=runid_list)
         #xpand('{proj_dir}Input/Fasta/fasta_dir_split_part_{samples}/',proj_dir=proj_dir,samples=runid_list)
 
 rule qiime2_manifest:
@@ -36,13 +37,15 @@ rule split_part_manifest:
     input:
         q2_man=proj_dir + 'Input/manifest_qiime2.tsv',
     output:
-        split_man_files=proj_dir + 'Input/manifest_file_split_parts_fastq_import/manifest_file_split_parts_fastq_import_{runid_list}.txt'
+        split_man_files=proj_dir + 'Input/split_parts_manifests/split_parts_manifest_{runid_list}.txt'
+    params:
+        fastq_abs_path=fastq_abs_path
     shell:
-        'perl SplitManifest.pl {input.q2_man} {output.split_man_files}'
+        'perl SplitManifest.pl {params.fastq_abs_path} {input.q2_man} {output.split_man_files}'
 
 rule create_symlinks:
     input:
-        split_man=directory(expand('{proj_dir}Input/manifest_file_split_parts_fastq_import/',proj_dir=proj_dir))
+        split_man=directory(expand('{proj_dir}Input/split_parts_manifests/',proj_dir=proj_dir))
     output:
         fasta_dir_split_part=directory(expand('{proj_dir}Input/Fasta/fasta_dir_split_part_{samples}/',proj_dir=proj_dir,samples=runid_list))
     shell:
