@@ -54,6 +54,8 @@ def symlinks(proj_dir,runid_list):
 proj_dir = config['project_dir']
 metadata_manifest = config['metadata_manifest']
 fastq_abs_path=config['fastq_abs_path']
+qiime_version=config['qiime_version']
+resources_dir=config['RESOURCES_DIR']
 
 runid_list = collect_runids(proj_dir+metadata_manifest)
 
@@ -91,3 +93,8 @@ rule create_symlinks:
         symlink_file_list=proj_dir + 'Input/fasta/dst_list.txt'
     run:
         symlinks(proj_dir,runid_list)
+
+run demux_qza
+    #shell:
+        #'source module load miniconda/3'
+        #'source activatve qiime2-${qiime_version}'

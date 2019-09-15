@@ -5,35 +5,35 @@
 
 #################################################
 # QIIME version
-qiime_version=2017.11
+#qiime_version=2017.11 ##moved
 
 # Initiate QIIME
-module load miniconda/3
-source activate qiime2-${qiime_version}
+#module load miniconda/3 ##snakmake
+#source activate qiime2-${qiime_version} ##snakmake
 # BB: Environment management to be handled by snakemake.
 
 # Parameters
-QUEUE=seq-gvcf.q
-SAMPLE_PREFIX=SC
-Phred_score=33
+#QUEUE=seq-gvcf.q ##yaml
+#SAMPLE_PREFIX=SC ##not needed
+#Phred_score=33 ##yaml
 # BB: cluster parameters to be managed in snakemake invocation via yaml config.
 # BB: Where are the other parameters used?  Benefits to leaving as global variables?
 
 #################################################
 # TO UPDATE
-PROJECT_DIR=/DCEG/Projects/Microbiome/CGR_MB/MicroBiome/Project_NP0084_MB6
-MANIFEST_FILE=${PROJECT_DIR}/NP0084-MB6.txt
+#PROJECT_DIR=/DCEG/Projects/Microbiome/CGR_MB/MicroBiome/Project_NP0084_MB6 ##yaml
+#MANIFEST_FILE=${PROJECT_DIR}/NP0084-MB6.txt ##yaml
 # BB: move to a yaml config.
 
 #################################################
 # Input Directories/Files
-SCRIPT_DIR=/DCEG/Projects/Microbiome/CGR_MB/MicroBiome/sc_scripts_qiime2_pipeline/V2
-TEMP_DIR=${PROJECT_DIR}/Input/tmp
-RESOURCES_DIR=${SCRIPT_DIR}/resources
-FASTA_DIR=${PROJECT_DIR}/Input/Fasta
-MANIFEST_FILE_SPLIT_PARTS_DIR=${PROJECT_DIR}/Input/manifest_file_split_parts
-MANIFEST_FILE_SPLIT_PARTS_FASTQ_IMPORT_DIR=${PROJECT_DIR}/Input/manifest_file_split_parts_fastq_import
-MANIFEST_FILE_qiime2_format=${PROJECT_DIR}/Input/manifest_qiime2.tsv
+#SCRIPT_DIR=/DCEG/Projects/Microbiome/CGR_MB/MicroBiome/sc_scripts_qiime2_pipeline/V2 ##not needed
+#TEMP_DIR=${PROJECT_DIR}/Input/tmp ##not needed
+#RESOURCES_DIR=${SCRIPT_DIR}/resources ##yaml
+#FASTA_DIR=${PROJECT_DIR}/Input/Fasta ##snakmake
+#MANIFEST_FILE_SPLIT_PARTS_DIR=${PROJECT_DIR}/Input/manifest_file_split_parts ##snakmake
+#MANIFEST_FILE_SPLIT_PARTS_FASTQ_IMPORT_DIR=${PROJECT_DIR}/Input/manifest_file_split_parts_fastq_import ##snakmake
+#MANIFEST_FILE_qiime2_format=${PROJECT_DIR}/Input/manifest_qiime2.tsv ##snakmake
 
 # Output Directories
 QZA_RESULTS_DIR=${PROJECT_DIR}/Output/qza_results
