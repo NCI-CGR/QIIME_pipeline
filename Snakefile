@@ -3,7 +3,7 @@ import os
 # reference the config file
 conf = os.environ.get("conf")
 configfile: conf
-sample_list = ['1','2','3','4']
+#sample_list = ['1','2','3','4']
 
 def collect_runids(meta_man_fullpath):
 	runid_list = [x.split('\t')[5] for x in open(meta_man_fullpath).readlines()]
@@ -15,9 +15,11 @@ def collect_runids(meta_man_fullpath):
 proj_dir = config['project_dir']
 metadata_manifest = config['metadata_manifest']
 
+sample_list = collect_runids(proj_dir+metadata_manifest)
+
 rule all:
     input:
-        #q2_man=proj_dir + 'Input/manifest_qiime2.tsv'
+        q2_man=proj_dir + 'Input/manifest_qiime2.tsv'
         #expand('{proj_dir}Input/manifest_file_split_parts_fastq_import/manifest_file_split_parts_fastq_import_{samples}.txt',proj_dir=proj_dir,samples=sample_list),
         #xpand('{proj_dir}Input/Fasta/fasta_dir_split_part_{samples}/',proj_dir=proj_dir,samples=sample_list)
 
@@ -26,14 +28,14 @@ rule qiime2_manifest:
         proj_dir=directory({proj_dir}),
         meta_man_fullpath=proj_dir+metadata_manifest
     output:
-        q2_man=proj_dir + 'Input/manifest_qiime2.tsv'
+        q2_man=proj_dir + 'Input/manifest_qiime2.tsv',
     shell:
         'dos2unix {input.meta_man_fullpath};\
         perl Q2Manifest.pl {input.proj_dir} {input.meta_man_fullpath} {output.q2_man}'
 
 rule split_part_manifest:
     input:
-        q2_man=proj_dir + 'Input/manifest_qiime2.tsv'
+        q2_man=proj_dir + 'Input/manifest_qiime2.tsv',
     output:
         split_man_files=proj_dir + 'Input/manifest_file_split_parts_fastq_import/manifest_file_split_parts_fastq_import_{sample_list}.txt'
     shell:
