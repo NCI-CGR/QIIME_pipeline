@@ -8,19 +8,26 @@ conf = os.environ.get("conf")
 configfile: conf
 
 def collect_runids(meta_man_fullpath):
+    #Example runid/flowcell id: 180112_M01354_0104_000000000-BFN3F
+
 	runid_list = [x.split('\t')[5] for x in open(meta_man_fullpath).readlines()]
 	runid_list.pop(0)
 	runid_list=set(runid_list)
 	return runid_list
 
 def symlinks_list(proj_dir,runid_list):
+    #Example src (source location):
+    #{fastq_abs_path}180112_M01354_0104_000000000-BFN3F/CASAVA/L1/Project_NP0084-MB4/Sample_SC249358/SC249358_GAAGAAGCGGTA_L001_R1_001.fastq.gz
+
+    #Example dst (destination location):
+    #{proj_dir}Input/fasta/fasta_dir_split_part_180112_M01354_0104_000000000-BFN3F/SC249358_GAAGAAGCGGTA_L001_R1_001.fastq.gz
+
     src_list=[]
     dst_list=[]
 
     for runs in runid_list:
-        #if(path.exists(proj_dir+"Input/split_parts_manifests/split_parts_manifest_"+runs+".txt")):
         fastq_path_list = [x.split(',')[1] for x in open(proj_dir+"Input/split_parts_manifests/split_parts_manifest_"+runs+".txt").readlines()]
-        fastq_path_list.pop(0)
+        fastq_path_list.pop(0) #Remove header
 
         for src in fastq_path_list:
             runid=re.sub(r"(^\/DCEG).*Data\/","",src)
@@ -33,8 +40,6 @@ def symlinks_list(proj_dir,runid_list):
             src_list.append(src)
             dst_list.append(dst)
 
-            #Example dst:
-            #{proj_dir}Input/fasta/fasta_dir_split_part_180112_M01354_0104_000000000-BFN3F/SC249359-PC04924-B-01_TATCAGGTGTGC_L001_R1_001.fastq.gz
         with open(proj_dir + "Input/fasta/dst_list.txt", 'w') as f:
             for dst in dst_list:
                 f.write("%s\n" % dst)
