@@ -52,11 +52,9 @@ sub create_manifest{
 		push(@projectid,$rows[6]);
 	}
 
-	$manifest_splitman =~ /_(\d+)\.txt/;
-	my $flowcell_number=$1;
-
-	my @runid_unique = uniq @runid;
-	my $flowcell_unique=$runid_unique[$flowcell_number];
+	my $current_flowcell =$manifest_splitman;
+	$current_flowcell=~ s/\/DCEG.*manifest_//;
+	$current_flowcell =~ s/.txt//;
 
 	#Create split manifests with sample ID's
 	my $count = 1;
@@ -68,7 +66,7 @@ sub create_manifest{
 
 	foreach my $flowcell (@runid){
 		#If the flowcell of the sample matches the current flow cell
-		if ($flowcell =~ $flowcell_unique){
+		if ($flowcell =~ $current_flowcell){
 
 				#Generate file path
 				#my $FastP_rel = "T:\\DCEG\\CGF\\Sequencing\\Illumina\\MiSeq\\PostRun_Analysis\\Data\\$runid[$i]\\CASAVA\\L1\\Project_$projectid[$i]\\$sample_name\\";
