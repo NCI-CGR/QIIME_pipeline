@@ -99,7 +99,7 @@ rule create_symlinks:
     run:
         symlinks(proj_dir,runid_list)
 
-rule demux_qza_split_part:
+rule demux_split_parts_QZA:
     input:
         split_man_dir= expand('{proj_dir}Input/split_parts_manifests',proj_dir=proj_dir)
     output:
