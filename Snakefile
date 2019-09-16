@@ -55,7 +55,11 @@ proj_dir = config['project_dir']
 metadata_manifest = config['metadata_manifest']
 fastq_abs_path=config['fastq_abs_path']
 qiime_version=config['qiime_version']
+queue=config['QUEUE']
 resources_dir=config['RESOURCES_DIR']
+demux_param=config['demux_param']
+input_type=config['input_type']
+phred_score=config['phred_score']
 
 runid_list = collect_runids(proj_dir+metadata_manifest)
 
@@ -63,7 +67,8 @@ rule all:
     input:
         #q2_man=proj_dir + 'Input/manifest_qiime2.tsv',
         #expand('{proj_dir}Input/split_parts_manifests/split_parts_manifest_{runid}.txt',proj_dir=proj_dir,runid=runid_list),
-        symlink_file_list=proj_dir + 'Input/fasta/dst_list.txt'
+        #symlink_file_list=proj_dir + 'Input/fasta/dst_list.txt'
+        expand('{proj_dir}Output/qza_results/demux_qza_split_parts/{demux_param}_{runid}.qza',proj_dir=proj_dir,demux_param=demux_param,runid=runid_list)
 
 rule qiime2_manifest:
     input:
@@ -94,7 +99,27 @@ rule create_symlinks:
     run:
         symlinks(proj_dir,runid_list)
 
-run demux_qza
-    #shell:
-        #'source module load miniconda/3'
-        #'source activatve qiime2-${qiime_version}'
+rule demux_qza_split_part:
+    input:
+        split_man_dir= expand('{proj_dir}Input/split_parts_manifests/',proj_dir=proj_dir)
+    output:
+        demux_qza_files=proj_dir+'Output/qza_results/demux_qza_split_parts/{params.demux_param}_{runid_list}.qza'
+    params:
+        qiime_version=qiime_version,
+        queue=queue,
+        demux_param=demux_param,
+        input_type=input_type,
+        phred_score=phred_score
+    shell:
+        'source /etc/profile.d/modules.sh; module load sge;'
+        'source /etc/profile.d/modules.sh; module load miniconda/3;'
+        'source /etc/profile.d/modules.sh; activate qiime2-{params.qiime_version};'
+        'qsub -cwd \
+            -pe by_node 10 \
+        	-q {params.queue} \
+        	-N demux_qza_split \
+        	-S /bin/sh \
+            demux_split_parts_QZA.sh \
+                {input.split_man_dir} \
+                {params.phred_score} \
+                {params.input}'
