@@ -4,7 +4,7 @@
 #input
 ##Requires 3 CML arguments -
 	#1) full path to split manifest directory
-		##Example:
+		##Example: {proj_dir}/Output/qza_results/demux_qza_split_parts/
 	#2) phred score for project (set in yaml file)
 		##Example: 33
 	#3) input type (set in yaml file)
@@ -36,14 +36,18 @@ if [ "$#" -ne 4 ] || ! [ -d "$1" ]; then
   exit 1
 fi
 
-for manifest_file_split_parts_fastq_import in $(ls -v $split_man_dir/*); do
+#Searches for all split_manifest files created, where # of files = # of flowcells for project
+for split_parts_manifests in $(ls -v $split_man_dir/*); do
 
-	split_man_path=$manifest_file_split_parts_fastq_import
-	runid=$manifest_file_split_parts_fastq_import
+	split_man_path=$split_parts_manifests
+
+	#Parse only the runid from the full path - need this to name the output file
+	runid=$split_parts_manifests
 	runid=$(sed -e "s/\/DCEG.*manifest_//g" <<< $runid)
 	runid=$(sed -e "s/.txt//g" <<< $runid)
 
-	demux_qza_split_part=$manifest_file_split_parts_fastq_import/Output/qza_results/demux_qza_split_parts/$demux_param_$runid.qza
+	#Example name: {proj_dir}Output/qza_results/demux_qza_split_parts/paired_end_demux_180112_M01354_0104_000000000-BFN3F.qza
+	demux_qza_split_part=$split_parts_manifests/Output/qza_results/demux_qza_split_parts/$demux_param_$runid.qza
 	demux_qza_split_part=$(sed -e "s/\Input.*txt\///g" <<< $demux_qza_split_part)
 
 	cmd="qiime tools import \
