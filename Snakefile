@@ -101,7 +101,7 @@ rule create_symlinks:
 
 rule demux_qza_split_part:
     input:
-        split_man_dir= expand('{proj_dir}Input/split_parts_manifests/',proj_dir=proj_dir)
+        split_man_dir= expand('{proj_dir}Input/split_parts_manifests',proj_dir=proj_dir)
     output:
         demux_qza_files=proj_dir+'Output/qza_results/demux_qza_split_parts/{params.demux_param}_{runid_list}.qza'
     params:
@@ -113,7 +113,7 @@ rule demux_qza_split_part:
     shell:
         'source /etc/profile.d/modules.sh; module load sge;'
         'source /etc/profile.d/modules.sh; module load miniconda/3;'
-        'source /etc/profile.d/modules.sh; activate qiime2-{params.qiime_version};'
+        'source /etc/profile.d/modules.sh; source activate qiime2-{params.qiime_version};'
         'qsub -cwd \
             -pe by_node 10 \
         	-q {params.queue} \
