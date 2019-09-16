@@ -122,4 +122,4 @@ rule demux_qza_split_part:
             demux_split_parts_QZA.sh \
                 {input.split_man_dir} \
                 {params.phred_score} \
-                {params.input}'
+                '"{params.input_type}"''
