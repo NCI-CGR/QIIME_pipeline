@@ -121,5 +121,6 @@ rule demux_qza_split_part:
         	-S /bin/sh \
             demux_split_parts_QZA.sh \
                 {input.split_man_dir} \
-                {params.phred_score} \
-                '"{params.input_type}"''
+				{params.demux_param} \
+                '"{params.input_type}"'\
+				{params.phred_score}'
