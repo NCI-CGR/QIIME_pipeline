@@ -22,6 +22,9 @@
 split_man_dir=$1
 shift
 
+demux_param=$1
+shift
+
 input_type=$1
 shift
 
@@ -40,7 +43,7 @@ for manifest_file_split_parts_fastq_import in $(ls -v $split_man_dir/*); do
 	runid=$(sed -e "s/\/DCEG.*manifest_//g" <<< $runid)
 	runid=$(sed -e "s/.txt//g" <<< $runid)
 
-	demux_qza_split_part=$manifest_file_split_parts_fastq_import/Output/qza_results/demux_qza_split_parts/$runid.qza
+	demux_qza_split_part=$manifest_file_split_parts_fastq_import/Output/qza_results/demux_qza_split_parts/$demux_param_$runid.qza
 	demux_qza_split_part=$(sed -e "s/\Input.*txt\///g" <<< $demux_qza_split_part)
 
 	cmd="qiime tools import \
