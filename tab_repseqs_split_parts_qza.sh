@@ -20,28 +20,28 @@ source activate qiime2-2017.11 #only needed if running stand-alone
 demux_qza_split_part=$1
 shift
 
-demux_param=$1
+denoise_method=$1
 shift
 
-if [ "$#" -ne 2 ]; then
+if [ "$#" -ne 0 ]; then
   echo "Usage: $0 /path/to/demuxqzafile denoise_method" >&2
   exit 1
 fi
 
 table_split_part=$demux_qza_split_part
-table_split_part=$(sed -e "s/_demux.*demux/table/g" <<< $table_split_part)
+table_split_part=$(sed -e "s/demux.*demux/table/g" <<< $table_split_part)
 
 repseqs_split_part=$demux_qza_split_part
-repseqs_split_part=$(sed -e "s/_demux.*demux/repseqs/g" <<< $repseq_split_part)
+repseqs_split_part=$(sed -e "s/demux.*demux/repseqs/g" <<< $repseqs_split_part)
 
-cmd="qiime $denoise_method denoise-paired \
+cmd="qiime dada2 denoise-paired \
   	--i-demultiplexed-seqs ${demux_qza_split_part} \
   	--o-table ${table_split_part} \
   	--o-representative-sequences ${repseqs_split_part} \
   	--p-trim-left-f 0 \
   	--p-trim-left-r 0 \
   	--p-trunc-len-f 0 \
-	--p-trunc-len-r 0"
+    --p-trunc-len-r 0"
 
 
 echo $cmd
