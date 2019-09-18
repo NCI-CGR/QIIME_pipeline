@@ -13,6 +13,7 @@ QUEUE: seq-gvcf.q
 phred_score: 33
 demux_param: 'paired_end_demux'
 input_type: 'SampleData[PairedEndSequencesWithQuality]'
+denoise_method: 'dada2'
 
 
 ## Script/Resource location

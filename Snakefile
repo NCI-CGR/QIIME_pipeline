@@ -60,6 +60,7 @@ resources_dir=config['RESOURCES_DIR']
 demux_param=config['demux_param']
 input_type=config['input_type']
 phred_score=config['phred_score']
+denoise_method=config['denoise_method']
 
 runid_list = collect_runids(proj_dir+metadata_manifest)
 
@@ -68,7 +69,8 @@ rule all:
         #q2_man=proj_dir + 'Input/manifest_qiime2.tsv',
         #expand('{proj_dir}Input/split_parts_manifests/split_parts_manifest_{runid}.txt',proj_dir=proj_dir,runid=runid_list),
         #symlink_file_list=proj_dir + 'Input/fasta/dst_list.txt'
-        expand('{proj_dir}Output/qza_results/demux_qza_split_parts/{demux_param}_{runid}.qza',proj_dir=proj_dir,demux_param=demux_param,runid=runid_list)
+        #expand('{proj_dir}Output/qza_results/demux_qza_split_parts/{demux_param}_{runid}.qza',proj_dir=proj_dir,demux_param=demux_param,runid=runid_list)
+        demux_qzv_files=expand('{proj_dir}Output/qzv_results/demux_qzv_split_parts/{demux_param}_{runid}.qzv',proj_dir=proj_dir,demux_param=demux_param,runid=runid_list)
 
 rule qiime2_manifest:
     input:
@@ -125,14 +127,14 @@ rule demux_split_parts_QZA:
                 '"{params.input_type}"'\
 				{params.phred_score}'
 
-rule demux_split_parts_QZV
+rule demux_split_parts_QZV:
 	input:
 		demux_qza_files=proj_dir+'Output/qza_results/demux_qza_split_parts/{params.demux_param}_{runid_list}.qza'
 	output:
 		demux_qzv_files=proj_dir+'Output/qza_results/demux_qza_split_parts/{params.demux_param}_{runid_list}.qzv'
 	params:
 		qiime_version=qiime_version,
-	    queue=queue
+		queue=queue
 	shell:
 		'source /etc/profile.d/modules.sh; module load sge;'
         'source /etc/profile.d/modules.sh; module load miniconda/3;'
@@ -144,3 +146,26 @@ rule demux_split_parts_QZV
         	-S /bin/sh \
             demux_split_parts_QZV.sh \
                 {input.demux_qza_files} '
+
+rule tab_repseqs_split_parts_QZA:
+	input:
+		demux_qza_files=proj_dir+'Output/qza_results/demux_qza_split_parts/{params.demux_param}_{runid_list}.qza'
+	output:
+		table_split_parts_QZA=proj_dir+'Output/qza_results/repseqs_{params.denoise_method}_qza_split_parts/repseqs_{runid_list}.qza',
+		repseqs_split_parts_QZA=proj_dir+'Output/qza_results/table_{params.denoise_method}_qza_split_parts/table_{runid_list}.qza'
+	params:
+		qiime_version=qiime_version,
+		queue=queue,
+		denoise_method=denoise_method
+	shell:
+		'source /etc/profile.d/modules.sh; module load sge;'
+        'source /etc/profile.d/modules.sh; module load miniconda/3;'
+        'source /etc/profile.d/modules.sh; source activate qiime2-{params.qiime_version};'
+        'qsub -cwd \
+            -pe by_node 10 \
+        	-q {params.queue} \
+        	-N tab_repseqs_qza_split \
+        	-S /bin/sh \
+            tab_repseqs_split_parts_QZA.sh \
+                {input.demux_qza_files} \
+				{params.denoise_method}'
