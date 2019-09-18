@@ -124,3 +124,23 @@ rule demux_split_parts_QZA:
 				{params.demux_param} \
                 '"{params.input_type}"'\
 				{params.phred_score}'
+
+rule demux_split_parts_QZV
+	input:
+		demux_qza_files=proj_dir+'Output/qza_results/demux_qza_split_parts/{params.demux_param}_{runid_list}.qza'
+	output:
+		demux_qzv_files=proj_dir+'Output/qza_results/demux_qza_split_parts/{params.demux_param}_{runid_list}.qzv'
+	params:
+		qiime_version=qiime_version,
+	    queue=queue
+	shell:
+		'source /etc/profile.d/modules.sh; module load sge;'
+        'source /etc/profile.d/modules.sh; module load miniconda/3;'
+        'source /etc/profile.d/modules.sh; source activate qiime2-{params.qiime_version};'
+        'qsub -cwd \
+            -pe by_node 10 \
+        	-q {params.queue} \
+        	-N demux_qza_split \
+        	-S /bin/sh \
+            demux_split_parts_QZV.sh \
+                {input.demux_qza_files} '
