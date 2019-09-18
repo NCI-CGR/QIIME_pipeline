@@ -69,8 +69,8 @@ rule all:
         #q2_man=proj_dir + 'Input/manifest_qiime2.tsv',
         #expand('{proj_dir}Input/split_parts_manifests/split_parts_manifest_{runid}.txt',proj_dir=proj_dir,runid=runid_list),
         #symlink_file_list=proj_dir + 'Input/fasta/dst_list.txt'
-        #expand('{proj_dir}Output/qza_results/demux_qza_split_parts/{demux_param}_{runid}.qza',proj_dir=proj_dir,demux_param=demux_param,runid=runid_list)
-        demux_qzv_files=expand('{proj_dir}Output/qzv_results/demux_qzv_split_parts/{demux_param}_{runid}.qzv',proj_dir=proj_dir,demux_param=demux_param,runid=runid_list)
+        #expand('{proj_dir}Output/qza_results/demux_split_parts_qza/{demux_param}_{runid}.qza',proj_dir=proj_dir,demux_param=demux_param,runid=runid_list)
+        demux_qzv_files=expand('{proj_dir}Output/qzv_results/demux_split_parts_qzv/{demux_param}_{runid}.qzv',proj_dir=proj_dir,demux_param=demux_param,runid=runid_list)
 
 rule qiime2_manifest:
     input:
@@ -105,7 +105,7 @@ rule demux_split_parts_qza:
     input:
         split_man_dir= expand('{proj_dir}Input/split_parts_manifests',proj_dir=proj_dir)
     output:
-        demux_qza_files=proj_dir+'Output/qza_results/demux_qza_split_parts/{params.demux_param}_{runid_list}.qza'
+        demux_qza_files=proj_dir+'Output/qza_results/demux_split_parts_qza/{params.demux_param}_{runid_list}.qza'
     params:
         qiime_version=qiime_version,
         queue=queue,
@@ -129,9 +129,9 @@ rule demux_split_parts_qza:
 
 rule demux_split_parts_qzv:
 	input:
-		demux_qza_files=proj_dir+'Output/qza_results/demux_qza_split_parts/{params.demux_param}_{runid_list}.qza'
+		demux_qza_files=proj_dir+'Output/qza_results/demux_split_parts_qza/{params.demux_param}_{runid_list}.qza'
 	output:
-		demux_qzv_files=proj_dir+'Output/qza_results/demux_qza_split_parts/{params.demux_param}_{runid_list}.qzv'
+		demux_qzv_files=proj_dir+'Output/qza_results/demux_split_parts_qza/{params.demux_param}_{runid_list}.qzv'
 	params:
 		qiime_version=qiime_version,
 		queue=queue
@@ -149,10 +149,10 @@ rule demux_split_parts_qzv:
 
 rule tab_repseqs_split_parts_qza:
 	input:
-		demux_qza_files=proj_dir+'Output/qza_results/demux_qza_split_parts/{params.demux_param}_{runid_list}.qza'
+		demux_qza_files=proj_dir+'Output/qza_results/demux_split_parts_qza/{params.demux_param}_{runid_list}.qza'
 	output:
-		table_split_parts_qza=proj_dir+'Output/qza_results/repseqs_{params.denoise_method}_qza_split_parts/repseqs_{runid_list}.qza',
-		repseqs_split_parts_qza=proj_dir+'Output/qza_results/table_{params.denoise_method}_qza_split_parts/table_{runid_list}.qza'
+		table_split_parts_qza=proj_dir+'Output/qza_results/repseqs_{params.denoise_method}_split_parts_qza/repseqs_{runid_list}.qza',
+		repseqs_split_parts_qza=proj_dir+'Output/qza_results/table_{params.denoise_method}_split_parts_qza/table_{runid_list}.qza'
 	params:
 		qiime_version=qiime_version,
 		queue=queue,
