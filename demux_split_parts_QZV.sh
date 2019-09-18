@@ -4,10 +4,10 @@
 #input
 ##Requires 1 arguments -
 	#1) full path to QZA file
-		##Example: path/to/projectdirectory/Output/qza_results/demux_qza_split_parts
+		##Example: path/to/projectdirectory/Output/qza_results/demux_split_parts_qza
 
 #output
-	#1) QZV file(s) named {demux_param}_{runid}.qzv in path/to/projectdirectory/Output/qzv_results/demux_qzv_split_parts
+	#1) QZV file(s) named {demux_param}_{runid}.qzv in path/to/projectdirectory/Output/qzv_results/demux_split_parts_qzv
 
 module load miniconda/3 #only needed if running stand-alone
 source activate qiime2-2017.11 #only needed if running stand-alone
@@ -21,8 +21,8 @@ if [ "$#" -ne 0 ]; then
 fi
 
 #Will replace QZA from directory and file named
-#Example QZA: path/to/projectdirectory/Output/qza_results/demux_qza_split_parts/paired_end_demux_180112_M01354_0104_000000000-BFN3F.qza
-#Example QZV: path/to/projectdirectory/Output/qzv_results/demux_qzv_split_parts/paired_end_demux_180112_M01354_0104_000000000-BFN3F.qzv
+#Example QZA: path/to/projectdirectory/Output/qza_results/demux_split_parts_qza/paired_end_demux_180112_M01354_0104_000000000-BFN3F.qza
+#Example QZV: path/to/projectdirectory/Output/qzv_results/demux_split_parts_qzv/paired_end_demux_180112_M01354_0104_000000000-BFN3F.qzv
 demux_qzv_split_part=$demux_qza_split_part
 demux_qzv_split_part=$(sed -e "s/qza/qzv/g" <<< $demux_qzv_split_part)
 

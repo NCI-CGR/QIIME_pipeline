@@ -4,7 +4,7 @@
 #input
 ##Requires 3 CML arguments -
 	#1) full path to split manifest directory
-		##Example: {proj_dir}/Output/qza_results/demux_qza_split_parts/
+		##Example: {proj_dir}/Output/qza_results/demux_split_parts_qza/
 	#2) phred score for project (set in yaml file)
 		##Example: 33
 	#3) input type (set in yaml file)
@@ -14,7 +14,7 @@
 
 
 #output
-	#1) QZA file(s) named demux_param}_{runid}.qza in path/to/projectdirectory/Output/qza/demux_qza_split_parts
+	#1) QZA file(s) named demux_param}_{runid}.qza in path/to/projectdirectory/Output/qza/demux_split_parts_qza
 
 #module load miniconda/3 #only needed if running stand-alone
 #source activate qiime2-2017.11 #only needed if running stand-alone
@@ -47,7 +47,7 @@ for split_parts_manifests in $(ls -v $split_man_dir/*); do
 	runid=$(sed -e "s/.txt//g" <<< $runid)
 
 	#Example name: {proj_dir}Output/qza_results/demux_qza_split_parts/paired_end_demux_180112_M01354_0104_000000000-BFN3F.qza
-	demux_qza_split_part=$split_parts_manifests/Output/qza_results/demux_qza_split_parts/$demux_param_$runid.qza
+	demux_qza_split_part=$split_parts_manifests/Output/qza_results/demux_split_parts_qza/$demux_param_$runid.qza
 	demux_qza_split_part=$(sed -e "s/\Input.*txt\///g" <<< $demux_qza_split_part)
 
 	cmd="qiime tools import \
