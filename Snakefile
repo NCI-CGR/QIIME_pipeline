@@ -101,7 +101,7 @@ rule create_symlinks:
     run:
         symlinks(proj_dir,runid_list)
 
-rule demux_split_parts_QZA:
+rule demux_split_parts_qza:
     input:
         split_man_dir= expand('{proj_dir}Input/split_parts_manifests',proj_dir=proj_dir)
     output:
@@ -121,13 +121,13 @@ rule demux_split_parts_QZA:
         	-q {params.queue} \
         	-N demux_qza_split \
         	-S /bin/sh \
-            demux_split_parts_QZA.sh \
+            demux_split_parts_qza.sh \
                 {input.split_man_dir} \
 				{params.demux_param} \
                 '"{params.input_type}"'\
 				{params.phred_score}'
 
-rule demux_split_parts_QZV:
+rule demux_split_parts_qzv:
 	input:
 		demux_qza_files=proj_dir+'Output/qza_results/demux_qza_split_parts/{params.demux_param}_{runid_list}.qza'
 	output:
@@ -144,15 +144,15 @@ rule demux_split_parts_QZV:
         	-q {params.queue} \
         	-N demux_qza_split \
         	-S /bin/sh \
-            demux_split_parts_QZV.sh \
+            demux_split_parts_qzv.sh \
                 {input.demux_qza_files} '
 
-rule tab_repseqs_split_parts_QZA:
+rule tab_repseqs_split_parts_qza:
 	input:
 		demux_qza_files=proj_dir+'Output/qza_results/demux_qza_split_parts/{params.demux_param}_{runid_list}.qza'
 	output:
-		table_split_parts_QZA=proj_dir+'Output/qza_results/repseqs_{params.denoise_method}_qza_split_parts/repseqs_{runid_list}.qza',
-		repseqs_split_parts_QZA=proj_dir+'Output/qza_results/table_{params.denoise_method}_qza_split_parts/table_{runid_list}.qza'
+		table_split_parts_qza=proj_dir+'Output/qza_results/repseqs_{params.denoise_method}_qza_split_parts/repseqs_{runid_list}.qza',
+		repseqs_split_parts_qza=proj_dir+'Output/qza_results/table_{params.denoise_method}_qza_split_parts/table_{runid_list}.qza'
 	params:
 		qiime_version=qiime_version,
 		queue=queue,
@@ -166,6 +166,6 @@ rule tab_repseqs_split_parts_QZA:
         	-q {params.queue} \
         	-N tab_repseqs_qza_split \
         	-S /bin/sh \
-            tab_repseqs_split_parts_QZA.sh \
+            tab_repseqs_split_parts_qza.sh \
                 {input.demux_qza_files} \
 				{params.denoise_method}'
