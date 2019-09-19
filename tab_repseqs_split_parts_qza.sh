@@ -29,10 +29,10 @@ if [ "$#" -ne 0 ]; then
 fi
 
 table_split_part=$demux_qza_split_part
-table_split_part=$(sed -e "s/demux.*demux/table/g" <<< $table_split_part)
+table_split_part=$(sed -e "s/demux.*demux/table_split_parts_qza\/table/g" <<< $table_split_part)
 
 repseqs_split_part=$demux_qza_split_part
-repseqs_split_part=$(sed -e "s/demux.*demux/repseqs/g" <<< $repseqs_split_part)
+repseqs_split_part=$(sed -e "s/demux.*demux/repseqs_split_parts_qza\/repseqs/g" <<< $repseqs_split_part)
 
 cmd="qiime dada2 denoise-paired \
   	--i-demultiplexed-seqs ${demux_qza_split_part} \
