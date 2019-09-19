@@ -36,22 +36,22 @@
 #MANIFEST_FILE_qiime2_format=${PROJECT_DIR}/Input/manifest_qiime2.tsv ##snakmake
 
 # Output Directories
-QZA_RESULTS_DIR=${PROJECT_DIR}/Output/qza_results
-QZV_RESULTS_DIR=${PROJECT_DIR}/Output/qzv_results
-LOG_DIR=${PROJECT_DIR}/Output/Log
+#QZA_RESULTS_DIR=${PROJECT_DIR}/Output/qza_results ##snakemake
+#QZV_RESULTS_DIR=${PROJECT_DIR}/Output/qzv_results ##snakemake
+#LOG_DIR=${PROJECT_DIR}/Output/Log ##not needed
 
 #################################################
 ## Stage 2
-demux_qza_split_parts_dir=${QZA_RESULTS_DIR}/demux_qza_split_parts
-demux_qzv_split_parts_dir=${QZV_RESULTS_DIR}/demux_qzv_split_parts
-table_dada2_qza_split_parts_dir=${QZA_RESULTS_DIR}/table_dada2_qza_split_parts
-repseqs_dada2_qza_split_parts_dir=${QZA_RESULTS_DIR}/repseqs_dada2_qza_split_parts
-log_dir_stage_2=${LOG_DIR}/stage2_qiime2
+#demux_qza_split_parts_dir=${QZA_RESULTS_DIR}/demux_qza_split_parts ##snakemake
+#demux_qzv_split_parts_dir=${QZV_RESULTS_DIR}/demux_qzv_split_parts ##snakemake
+#table_dada2_qza_split_parts_dir=${QZA_RESULTS_DIR}/table_dada2_qza_split_parts ##snakemake 
+#repseqs_dada2_qza_split_parts_dir=${QZA_RESULTS_DIR}/repseqs_dada2_qza_split_parts ##snakemake
+#log_dir_stage_2=${LOG_DIR}/stage2_qiime2 ##not needed
 
 # Stage 2 Parameters
-demux_param=paired_end_demux
-table_dada2_param=table_dada2
-repseqs_dada2_param=repseqs_dada2
+#demux_param=paired_end_demux ##yaml
+#table_dada2_param=table_dada2 ##yaml
+#repseqs_dada2_param=repseqs_dada2 ##yaml
 
 #################################################
 # Stage 3 Directories
