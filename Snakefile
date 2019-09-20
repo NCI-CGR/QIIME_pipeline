@@ -1,14 +1,14 @@
 import os
 import re
 import os.path
-from os import path
+
 
 # reference the config file
 conf = os.environ.get("conf")
 configfile: conf
 
 # import variables from the config file
-proj_dir = config['project_dir'] + 'QIIME2/'
+proj_dir = config['project_dir'] + 'QIIME2/'  # separate output dir from manifest dir
 metadata_manifest = config['metadata_manifest']
 fastq_abs_path = config['fastq_abs_path']
 qiime_version = config['qiime_version']
@@ -60,6 +60,7 @@ sym_link_path = proj_dir + 'fastqs/'
 # from manifest, pull sampleID, projID, runID, then assemble those to get the original fqs:
 
 sampleDict = {}
+RUN_IDS = []
 with open(meta_man_fullpath) as f:
     next(f)
     for line in f:
@@ -67,6 +68,8 @@ with open(meta_man_fullpath) as f:
         if l[0] in sampleDict.keys():
             sys.exit('ERROR: duplicate sample IDs detected in' + meta_man_fullpath)
         sampleDict[l[0]] = (l[5], l[6])  # runID, projID
+        RUN_IDS.append(l[5])
+RUN_IDS = list(set(RUN_IDS))
 
 def get_orig_r1_fq(wildcards):
     '''Return original fastq with path based on filename
@@ -95,8 +98,10 @@ rule all:
         expand(sym_link_path + '{sample}_R1.fastq.gz', sample=sampleDict.keys()),
         expand(sym_link_path + '{sample}_R2.fastq.gz', sample=sampleDict.keys()),
         proj_dir + 'manifests/manifest_qiime2.tsv',
-        proj_dir + 'manifests/Q2_manifest.txt',
-        proj_dir + 'out/qza_results/demux/' + demux_param + '.qza'
+        expand(proj_dir + 'manifests/{runID}_Q2_manifest.txt',runID=RUN_IDS),
+        expand(proj_dir + 'out/qza_results/demux_{runID}/' + demux_param + '.qza',runID=RUN_IDS)
+
+# think about adding check for minimum reads count per sample per flow cell (need more than 1 sample per flow cell passing min threshold for tab/rep seq creation) - either see if we can include via LIMS in the manifest, or use samtools(?)
 
 rule check_manifest:
     '''TODO: Add verbiage here
@@ -115,26 +120,28 @@ rule check_manifest:
 rule create_per_sample_Q2_manifest:
     '''QIIME2 has it's own manifest file format, created per-sample here
     why was this called "split part"?  What has been split?
-    is there a reason to keep samples separated by run ID?
+    is there a reason to keep samples separated by run ID? - Q2 requires you to group samples by flow cell (runID)
     '''
     input:
         fq1 = get_orig_r1_fq,
         fq2 = get_orig_r2_fq
     output:
-        temp(proj_dir + 'manifests/{sample}_Q2_manifest.txt')
+        proj_dir + 'manifests/{sample}_Q2_manifest.txt'
     shell:
         'echo "{wildcards.sample},{input.fq1},forward" > {output};'
         'echo "{wildcards.sample},{input.fq2},reverse" >> {output}'
 
-rule combine_Q2_manifest:
+rule combine_Q2_manifest_by_runID:
     '''Q2 per-sample manifests combined into a single file
     '''
     input:
         expand(proj_dir + 'manifests/{sample}_Q2_manifest.txt', sample=sampleDict.keys())
     output:
-        proj_dir + 'manifests/Q2_manifest.txt'
+        proj_dir + 'manifests/{runID}_Q2_manifest.txt'
     shell:
-        'cat <(echo "sample-id,absolute-filepath,direction") {input} > {output}'
+        'cat {input} | awk \'BEGIN{{FS=OFS="/"}}NR==1{{print "sample-id,absolute-filepath,direction"}}$9=="{wildcards.runID}"{{print $0}}\' > {output}'
+        # 'cat <(echo "sample-id,absolute-filepath,direction") <(cat {input} | awk \'{{FS=OFS="/"}}$9=={wildcards.runID}{{print $0}}\') > {output}'
+
 
 rule create_symlinks:
     '''Symlink the original fastqs in an area that PIs can access
@@ -158,11 +165,16 @@ rule demux_split_parts_qza:
     If they are, can we just combine at the fastq level?  
     Does Q2 somehow combine everything in a given manifest, and that's the problem?
     Simple enough to create multiple manifests.
+
+    If data is multiplexed, this step would de-~.  But, our data is already demultiplexed.
+    provdes summaries and plots per flow cell (as QZA).
+
+    Next step converts to QZV - human readable.
     '''
     input:
-        proj_dir + 'manifests/Q2_manifest.txt'
+        proj_dir + 'manifests/{runID}_Q2_manifest.txt'
     output:
-        proj_dir + 'out/qza_results/demux/' + demux_param + '.qza'
+        proj_dir + 'out/qza_results/demux_{runID}/' + demux_param + '.qza'
     params:
         q2 = qiime_version,
         demux_param = demux_param,
@@ -176,6 +188,7 @@ rule demux_split_parts_qza:
             --input-path {input}\
             --output-path {output}\
             --source-format PairedEndFastqManifestPhred{params.phred}'
+
 
 # rule all:
 #     input:
