@@ -7,165 +7,225 @@ from os import path
 conf = os.environ.get("conf")
 configfile: conf
 
-def collect_runids(meta_man_fullpath):
-    #Example runid/flowcell id: 180112_M01354_0104_000000000-BFN3F
-
-	runid_list = [x.split('\t')[5] for x in open(meta_man_fullpath).readlines()]
-	runid_list.pop(0)
-	runid_list=set(runid_list)
-	return runid_list
-
-def symlinks(proj_dir,runid_list):
-    #Example src (source location):
-    #{fastq_abs_path}180112_M01354_0104_000000000-BFN3F/CASAVA/L1/Project_NP0084-MB4/Sample_SC249358/SC249358_GAAGAAGCGGTA_L001_R1_001.fastq.gz
-
-    #Example dst (destination location):
-    #{proj_dir}Input/fasta/fasta_dir_split_part_180112_M01354_0104_000000000-BFN3F/SC249358_GAAGAAGCGGTA_L001_R1_001.fastq.gz
-
-    src_list=[]
-    dst_list=[]
-
-    for runs in runid_list:
-        fastq_path_list = [x.split(',')[1] for x in open(proj_dir+"Input/split_parts_manifests/split_parts_manifest_"+runs+".txt").readlines()]
-        fastq_path_list.pop(0) #Remove header
-
-        for src in fastq_path_list:
-            runid=re.sub(r"(^\/DCEG).*Data\/","",src)
-            runid=re.sub(r"(\/CASAVA).*","",runid)
-
-            if not os.path.exists(proj_dir + "Input/fasta/fasta_dir_split_part_" + runid):
-                os.makedirs(proj_dir + "Input/fasta/fasta_dir_split_part_" + runid)
-
-            dst=proj_dir + "Input/fasta/fasta_dir_split_part_" + runid + "/"+re.sub(r"(^\/DCEG).*(_SC).*\/","",src)
-            src_list.append(src)
-            dst_list.append(dst)
-
-        with open(proj_dir + "Input/fasta/dst_list.txt", 'w') as f:
-            for dst in dst_list:
-                f.write("%s\n" % dst)
-
-    i=0
-    for src in src_list:
-        dst=dst_list[i]
-        i += 1
-        os.symlink(src,dst)
-
 # import variables from the config file
-proj_dir = config['project_dir']
+proj_dir = config['project_dir'] + 'QIIME2/'
 metadata_manifest = config['metadata_manifest']
-fastq_abs_path=config['fastq_abs_path']
-qiime_version=config['qiime_version']
-queue=config['QUEUE']
-resources_dir=config['RESOURCES_DIR']
-demux_param=config['demux_param']
-input_type=config['input_type']
-phred_score=config['phred_score']
-denoise_method=config['denoise_method']
+fastq_abs_path = config['fastq_abs_path']
+qiime_version = config['qiime_version']
+queue = config['QUEUE']
+resources_dir = config['RESOURCES_DIR']
+demux_param = config['demux_param']
+input_type = config['input_type']
+phred_score = config['phred_score']
+denoise_method = config['denoise_method']
 
-runid_list = collect_runids(proj_dir+metadata_manifest)
+meta_man_fullpath = proj_dir + metadata_manifest
+sym_link_path = proj_dir + 'fastqs/'
+
+
+# REQUIREMENTS TO START PIPELINE:
+# - directory containing: manifest (e.g. NP0084-MB4_08_29_19_metadata_test.txt) at top level
+
+
+# example manifest (specified in config):
+# #SampleID       External-ID     Sample-Type     Source-Material Source-PCR-Plate        Run-ID  Project-ID      Reciept Sample_Cat      SubjectID       Sample_Aliquot  Ext_Company     Ext_Kit Ext_Robot
+#        Homo_Method     Homo-Holder     Homo-Holder2    AFA Setting1    AFA Setting2    Extraction Batch        Residual or Original    Row     Column
+# SC249358        DZ35322 0006_01 ArtificialColony        CGR     PC04924_A_01    180112_M01354_0104_000000000-BFN3F      NP0084-MB4      sFEMB-001-R-002 ExtControl      DZ35322 0       CGR     DSP Virus
+#        QIASymphony     V Adaptor       Tubes   NA      NA      NA      2       Original        A       1
+# SC249359-PC04924-B-01   Stool_20        Stool   CGR     PC04924_B_01    180112_M01354_0104_000000000-BFN3F      NP0084-MB4      sFEMB-001-R-002 Study   IE_Stool        20      CGR     DSP Virus       QIASymphony     V Adaptor       Tubes   NA      NA      NA      2       Original        B       1
+# SC249360-PC04924-C-01   DZ35298 0093_01 Robogut CGR     PC04924_C_01    180112_M01354_0104_000000000-BFN3F      NP0084-MB4      sFEMB-001-R-002 ExtControl      DZ35298 0       CGR     DSP Virus       QIASymphony     V Adaptor       Tubes   NA      NA      NA      2       Original        C       1
+# SC249359-PC04925-A-01   Stool_20        Stool   CGR     PC04925_A_01    180112_M03599_0134_000000000-BFD9Y      NP0084-MB4      sFEMB-001-R-002 Study   IE_Stool        20      CGR     DSP Virus       QIASymphony     V Adaptor       Tubes   NA      NA      NA      2       Original        B       1
+
+# example run ID:
+# '180112_M01354_0104_000000000-BFN3F'
+
+# example split parts manifest:
+# '/DCEG/Projects/Microbiome/CGR_MB/MicroBiome/Testing/Project_NP0084-MB4/Input/split_parts_manifests/split_parts_manifest_180112_M01354_0104_000000000-BFN3F.txt
+
+    # sample-id,absolute-filepath,direction
+    # SC249358,/DCEG/CGF/Sequencing/Illumina/MiSeq/PostRun_Analysis/Data/180112_M01354_0104_000000000-BFN3F/CASAVA/L1/Project_NP0084-MB4/Sample_SC249358/SC249358_GAAGAAGCGGTA_L001_R1_001.fastq.gz,forward
+    # SC249358,/DCEG/CGF/Sequencing/Illumina/MiSeq/PostRun_Analysis/Data/180112_M01354_0104_000000000-BFN3F/CASAVA/L1/Project_NP0084-MB4/Sample_SC249358/SC249358_GAAGAAGCGGTA_L001_R2_001.fastq.gz,reverse
+    # SC249359-PC04924-B-01,/DCEG/CGF/Sequencing/Illumina/MiSeq/PostRun_Analysis/Data/180112_M01354_0104_000000000-BFN3F/CASAVA/L1/Project_NP0084-MB4/Sample_SC249359-PC04924-B-01/SC249359-PC04924-B-01_TATCAGGTGTGC_L001_R1_001.fastq.gz,forward
+    # SC249359-PC04924-B-01,/DCEG/CGF/Sequencing/Illumina/MiSeq/PostRun_Analysis/Data/180112_M01354_0104_000000000-BFN3F/CASAVA/L1/Project_NP0084-MB4/Sample_SC249359-PC04924-B-01/SC249359-PC04924-B-01_TATCAGGTGTGC_L001_R2_001.fastq.gz,reverse
+
+# example fastq file found based on run ID:
+# '/DCEG/CGF/Sequencing/Illumina/MiSeq/PostRun_Analysis/Data/180112_M01354_0104_000000000-BFN3F/CASAVA/L1/Project_NP0084-MB4/Sample_SC249358/SC249358_GAAGAAGCGGTA_L001_R1_001.fastq.gz'
+
+# example sym link path:
+# '/DCEG/Projects/Microbiome/CGR_MB/MicroBiome/Testing/Project_NP0084-MB4/Input/fasta/fasta_dir_split_part_180112_M01354_0104_000000000-BFN3F/SC249358_GAAGAAGCGGTA_L001_R1_001.fastq.gz'
+
+# /DCEG/CGF/Sequencing/Illumina/MiSeq/PostRun_Analysis/Data/190617_M01354_0118_000000000-CHFG3/CASAVA/L1/Project_NP0084-MB6/Sample_SC502441/SC502441_GACTCGAATCGT_L001_R1_001.fastq.gz
+
+
+# from manifest, pull sampleID, projID, runID, then assemble those to get the original fqs:
+
+sampleDict = {}
+with open(meta_man_fullpath) as f:
+    next(f)
+    for line in f:
+        l = line.split('\t')
+        if l[0] in sampleDict.keys():
+            sys.exit('ERROR: duplicate sample IDs detected in' + meta_man_fullpath)
+        sampleDict[l[0]] = (l[5], l[6])  # runID, projID
+
+def get_orig_r1_fq(wildcards):
+    '''Return original fastq with path based on filename
+    Note there are some assumptions here (files always end with 
+    R1_001.fastq.gz; only one R1 fq per directory).  Same for
+    following function.
+    '''
+    (runID, projID) = sampleDict[wildcards.sample]
+    p = fastq_abs_path + runID + '/CASAVA/L1/Project_' + projID + '/Sample_' + wildcards.sample + '/'
+    file = [f for f in os.listdir(p) if f.endswith('R1_001.fastq.gz')]
+    # TODO: error if file contains more than one element.  below too.
+    return p + file[0]
+
+
+def get_orig_r2_fq(wildcards):
+    '''Return original fastq with path based on filename
+    '''
+    (runID, projID) = sampleDict[wildcards.sample]
+    p = fastq_abs_path + runID + '/CASAVA/L1/Project_' + projID + '/Sample_' + wildcards.sample + '/'
+    file = [f for f in os.listdir(p) if f.endswith('R2_001.fastq.gz')]
+    return p + file[0]
+
 
 rule all:
     input:
-        #q2_man=proj_dir + 'Input/manifest_qiime2.tsv',
-        #expand('{proj_dir}Input/split_parts_manifests/split_parts_manifest_{runid}.txt',proj_dir=proj_dir,runid=runid_list),
-        #symlink_file_list=proj_dir + 'Input/fasta/dst_list.txt'
-        #expand('{proj_dir}Output/qza_results/demux_split_parts_qza/{demux_param}_{runid}.qza',proj_dir=proj_dir,demux_param=demux_param,runid=runid_list)
-        demux_qzv_files=expand('{proj_dir}Output/qzv_results/demux_split_parts_qzv/{demux_param}_{runid}.qzv',proj_dir=proj_dir,demux_param=demux_param,runid=runid_list)
+        expand(sym_link_path + '{sample}_R1.fastq.gz', sample=sampleDict.keys()),
+        expand(sym_link_path + '{sample}_R2.fastq.gz', sample=sampleDict.keys()),
+        proj_dir + 'manifests/manifest_qiime2.tsv',
+        proj_dir + 'manifests/Q2_manifest.txt',
+        proj_dir + 'out/qza_results/demux/' + demux_param + '.qza'
 
-rule qiime2_manifest:
+rule check_manifest:
+    '''TODO: Add verbiage here
+    TODO: add execute path for perl script
+    '''
     input:
-        proj_dir=directory({proj_dir}),
-        meta_man_fullpath=proj_dir+metadata_manifest
+        meta_man_fullpath
     output:
-        q2_man=proj_dir + 'Input/manifest_qiime2.tsv',
-    shell:
-        'source /etc/profile.d/modules.sh; module load perl/5.18.0;'
-        'perl Q2Manifest.pl {input.proj_dir} {input.meta_man_fullpath} {output.q2_man}'
-
-rule split_part_manifest:
-    input:
-        q2_man=proj_dir + 'Input/manifest_qiime2.tsv',
-    output:
-        split_man_files=proj_dir + 'Input/split_parts_manifests/split_parts_manifest_{runid_list}.txt'
+        proj_dir + 'manifests/manifest_qiime2.tsv'
     params:
-        fastq_abs_path=fastq_abs_path
+        proj_dir
     shell:
         'source /etc/profile.d/modules.sh; module load perl/5.18.0;'
-        'perl SplitManifest.pl {params.fastq_abs_path} {input.q2_man} {output.split_man_files}'
+        'perl Q2Manifest.pl {params} {input} {output}'
+
+rule create_per_sample_Q2_manifest:
+    '''QIIME2 has it's own manifest file format, created per-sample here
+    why was this called "split part"?  What has been split?
+    is there a reason to keep samples separated by run ID?
+    '''
+    input:
+        fq1 = get_orig_r1_fq,
+        fq2 = get_orig_r2_fq
+    output:
+        temp(proj_dir + 'manifests/{sample}_Q2_manifest.txt')
+    shell:
+        'echo "{wildcards.sample},{input.fq1},forward" > {output};'
+        'echo "{wildcards.sample},{input.fq2},reverse" >> {output}'
+
+rule combine_Q2_manifest:
+    '''Q2 per-sample manifests combined into a single file
+    '''
+    input:
+        expand(proj_dir + 'manifests/{sample}_Q2_manifest.txt', sample=sampleDict.keys())
+    output:
+        proj_dir + 'manifests/Q2_manifest.txt'
+    shell:
+        'cat <(echo "sample-id,absolute-filepath,direction") {input} > {output}'
 
 rule create_symlinks:
-    input:
-        expand('{proj_dir}Input/split_parts_manifests/split_parts_manifest_{runid}.txt',proj_dir=proj_dir,runid=runid_list),
+    '''Symlink the original fastqs in an area that PIs can access
+    TODO: Note that I've changed the directory structure from an earlier
+    version.  Update documentation.
+    '''
+    input: 
+        fq1 = get_orig_r1_fq,
+        fq2 = get_orig_r2_fq
     output:
-        symlink_file_list=proj_dir + 'Input/fasta/dst_list.txt'
-    run:
-        symlinks(proj_dir,runid_list)
+        sym1 = sym_link_path + '{sample}_R1.fastq.gz',
+        sym2 = sym_link_path + '{sample}_R2.fastq.gz'
+    shell:
+        'ln -s {input.fq1} {output.sym1};'
+        'ln -s {input.fq2} {output.sym2}'
 
 rule demux_split_parts_qza:
+    '''
+    Why did the bash script name things via runID instead of sample?  
+    RunID pulls up multiple pairs of fastqs.  Are they meant to be combined?  
+    If they are, can we just combine at the fastq level?  
+    Does Q2 somehow combine everything in a given manifest, and that's the problem?
+    Simple enough to create multiple manifests.
+    '''
     input:
-        split_man_dir= expand('{proj_dir}Input/split_parts_manifests',proj_dir=proj_dir)
+        proj_dir + 'manifests/Q2_manifest.txt'
     output:
-        demux_qza_files=proj_dir+'Output/qza_results/demux_split_parts_qza/{params.demux_param}_{runid_list}.qza'
+        proj_dir + 'out/qza_results/demux/' + demux_param + '.qza'
     params:
-        qiime_version=qiime_version,
-        queue=queue,
-        demux_param=demux_param,
-        input_type=input_type,
-        phred_score=phred_score
+        q2 = qiime_version,
+        demux_param = demux_param,
+        i_type = input_type,
+        phred = phred_score
+    conda:
+        'envs/qiime2-2017.11.yaml'
     shell:
-        'source /etc/profile.d/modules.sh; module load sge;'
-        'source /etc/profile.d/modules.sh; module load miniconda/3;'
-        'source /etc/profile.d/modules.sh; source activate qiime2-{params.qiime_version};'
-        'qsub -cwd \
-            -pe by_node 10 \
-        	-q {params.queue} \
-        	-N demux_qza_split \
-        	-S /bin/sh \
-            demux_split_parts_qza.sh \
-                {input.split_man_dir} \
-				{params.demux_param} \
-                '"{params.input_type}"'\
-				{params.phred_score}'
+        'qiime tools import \
+            --type {params.i_type} \
+            --input-path {input}\
+            --output-path {output}\
+            --source-format PairedEndFastqManifestPhred{params.phred}'
 
-rule demux_split_parts_qzv:
-	input:
-		demux_qza_files=proj_dir+'Output/qza_results/demux_split_parts_qza/{params.demux_param}_{runid_list}.qza'
-	output:
-		demux_qzv_files=proj_dir+'Output/qza_results/demux_split_parts_qza/{params.demux_param}_{runid_list}.qzv'
-	params:
-		qiime_version=qiime_version,
-		queue=queue
-	shell:
-		'source /etc/profile.d/modules.sh; module load sge;'
-        'source /etc/profile.d/modules.sh; module load miniconda/3;'
-        'source /etc/profile.d/modules.sh; source activate qiime2-{params.qiime_version};'
-        'qsub -cwd \
-            -pe by_node 10 \
-        	-q {params.queue} \
-        	-N demux_qza_split \
-        	-S /bin/sh \
-            demux_split_parts_qzv.sh \
-                {input.demux_qza_files} '
+# rule all:
+#     input:
+#         #q2_man = proj_dir + 'Input/manifest_qiime2.tsv',
+#         #expand('{proj_dir}Input/split_parts_manifests/split_parts_manifest_{runid}.txt',proj_dir = proj_dir,runid = runid_list),
+#         #symlink_file_list = proj_dir + 'Input/fasta/dst_list.txt'
+#         #expand('{proj_dir}Output/qza_results/demux_split_parts_qza/{demux_param}_{runid}.qza',proj_dir = proj_dir,demux_param = demux_param,runid = runid_list)
+#         demux_qzv_files = expand('{proj_dir}Output/qzv_results/demux_split_parts_qzv/{demux_param}_{runid}.qzv',proj_dir = proj_dir,demux_param = demux_param,runid = runid_list)
 
-rule tab_repseqs_split_parts_qza:
-	input:
-		demux_qza_files=proj_dir+'Output/qza_results/demux_split_parts_qza/{params.demux_param}_{runid_list}.qza'
-	output:
-		table_split_parts_qza=proj_dir+'Output/qza_results/repseqs_{params.denoise_method}_split_parts_qza/repseqs_{runid_list}.qza',
-		repseqs_split_parts_qza=proj_dir+'Output/qza_results/table_{params.denoise_method}_split_parts_qza/table_{runid_list}.qza'
-	params:
-		qiime_version=qiime_version,
-		queue=queue,
-		denoise_method=denoise_method
-	shell:
-		'source /etc/profile.d/modules.sh; module load sge;'
-        'source /etc/profile.d/modules.sh; module load miniconda/3;'
-        'source /etc/profile.d/modules.sh; source activate qiime2-{params.qiime_version};'
-        'qsub -cwd \
-            -pe by_node 10 \
-        	-q {params.queue} \
-        	-N tab_repseqs_qza_split \
-        	-S /bin/sh \
-            tab_repseqs_split_parts_qza.sh \
-                {input.demux_qza_files} \
-				{params.denoise_method}'
+
+
+# rule demux_split_parts_qzv:
+#  input:
+#      demux_qza_files = proj_dir + 'Output/qza_results/demux_split_parts_qza/{params.demux_param}_{runid_list}.qza'
+#  output:
+#      demux_qzv_files = proj_dir + 'Output/qza_results/demux_split_parts_qza/{params.demux_param}_{runid_list}.qzv'
+#  params:
+#      qiime_version = qiime_version,
+#      queue = queue
+#  shell:
+#      'source /etc/profile.d/modules.sh; module load sge;'
+#         'source /etc/profile.d/modules.sh; module load miniconda/3;'
+#         'source /etc/profile.d/modules.sh; source activate qiime2-{params.qiime_version};'
+#         'qsub -cwd \
+#             -pe by_node 10 \
+#          -q {params.queue} \
+#          -N demux_qza_split \
+#          -S /bin/sh \
+#             demux_split_parts_qzv.sh \
+#                 {input.demux_qza_files} '
+
+# rule tab_repseqs_split_parts_qza:
+#  input:
+#      demux_qza_files = proj_dir + 'Output/qza_results/demux_split_parts_qza/{params.demux_param}_{runid_list}.qza'
+#  output:
+#      table_split_parts_qza = proj_dir + 'Output/qza_results/repseqs_{params.denoise_method}_split_parts_qza/repseqs_{runid_list}.qza',
+#      repseqs_split_parts_qza = proj_dir + 'Output/qza_results/table_{params.denoise_method}_split_parts_qza/table_{runid_list}.qza'
+#  params:
+#      qiime_version = qiime_version,
+#      queue = queue,
+#      denoise_method = denoise_method
+#  shell:
+#      'source /etc/profile.d/modules.sh; module load sge;'
+#         'source /etc/profile.d/modules.sh; module load miniconda/3;'
+#         'source /etc/profile.d/modules.sh; source activate qiime2-{params.qiime_version};'
+#         'qsub -cwd \
+#             -pe by_node 10 \
+#          -q {params.queue} \
+#          -N tab_repseqs_qza_split \
+#          -S /bin/sh \
+#             tab_repseqs_split_parts_qza.sh \
+#                 {input.demux_qza_files} \
+#              {params.denoise_method}'
