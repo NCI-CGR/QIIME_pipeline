@@ -76,6 +76,8 @@ def get_orig_r1_fq(wildcards):
     Note there are some assumptions here (files always end with
     R1_001.fastq.gz; only one R1 fq per directory).  Same for
     following function.
+
+    SS: This is true - historic projects that had duplicates creating at seq or extraction level had new folders created so only 2 FASTQ / folder
     '''
     (runID, projID) = sampleDict[wildcards.sample]
     p = fastq_abs_path + runID + '/CASAVA/L1/Project_' + projID + '/Sample_' + wildcards.sample + '/'
@@ -104,7 +106,8 @@ rule all:
 # think about adding check for minimum reads count per sample per flow cell (need more than 1 sample per flow cell passing min threshold for tab/rep seq creation) - either see if we can include via LIMS in the manifest, or use samtools(?)
 
 rule check_manifest:
-    '''TODO: Add verbiage here
+    '''QIIME2 has specific metadata requirements for headers and columns
+    Since user is creating manifest (likely) in Excel, need to parse files to ensure that it meets requirements
     TODO: add execute path for perl script
     '''
     input:
@@ -119,8 +122,8 @@ rule check_manifest:
 
 rule create_per_sample_Q2_manifest:
     '''QIIME2 has it's own manifest file format, created per-sample here
-    why was this called "split part"?  What has been split?
-    is there a reason to keep samples separated by run ID? - Q2 requires you to group samples by flow cell (runID)
+    why was this called "split part"?  What has been split? - SS: project is being "split" into flowcells
+    is there a reason to keep samples separated by run ID? - DADA2 requires you to group samples by flow cell (runID)
     '''
     input:
         fq1 = get_orig_r1_fq,
@@ -142,7 +145,6 @@ rule combine_Q2_manifest_by_runID:
         'cat {input} | awk \'BEGIN{{FS=OFS="/"}}NR==1{{print "sample-id,absolute-filepath,direction"}}$9=="{wildcards.runID}"{{print $0}}\' > {output}'
         # 'cat <(echo "sample-id,absolute-filepath,direction") <(cat {input} | awk \'{{FS=OFS="/"}}$9=={wildcards.runID}{{print $0}}\') > {output}'
 
-
 rule create_symlinks:
     '''Symlink the original fastqs in an area that PIs can access
     TODO: Note that I've changed the directory structure from an earlier
@@ -160,14 +162,17 @@ rule create_symlinks:
 
 rule demux_split_parts_qza:
     '''
-    Why did the bash script name things via runID instead of sample?
-    RunID pulls up multiple pairs of fastqs.  Are they meant to be combined?
+    Why did the bash script name things via runID instead of sample? SS: DADA2 requirement
+    RunID pulls up multiple pairs of fastqs.  Are they meant to be combined? SS: Yes
     If they are, can we just combine at the fastq level?
     Does Q2 somehow combine everything in a given manifest, and that's the problem?
     Simple enough to create multiple manifests.
 
     If data is multiplexed, this step would de-~.  But, our data is already demultiplexed.
-    provdes summaries and plots per flow cell (as QZA).
+    provdes summaries and plots per flow cell (as QZA - not human-readable).
+
+    SS: QZA files are artifacts that contain the QIIME2 parameters that were used within the pipeline being run. They
+    would theoretically allow you to repeat parts of the pipeline if you didn't have a workflow or documentation
 
     Next step converts to QZV - human readable.
     '''
@@ -189,20 +194,9 @@ rule demux_split_parts_qza:
             --output-path {output}\
             --source-format PairedEndFastqManifestPhred{params.phred}'
 
-
-# rule all:
-#     input:
-#         #q2_man = proj_dir + 'Input/manifest_qiime2.tsv',
-#         #expand('{proj_dir}Input/split_parts_manifests/split_parts_manifest_{runid}.txt',proj_dir = proj_dir,runid = runid_list),
-#         #symlink_file_list = proj_dir + 'Input/fasta/dst_list.txt'
-#         #expand('{proj_dir}Output/qza_results/demux_split_parts_qza/{demux_param}_{runid}.qza',proj_dir = proj_dir,demux_param = demux_param,runid = runid_list)
-#         demux_qzv_files = expand('{proj_dir}Output/qzv_results/demux_split_parts_qzv/{demux_param}_{runid}.qzv',proj_dir = proj_dir,demux_param = demux_param,runid = runid_list)
-
-
-
 # rule demux_split_parts_qzv:
 #  input:
-#      demux_qza_files = proj_dir + 'Output/qza_results/demux_split_parts_qza/{params.demux_param}_{runid_list}.qza'
+#      proj_dir + 'out/qza_results/demux_{runID}/' + demux_param + '.qza'
 #  output:
 #      demux_qzv_files = proj_dir + 'Output/qza_results/demux_split_parts_qza/{params.demux_param}_{runid_list}.qzv'
 #  params:
