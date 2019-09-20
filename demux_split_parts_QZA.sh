@@ -16,8 +16,8 @@
 #output
 	#1) QZA file(s) named demux_param}_{runid}.qza in path/to/projectdirectory/Output/qza/demux_split_parts_qza
 
-#module load miniconda/3 #only needed if running stand-alone
-#source activate qiime2-2017.11 #only needed if running stand-alone
+module load miniconda/3 #only needed if running stand-alone
+source activate qiime2-2017.11 #only needed if running stand-alone
 
 split_man_dir=$1
 shift
@@ -31,10 +31,10 @@ shift
 phred_score=$1
 shift
 
-if [ "$#" -ne 4 ] || ! [ -d "$1" ]; then
-  echo "Usage: $0 /path/to/splitmanifests/ demux_param input_type phred_score" >&2
-  exit 1
-fi
+#if [ "$#" -ne 0 ] || ! [ -d "$1" ]; then
+#  echo "Usage: $0 /path/to/splitmanifests/ demux_param input_type phred_score" >&2
+#  exit 1
+#fi
 
 #Searches for all split_manifest files created, where # of files = # of flowcells for project
 for split_parts_manifests in $(ls -v $split_man_dir/*); do
@@ -47,7 +47,7 @@ for split_parts_manifests in $(ls -v $split_man_dir/*); do
 	runid=$(sed -e "s/.txt//g" <<< $runid)
 
 	#Example name: {proj_dir}Output/qza_results/demux_qza_split_parts/paired_end_demux_180112_M01354_0104_000000000-BFN3F.qza
-	demux_qza_split_part=$split_parts_manifests/Output/qza_results/demux_split_parts_qza/$demux_param_$runid.qza
+	demux_qza_split_part=$split_parts_manifests/Output/qza_results/demux_split_parts_qza/${demux_param}_$runid.qza
 	demux_qza_split_part=$(sed -e "s/\Input.*txt\///g" <<< $demux_qza_split_part)
 
 	cmd="qiime tools import \
