@@ -169,3 +169,9 @@ rule tab_repseqs_split_parts_qza:
             tab_repseqs_split_parts_qza.sh \
                 {input.demux_qza_files} \
 				{params.denoise_method}'
+
+rule tab_merged:
+	input:
+	output:
+	params:
+	shell:
