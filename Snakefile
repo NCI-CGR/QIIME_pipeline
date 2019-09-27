@@ -101,8 +101,8 @@ rule all:
         expand(sym_link_path + '{sample}_R2.fastq.gz', sample=sampleDict.keys()),
         proj_dir + 'manifests/manifest_qiime2.tsv',
         expand(proj_dir + 'manifests/{runID}_Q2_manifest.txt',runID=RUN_IDS),
-        expand(proj_dir + 'out/qza_results/demux_{runID}/' + demux_param + '.qza',runID=RUN_IDS)
-#        expand(proj_dir + 'out/qza_results/demux_{runID}/' + demux_param + '.qzv',runID=RUN_IDS)
+        expand(proj_dir + 'out/qza_results/demux_{runID}/' + demux_param + '.qza',runID=RUN_IDS),
+        expand(proj_dir + 'out/qzv_results/demux_{runID}/' + demux_param + '.qzv',runID=RUN_IDS)
 
 # think about adding check for minimum reads count per sample per flow cell (need more than 1 sample per flow cell passing min threshold for tab/rep seq creation) - either see if we can include via LIMS in the manifest, or use samtools(?)
 
@@ -196,25 +196,26 @@ rule demux_split_parts_qza:
             --output-path {output}\
             --source-format PairedEndFastqManifestPhred{params.phred}'
 
-#rule demux_split_parts_qzv:
-#    '''
+rule demux_split_parts_qzv:
+    '''
 
-#    '''
-#    input:
-#      proj_dir + 'out/qzv_results/demux_{runID}/' + demux_param + '.qza'
-#  output:
-#      proj_dir + 'out/qzv_results/demux_{runID}/' + demux_param + '.qzv'
-#  params:
-#        q2 = qiime_version,
-#        demux_param = demux_param,
-#        i_type = input_type,
-#        phred = phred_score
-#    conda:
-#        'envs/qiime2-2017.11.yaml'
-#    shell:
-#        'qiime demux summarize \
-#            --i-data {input}\
-#            --o-visualization {output}"
+    '''
+    input:
+        proj_dir + 'out/qza_results/demux_{runID}/' + demux_param + '.qza'
+    output:
+        proj_dir + 'out/qzv_results/demux_{runID}/' + demux_param + '.qzv'
+    params:
+        q2 = qiime_version,
+        demux_param = demux_param,
+        i_type = input_type,
+        phred = phred_score
+    conda:
+        'envs/qiime2-2017.11.yaml'
+    shell:
+        'source activate qiime2-2017.11;'
+        'qiime demux summarize \
+            --i-data {input}\
+            --o-visualization {output}'
 
 # rule tab_repseqs_split_parts_qza:
 #    '''
