@@ -216,24 +216,30 @@ rule demux_split_parts_qza:
 #            --o-visualization {output}"
 
 # rule tab_repseqs_split_parts_qza:
+    '''
+    Generates feature tables and feature sequences. Each feature in the table is represented by one sequence (joined paired-end).
+    QIIME 2017.10 does not require that both the table and sequences are generated in one step, however, QIIME 2019 does require
+    they are generated together.
+
+    SS: do we want to have the trimming be config features? We are giving it already demultiplexed data, so we don't need to trim
+    but if PI's are using on external data, we may want to add that feature.
+    '''
 #  input:
-#      demux_qza_files = proj_dir + 'Output/qza_results/demux_split_parts_qza/{params.demux_param}_{runid_list}.qza'
+#      proj_dir + 'out/qza_results/demux_{runID}/' + demux_param + '.qza'
 #  output:
-#      table_split_parts_qza = proj_dir + 'Output/qza_results/repseqs_{params.denoise_method}_split_parts_qza/repseqs_{runid_list}.qza',
-#      repseqs_split_parts_qza = proj_dir + 'Output/qza_results/table_{params.denoise_method}_split_parts_qza/table_{runid_list}.qza'
+#      tab=proj_dir + 'out/qza_results/table_{runID}/' + demux_param + '.qzv',
+#      seq = proj_dir + 'out/qza_results/seq_{runID}/' + demux_param + '.qzv'
 #  params:
-#      qiime_version = qiime_version,
-#      queue = queue,
-#      denoise_method = denoise_method
+#        q2 = qiime_version,
+#        demux_param = demux_param,
+#        i_type = input_type,
+#        phred = phred_score
 #  shell:
-#      'source /etc/profile.d/modules.sh; module load sge;'
-#         'source /etc/profile.d/modules.sh; module load miniconda/3;'
-#         'source /etc/profile.d/modules.sh; source activate qiime2-{params.qiime_version};'
-#         'qsub -cwd \
-#             -pe by_node 10 \
-#          -q {params.queue} \
-#          -N tab_repseqs_qza_split \
-#          -S /bin/sh \
-#             tab_repseqs_split_parts_qza.sh \
-#                 {input.demux_qza_files} \
-#              {params.denoise_method}'
+#      'qiime dada2 denoise-paired\
+#          	--i-demultiplexed-seqs {input} \
+#          	--o-table {output.tab} \
+#          	--o-representative-sequences ${output.seq} \
+#          	--p-trim-left-f 0 \
+#          	--p-trim-left-r 0 \
+#          	--p-trunc-len-f 0 \
+#            --p-trunc-len-r 0"
