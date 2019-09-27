@@ -1,6 +1,6 @@
+#! /usr/bin/env python3
 import os
 import re
-import os.path
 
 
 # reference the config file
