@@ -1,6 +1,6 @@
 # CGR QIIME2 Microbiome Pipeline
 
-This is the Cancer Genomics Research Laboratory's (CGR) microbiome analyis pipeline. This pipeline utilizes [QIIME2](https://qiime2.org/).
+This is the Cancer Genomics Research Laboratory's (CGR) microbiome analysis pipeline. This pipeline utilizes [QIIME2](https://qiime2.org/).
 
 - Testing examples:
 `/DCEG/Projects/Microbiome/CGR_MB/MicroBiome/Project_NP0501_MB1and2`
@@ -92,8 +92,22 @@ This is the Cancer Genomics Research Laboratory's (CGR) microbiome analyis pipel
     │   └── taxonomy_silva.qzv
     └── taxonomy_relative_abundance_results
 ```
+## Input Requirements
+- Edited config.yaml file
+- LIMS downloaded (w/ or w/o metadata added) manifest txt file
 
-## Details of each step
+## Workflow Details
+
+### Manifest
+QIIME2 has specific metadata requirements for headers and columns, and as the user is creating manifest (likely) in Excel, need to parse files to ensure that it meets requirements. Samples are run at a flowcell level, and manifest files are generated to include sample lists by flowcell.
+
+__Note:__ Samples are run at a flowcell level, due to DADA2 run requirements. The algorithm that DADA2 uses includes an error model that assumes one sequencing run. The pitfall of merging them together prior to running DADA2 is that a lower-quality run (but still passing threshold) may have samples thrown out because they are significantly lower than a high performing run.
+
+### Symlinks
+Investigators need access to FASTQ files, as they are not able to access these files from our network directly.
+
+### Demultiplexed Summaries
+Flowcells are processed and summary information including sequence reads by sample, is generated.
 
 ### Step 1
 
@@ -106,6 +120,8 @@ Required scripts:
   - Step1.pl
 
 __Note:__	After creating the QIIME2 manifest file, www.keemi.qiime2.org can be used from Google Chrome to verify the manifest is in the correct format.
+
+__Note:__ Samples are run at a flowcell level, due to DADA2 run requirements. The algorithm that DADA2 uses includes an error model that assumes one sequencing run. The pitfall of merging them together prior to running DADA2 is that a lower-quality run (but still passing threshold) may have samples thrown out because they are significantly lower than a high performing run.
 
 ### Step 2
 
@@ -127,7 +143,7 @@ This step will merge multiple flowcells into one file, or rename the singular fl
   - Finalize multiple flowcells
   - Merge multiple flowcells (Repseq merging)
   - Finalize Multiple Flowcells (Repseq)
-  - Filter zero reads 
+  - Filter zero reads
 - If single flowcell:
   - Finalize single flowcell (Table)
   - Finalize single flowcell (RepSeq)
@@ -158,8 +174,8 @@ Required scripts:
 ### Step 5
 
 This step performs alpha and beta diversity, taxonomic assignment using both greengenes and silva references, and creates barplot visuals for both references.
-- Alpha and Beta Diversity 
-- Creates Alpha Visualizations 
+- Alpha and Beta Diversity
+- Creates Alpha Visualizations
 - Greengenes:
   - Taxonomy results
   - Taxonomy results visualization
@@ -167,8 +183,8 @@ This step performs alpha and beta diversity, taxonomic assignment using both gre
 - Silva:
   - Taxonomy results
   - Taxonomy results visualization
-  - Taxonomic bar plot visualization 
-  
+  - Taxonomic bar plot visualization
+
 Required scripts:
 - Global.sh
 - Step5.sh
