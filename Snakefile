@@ -189,6 +189,7 @@ rule demux_split_parts_qza:
     conda:
         'envs/qiime2-2017.11.yaml'
     shell:
+        'source activate qiime2-2017.11;'
         'qiime tools import \
             --type {params.i_type} \
             --input-path {input}\
@@ -196,9 +197,9 @@ rule demux_split_parts_qza:
             --source-format PairedEndFastqManifestPhred{params.phred}'
 
 #rule demux_split_parts_qzv:
-    '''
+#    '''
 
-    '''
+#    '''
 #    input:
 #      proj_dir + 'out/qzv_results/demux_{runID}/' + demux_param + '.qza'
 #  output:
@@ -216,14 +217,14 @@ rule demux_split_parts_qza:
 #            --o-visualization {output}"
 
 # rule tab_repseqs_split_parts_qza:
-    '''
-    Generates feature tables and feature sequences. Each feature in the table is represented by one sequence (joined paired-end).
-    QIIME 2017.10 does not require that both the table and sequences are generated in one step, however, QIIME 2019 does require
-    they are generated together.
+#    '''
+#    Generates feature tables and feature sequences. Each feature in the table is represented by one sequence (joined paired-end).
+#    QIIME 2017.10 does not require that both the table and sequences are generated in one step, however, QIIME 2019 does require
+#    they are generated together.
 
-    SS: do we want to have the trimming be config features? We are giving it already demultiplexed data, so we don't need to trim
-    but if PI's are using on external data, we may want to add that feature.
-    '''
+#    SS: do we want to have the trimming be config features? We are giving it already demultiplexed data, so we don't need to trim
+#    but if PI's are using on external data, we may want to add that feature.
+#    '''
 #  input:
 #      proj_dir + 'out/qza_results/demux_{runID}/' + demux_param + '.qza'
 #  output:
