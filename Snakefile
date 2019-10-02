@@ -101,8 +101,8 @@ rule all:
         expand(sym_link_path + '{sample}_R2.fastq.gz', sample=sampleDict.keys()),
         proj_dir + 'manifests/manifest_qiime2.tsv',
         expand(proj_dir + 'manifests/{runID}_Q2_manifest.txt',runID=RUN_IDS),
-        expand(proj_dir + 'out/qza_results/demux/{runID}' + demux_param + '.qza',runID=RUN_IDS),
-        expand(proj_dir + 'out/qzv_results/demux/{runID}' + demux_param + '.qzv',runID=RUN_IDS)
+        expand(proj_dir + 'out/qza_results/demux/{runID}_' + demux_param + '.qza',runID=RUN_IDS),
+        expand(proj_dir + 'out/qzv_results/demux/{runID}_' + demux_param + '.qzv',runID=RUN_IDS)
 
 # think about adding check for minimum reads count per sample per flow cell (need more than 1 sample per flow cell passing min threshold for tab/rep seq creation) - either see if we can include via LIMS in the manifest, or use samtools(?)
 
@@ -180,7 +180,7 @@ rule demux_summary_qza:
     input:
         proj_dir + 'manifests/{runID}_Q2_manifest.txt'
     output:
-        proj_dir + 'out/qza_results/demux/{runID}' + demux_param + '.qza'
+        proj_dir + 'out/qza_results/demux/{runID}_' + demux_param + '.qza'
     params:
         q2 = qiime_version,
         demux_param = demux_param,
@@ -201,9 +201,9 @@ rule demux_summary_qzv:
 
     '''
     input:
-        proj_dir + 'out/qza_results/demux/{runID}' + demux_param + '.qza'
+        proj_dir + 'out/qza_results/demux/{runID}_' + demux_param + '.qza'
     output:
-        proj_dir + 'out/qzv_results/demux/{runID}' + demux_param + '.qzv'
+        proj_dir + 'out/qzv_results/demux/{runID}_' + demux_param + '.qzv'
     params:
         q2 = qiime_version,
         demux_param = demux_param,
