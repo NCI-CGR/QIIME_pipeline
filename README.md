@@ -107,7 +107,7 @@ __Note:__ Samples are run at a flowcell level, due to DADA2 run requirements. Th
 Investigators need access to FASTQ files, as they are not able to access these files from our network directly.
 
 ### Demultiplexed Summaries
-Flowcells are processed and summary information including sequence reads by sample, is generated.
+Flowcells are processed and summary information including sequence reads by sample, is generated in QIIME2 artifact format (QZA) and in visualization format (QZV).
 
 ### Step 1
 
