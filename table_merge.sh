@@ -1,10 +1,8 @@
 #!/bin/bash
 
 #input
-	#1) input directory for individual table and repseq files
-	
-#output
-
+	#1) input directory for individual table files
+	#2) output file full path
 
 count=1
 
