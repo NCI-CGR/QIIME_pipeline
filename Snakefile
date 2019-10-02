@@ -161,7 +161,7 @@ rule create_symlinks:
         'ln -s {input.fq1} {output.sym1};'
         'ln -s {input.fq2} {output.sym2}'
 
-rule demux_split_parts_qza:
+rule demux_summary_qza:
     '''
     Why did the bash script name things via runID instead of sample? SS: DADA2 requirement
     RunID pulls up multiple pairs of fastqs.  Are they meant to be combined? SS: Yes
@@ -196,7 +196,7 @@ rule demux_split_parts_qza:
             --output-path {output}\
             --source-format PairedEndFastqManifestPhred{params.phred}'
 
-rule demux_split_parts_qzv:
+rule demux_summary_qzv:
     '''
 
     '''
