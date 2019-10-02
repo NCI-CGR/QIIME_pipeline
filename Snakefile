@@ -108,8 +108,12 @@ rule all:
         expand(proj_dir + 'manifests/{runID}_Q2_manifest.txt',runID=RUN_IDS),
         expand(proj_dir + 'out/qza_results/demux/{runID}_' + demux_param + '.qza',runID=RUN_IDS),
         expand(proj_dir + 'out/qzv_results/demux/{runID}_' + demux_param + '.qzv',runID=RUN_IDS),
-        expand(proj_dir + 'out/qza_results/table/{runID}_' + demux_param + '.qzv',runID=RUN_IDS),
-        expand(proj_dir + 'out/qza_results/repseq/{runID}_' + demux_param + '.qzv',runID=RUN_IDS)
+        expand(proj_dir + 'out/qza_results/table/{runID}_' + demux_param + '.qza',runID=RUN_IDS),
+        expand(proj_dir + 'out/qza_results/repseq/{runID}_' + demux_param + '.qza',runID=RUN_IDS),
+        proj_dir + 'out/qza_results/table/final_' + demux_param + '.qza',
+        proj_dir + 'out/qza_results/repseq/final_' + demux_param + '.qza',
+
+
 
 # think about adding check for minimum reads count per sample per flow cell (need more than 1 sample per flow cell passing min threshold for tab/rep seq creation) - either see if we can include via LIMS in the manifest, or use samtools(?)
 
@@ -234,8 +238,8 @@ rule table_repseqs_qza:
     input:
         proj_dir + 'out/qza_results/demux/{runID}_' + demux_param + '.qza'
     output:
-        tab = proj_dir + 'out/qza_results/table/{runID}_' + demux_param + '.qzv',
-        seq = proj_dir + 'out/qza_results/repseq/{runID}_' + demux_param + '.qzv'
+        tab = proj_dir + 'out/qza_results/table/{runID}_' + demux_param + '.qza',
+        seq = proj_dir + 'out/qza_results/repseq/{runID}_' + demux_param + '.qza'
     params:
         q2 = qiime_version,
         demux_param = demux_param,
@@ -243,14 +247,79 @@ rule table_repseqs_qza:
         trim_l_r = trim_left_r,
         trun_len_f = trunc_len_f,
         trun_len_r = trunc_len_r
-
     shell:
         'source activate qiime2-2017.11;'
         'qiime dada2 denoise-paired\
             --i-demultiplexed-seqs {input} \
           	--o-table {output.tab} \
           	--o-representative-sequences ${output.seq} \
-          	--p-trim-left-f {param.trim_l_f} \
-          	--p-trim-left-r {param.trim_l_r} \
-          	--p-trunc-len-f {param.trun_len_f} \
-            --p-trunc-len-r {param.trun_len_r}'
+          	--p-trim-left-f {params.trim_l_f} \
+          	--p-trim-left-r {params.trim_l_r} \
+          	--p-trunc-len-f {params.trun_len_f} \
+            --p-trunc-len-r {params.trun_len_r}'
+
+rule table_merge_qza
+    '''
+    SS: Future qiime2 versions allow for mutliple tables/repseqs to be given at
+    one time, however, this version does not allow this and one must be given at
+    a time. Once upgrading occurs, we can eliminate the sh script entirely and example
+    below can be used
+    '''
+    ##Example updated code
+    ###https://docs.qiime2.org/2017.12/plugins/available/feature-table/merge/
+    #input:
+    #    expand(proj_dir + 'out/qza_results/demux/{runID}_' + demux_param + '.qza',runID=RUN_IDS)
+    #output:
+    #    proj_dir + 'out/qza_results/table/final_' + demux_param + '.qza',
+    #params:
+    #    q2 = qiime_version,
+    #    demux_param = demux_param
+    #shell:
+    #    'source activate qiime2-2017.11;'
+    #    'qiime feature-table merge \
+    #        --i-tables {input} \
+    #        --o-merged-table {output}'
+
+    input:
+        proj_dir + 'out/qza_results/table/{runID}_' + demux_param + '.qza',
+    output:
+        proj_dir + 'out/qza_results/table/final_' + demux_param + '.qza',
+    params:
+        q2 = qiime_version,
+        demux_param = demux_param,
+        tab_dir = directory( proj_dir + 'out/qza_results/table/')
+    shell:
+        'table_merge.sh {params.tab_dir} {output}'
+
+rule repseq_merge_qza
+    '''
+    SS: Future qiime2 versions allow for mutliple tables/repseqs to be given at
+    one time, however, this version does not allow this and one must be given at
+    a time. Once upgrading occurs, we can eliminate the sh script entirely and example
+    below can be used
+    '''
+    ##Example updated code
+    ###https://docs.qiime2.org/2017.12/plugins/available/feature-table/merge/
+    #input:
+    #    expand(proj_dir + 'out/qza_results/demux/{runID}_' + demux_param + '.qza',runID=RUN_IDS)
+    #output:
+    #    proj_dir + 'out/qza_results/repseq/final_' + demux_param + '.qza'
+    #params:
+    #    q2 = qiime_version,
+    #    demux_param = demux_param
+    #shell:
+    #    'source activate qiime2-2017.11;'
+    #    'qiime feature-table merge-seqs \
+    #        --i-data {input} \
+    #        --o-merged-data {output}'
+
+    input:
+        proj_dir + 'out/qza_results/repseq/{runID}_' + demux_param + '.qza'
+    output:
+        proj_dir + 'out/qza_results/repseq/final_' + demux_param + '.qza'
+    params:
+        q2 = qiime_version,
+        demux_param = demux_param,
+        rep_dir = directory( proj_dir + 'out/qza_results/repseqs/')
+    shell:
+        'rep_merge.sh {params.rep_dir} {output}'
