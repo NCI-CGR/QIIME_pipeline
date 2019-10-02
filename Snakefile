@@ -18,6 +18,11 @@ demux_param = config['demux_param']
 input_type = config['input_type']
 phred_score = config['phred_score']
 denoise_method = config['denoise_method']
+trim_left_f = config['trim_left_forward']
+trim_left_r = config['trim_left_reverse']
+trunc_len_f = config['truncate_length_forward']
+trunc_len_r = config['truncate_length_reverse']
+
 
 meta_man_fullpath = proj_dir + metadata_manifest
 sym_link_path = proj_dir + 'fastqs/'
@@ -208,9 +213,7 @@ rule demux_summary_qzv:
         proj_dir + 'out/qzv_results/demux/{runID}_' + demux_param + '.qzv'
     params:
         q2 = qiime_version,
-        demux_param = demux_param,
-        i_type = input_type,
-        phred = phred_score
+        demux_param = demux_param
     conda:
         'envs/qiime2-2017.11.yaml'
     shell:
@@ -236,15 +239,18 @@ rule table_repseqs_qza:
     params:
         q2 = qiime_version,
         demux_param = demux_param,
-        i_type = input_type,
-        phred = phred_score
+        trim_l_f = trim_left_f,
+        trim_l_r = trim_left_r,
+        trun_len_f = trunc_len_f,
+        trun_len_r = trunc_len_r
+
     shell:
         'source activate qiime2-2017.11;'
         'qiime dada2 denoise-paired\
             --i-demultiplexed-seqs {input} \
           	--o-table {output.tab} \
           	--o-representative-sequences ${output.seq} \
-          	--p-trim-left-f 0 \
-          	--p-trim-left-r 0 \
-          	--p-trunc-len-f 0 \
-            --p-trunc-len-r 0'
+          	--p-trim-left-f {param.trim_l_f} \
+          	--p-trim-left-r {param.trim_l_r} \
+          	--p-trunc-len-f {param.trun_len_f} \
+            --p-trunc-len-r {param.trun_len_r}'

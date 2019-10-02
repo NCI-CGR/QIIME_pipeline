@@ -1,11 +1,6 @@
 # Step 1
-<<<<<<< HEAD
 project_dir: '/DCEG/Projects/Microbiome/CGR_MB/MicroBiome/Testing/Project_NP0084-MB4/'
-metadata_manifest: 'NP0084-MB4_08_29_19_metadata_test_2.txt'
-=======
-project_dir: '/DCEG/Projects/Microbiome/CGR_MB/MicroBiome/Testing_BB/Project_NP0084-MB4/'
-metadata_manifest: 'NP0084-MB4_08_29_19_metadata_test.txt'
->>>>>>> BB_dev
+metadata_manifest: 'NP0084-MB4_08_29_19_metadata_seq.txt'
 
 # Step 2-5
 fastq_abs_path: '/DCEG/CGF/Sequencing/Illumina/MiSeq/PostRun_Analysis/Data/'
@@ -19,7 +14,10 @@ phred_score: 33
 demux_param: 'paired_end_demux'
 input_type: 'SampleData[PairedEndSequencesWithQuality]'
 denoise_method: 'dada2'
-
+trim_left_forward: 0
+trim_left_reverse: 0
+truncate_length_forward: 0
+truncate_length_reverse: 0
 
 ## Script/Resource location
 RESOURCES_DIR: '/resources'
