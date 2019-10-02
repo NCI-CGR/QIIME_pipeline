@@ -102,7 +102,9 @@ rule all:
         proj_dir + 'manifests/manifest_qiime2.tsv',
         expand(proj_dir + 'manifests/{runID}_Q2_manifest.txt',runID=RUN_IDS),
         expand(proj_dir + 'out/qza_results/demux/{runID}_' + demux_param + '.qza',runID=RUN_IDS),
-        expand(proj_dir + 'out/qzv_results/demux/{runID}_' + demux_param + '.qzv',runID=RUN_IDS)
+        expand(proj_dir + 'out/qzv_results/demux/{runID}_' + demux_param + '.qzv',runID=RUN_IDS),
+        expand(proj_dir + 'out/qza_results/table/{runID}_' + demux_param + '.qzv',runID=RUN_IDS),
+        expand(proj_dir + 'out/qza_results/repseq/{runID}_' + demux_param + '.qzv',runID=RUN_IDS)
 
 # think about adding check for minimum reads count per sample per flow cell (need more than 1 sample per flow cell passing min threshold for tab/rep seq creation) - either see if we can include via LIMS in the manifest, or use samtools(?)
 
@@ -216,3 +218,33 @@ rule demux_summary_qzv:
         'qiime demux summarize \
             --i-data {input}\
             --o-visualization {output}'
+
+rule table_repseqs_qza:
+    '''
+    Generates feature tables and feature sequences. Each feature in the table is represented by one sequence (joined paired-end).
+    QIIME 2017.10 does not require that both the table and sequences are generated in one step, however, QIIME 2019 does require
+    they are generated together.
+
+    SS: do we want to have the trimming be config features? We are giving it already demultiplexed data, so we don't need to trim
+    but if PI's are using on external data, we may want to add that feature.
+    '''
+    input:
+        proj_dir + 'out/qza_results/demux/{runID}_' + demux_param + '.qza'
+    output:
+        tab = proj_dir + 'out/qza_results/table/{runID}_' + demux_param + '.qzv',
+        seq = proj_dir + 'out/qza_results/repseq/{runID}_' + demux_param + '.qzv'
+    params:
+        q2 = qiime_version,
+        demux_param = demux_param,
+        i_type = input_type,
+        phred = phred_score
+    shell:
+        'source activate qiime2-2017.11;'
+        'qiime dada2 denoise-paired\
+            --i-demultiplexed-seqs {input} \
+          	--o-table {output.tab} \
+          	--o-representative-sequences ${output.seq} \
+          	--p-trim-left-f 0 \
+          	--p-trim-left-r 0 \
+          	--p-trunc-len-f 0 \
+            --p-trunc-len-r 0'
