@@ -129,7 +129,6 @@ rule check_manifest:
     params:
         proj_dir
     shell:
-        'source /etc/profile.d/modules.sh; module load perl/5.18.0;'
         'perl Q2Manifest.pl {params} {input} {output}'
 
 rule create_per_sample_Q2_manifest:
@@ -200,7 +199,6 @@ rule demux_summary_qza:
     conda:
         'envs/qiime2-2017.11.yaml'
     shell:
-        'source activate qiime2-2017.11;'
         'qiime tools import \
             --type {params.i_type} \
             --input-path {input}\
@@ -218,10 +216,9 @@ rule demux_summary_qzv:
     params:
         q2 = qiime_version,
         demux_param = demux_param
-    conda:
-        'envs/qiime2-2017.11.yaml'
+    # conda:
+    #     'envs/qiime2-2017.11.yaml'
     shell:
-        'source activate qiime2-2017.11;'
         'qiime demux summarize \
             --i-data {input}\
             --o-visualization {output}'
@@ -248,7 +245,6 @@ rule table_repseqs_qza:
         trun_len_f = trunc_len_f,
         trun_len_r = trunc_len_r
     shell:
-        'source activate qiime2-2017.11;'
         'qiime dada2 denoise-paired\
             --i-demultiplexed-seqs {input} \
           	--o-table {output.tab} \
@@ -258,68 +254,68 @@ rule table_repseqs_qza:
           	--p-trunc-len-f {params.trun_len_f} \
             --p-trunc-len-r {params.trun_len_r}'
 
-rule table_merge_qza
-    '''
-    SS: Future qiime2 versions allow for mutliple tables/repseqs to be given at
-    one time, however, this version does not allow this and one must be given at
-    a time. Once upgrading occurs, we can eliminate the sh script entirely and example
-    below can be used
-    '''
-    ##Example updated code
-    ###https://docs.qiime2.org/2017.12/plugins/available/feature-table/merge/
-    #input:
-    #    expand(proj_dir + 'out/qza_results/demux/{runID}_' + demux_param + '.qza',runID=RUN_IDS)
-    #output:
-    #    proj_dir + 'out/qza_results/table/final_' + demux_param + '.qza',
-    #params:
-    #    q2 = qiime_version,
-    #    demux_param = demux_param
-    #shell:
-    #    'source activate qiime2-2017.11;'
-    #    'qiime feature-table merge \
-    #        --i-tables {input} \
-    #        --o-merged-table {output}'
-
-    input:
-        proj_dir + 'out/qza_results/table/{runID}_' + demux_param + '.qza',
-    output:
-        proj_dir + 'out/qza_results/table/final_' + demux_param + '.qza',
-    params:
-        q2 = qiime_version,
-        demux_param = demux_param,
-        tab_dir = directory( proj_dir + 'out/qza_results/table/')
-    shell:
-        'table_merge.sh {params.tab_dir} {output}'
-
-rule repseq_merge_qza
-    '''
-    SS: Future qiime2 versions allow for mutliple tables/repseqs to be given at
-    one time, however, this version does not allow this and one must be given at
-    a time. Once upgrading occurs, we can eliminate the sh script entirely and example
-    below can be used
-    '''
-    ##Example updated code
-    ###https://docs.qiime2.org/2017.12/plugins/available/feature-table/merge/
-    #input:
-    #    expand(proj_dir + 'out/qza_results/demux/{runID}_' + demux_param + '.qza',runID=RUN_IDS)
-    #output:
-    #    proj_dir + 'out/qza_results/repseq/final_' + demux_param + '.qza'
-    #params:
-    #    q2 = qiime_version,
-    #    demux_param = demux_param
-    #shell:
-    #    'source activate qiime2-2017.11;'
-    #    'qiime feature-table merge-seqs \
-    #        --i-data {input} \
-    #        --o-merged-data {output}'
-
-    input:
-        proj_dir + 'out/qza_results/repseq/{runID}_' + demux_param + '.qza'
-    output:
-        proj_dir + 'out/qza_results/repseq/final_' + demux_param + '.qza'
-    params:
-        q2 = qiime_version,
-        demux_param = demux_param,
-        rep_dir = directory( proj_dir + 'out/qza_results/repseqs/')
-    shell:
-        'rep_merge.sh {params.rep_dir} {output}'
+# rule table_merge_qza
+#     '''
+#     SS: Future qiime2 versions allow for mutliple tables/repseqs to be given at
+#     one time, however, this version does not allow this and one must be given at
+#     a time. Once upgrading occurs, we can eliminate the sh script entirely and example
+#     below can be used
+#     '''
+#     ##Example updated code
+#     ###https://docs.qiime2.org/2017.12/plugins/available/feature-table/merge/
+#     #input:
+#     #    expand(proj_dir + 'out/qza_results/demux/{runID}_' + demux_param + '.qza',runID=RUN_IDS)
+#     #output:
+#     #    proj_dir + 'out/qza_results/table/final_' + demux_param + '.qza',
+#     #params:
+#     #    q2 = qiime_version,
+#     #    demux_param = demux_param
+#     #shell:
+#     #    'source activate qiime2-2017.11;'
+#     #    'qiime feature-table merge \
+#     #        --i-tables {input} \
+#     #        --o-merged-table {output}'
+#
+#     input:
+#         proj_dir + 'out/qza_results/table/{runID}_' + demux_param + '.qza',
+#     output:
+#         proj_dir + 'out/qza_results/table/final_' + demux_param + '.qza',
+#     params:
+#         q2 = qiime_version,
+#         demux_param = demux_param,
+#         tab_dir = directory( proj_dir + 'out/qza_results/table/')
+#     shell:
+#         'table_merge.sh {params.tab_dir} {output}'
+#
+# rule repseq_merge_qza
+#     '''
+#     SS: Future qiime2 versions allow for mutliple tables/repseqs to be given at
+#     one time, however, this version does not allow this and one must be given at
+#     a time. Once upgrading occurs, we can eliminate the sh script entirely and example
+#     below can be used
+#     '''
+#     ##Example updated code
+#     ###https://docs.qiime2.org/2017.12/plugins/available/feature-table/merge/
+#     #input:
+#     #    expand(proj_dir + 'out/qza_results/demux/{runID}_' + demux_param + '.qza',runID=RUN_IDS)
+#     #output:
+#     #    proj_dir + 'out/qza_results/repseq/final_' + demux_param + '.qza'
+#     #params:
+#     #    q2 = qiime_version,
+#     #    demux_param = demux_param
+#     #shell:
+#     #    'source activate qiime2-2017.11;'
+#     #    'qiime feature-table merge-seqs \
+#     #        --i-data {input} \
+#     #        --o-merged-data {output}'
+#
+#     input:
+#         proj_dir + 'out/qza_results/repseq/{runID}_' + demux_param + '.qza'
+#     output:
+#         proj_dir + 'out/qza_results/repseq/final_' + demux_param + '.qza'
+#     params:
+#         q2 = qiime_version,
+#         demux_param = demux_param,
+#         rep_dir = directory( proj_dir + 'out/qza_results/repseqs/')
+#     shell:
+#         'rep_merge.sh {params.rep_dir} {output}'
