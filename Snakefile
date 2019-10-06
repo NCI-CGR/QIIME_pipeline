@@ -196,8 +196,8 @@ rule demux_summary_qza:
         demux_param = demux_param,
         i_type = input_type,
         phred = phred_score
-    conda:
-        'envs/qiime2-2017.11.yaml'
+    # conda:
+    #     'envs/qiime2-2017.11.yaml'
     shell:
         'qiime tools import \
             --type {params.i_type} \
