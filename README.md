@@ -2,6 +2,30 @@
 
 This is the Cancer Genomics Research Laboratory's (CGR) microbiome analysis pipeline. This pipeline utilizes [QIIME2](https://qiime2.org/).
 
+## How to run:
+
+### Input requirements:
+    - Manifest file
+        - First X columns are required as shown here:
+            ```
+            #SampleID   External-ID    Sample-Type Source-Material  Source-PCR-Plate  Run-ID    Project-ID  Reciept   Sample_Cat SubjectID    Sample_Aliquot  Ext_Company   ...
+            ```
+    - config.yaml
+    - (for production runs) run_pipeline.sh
+
+
+### Options to run the pipeline (choose one):
+    A. Production run: Copy the run_pipeline.sh script to your
+    directory and edit as needed, then execute that script.
+    B. For dev/testing only: Run the snakefile directly, e.g.:
+        ```
+        module load perl/5.18.0 python3/3.6.3 miniconda/3
+        source activate qiime2-2017.11
+        conf=${PWD}/config.yml snakemake -s /path/to/pipeline/Snakefile
+        ```
+
+
+
 - Testing examples:
 `/DCEG/Projects/Microbiome/CGR_MB/MicroBiome/Project_NP0501_MB1and2`
 `/DCEG/Projects/Microbiome/CGR_MB/MicroBiome/Project_NP0440_MB4_Complete`
@@ -119,7 +143,7 @@ Using the command line, the project directory and manifest text file are input. 
 Required scripts:
   - Step1.pl
 
-__Note:__	After creating the QIIME2 manifest file, www.keemi.qiime2.org can be used from Google Chrome to verify the manifest is in the correct format.
+__Note:__   After creating the QIIME2 manifest file, www.keemi.qiime2.org can be used from Google Chrome to verify the manifest is in the correct format.
 
 __Note:__ Samples are run at a flowcell level, due to DADA2 run requirements. The algorithm that DADA2 uses includes an error model that assumes one sequencing run. The pitfall of merging them together prior to running DADA2 is that a lower-quality run (but still passing threshold) may have samples thrown out because they are significantly lower than a high performing run.
 
