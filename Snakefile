@@ -301,40 +301,44 @@ rule table_repseqs_qza:
             --p-trunc-len-f {params.trun_len_f} \
             --p-trunc-len-r {params.trun_len_r}'
 
-# rule table_merge_qza
-#     '''
-#     SS: Future qiime2 versions allow for mutliple tables/repseqs to be given at
-#     one time, however, this version does not allow this and one must be given at
-#     a time. Once upgrading occurs, we can eliminate the sh script entirely and example
-#     below can be used
-#     '''
-#     ##Example updated code
-#     ###https://docs.qiime2.org/2017.12/plugins/available/feature-table/merge/
-#     #input:
-#     #    expand(proj_dir + 'qza_results/demux/{runID}_' + demux_param + '.qza',runID=RUN_IDS)
-#     #output:
-#     #    proj_dir + 'qza_results/table/final_' + demux_param + '.qza',
-#     #params:
-#     #    q2 = qiime_version,
-#     #    demux_param = demux_param
-#     #shell:
-#     #    'source activate qiime2-2017.11;'
-#     #    'qiime feature-table merge \
-#     #        --i-tables {input} \
-#     #        --o-merged-table {output}'
+rule table_merge_qza
+    '''
+    Future qiime2 versions allow for mutliple tables/repseqs to be given at
+    one time, however, this version does not allow this and one must be given at
+    a time. Once upgrading occurs, we can eliminate the sh script entirely and example
+    below can be used
 
-#     input:
-#         proj_dir + 'qza_results/table/{runID}_' + demux_param + '.qza',
-#     output:
-#         proj_dir + 'qza_results/table/final_' + demux_param + '.qza',
-#     params:
-#         q2 = qiime_version,
-#         demux_param = demux_param,
-#         tab_dir = directory( proj_dir + 'qza_results/table/')
-#     shell:
-#         'table_merge.sh {params.tab_dir} {output}'
+    Pair-wise merging is not allowed with this version, as table_merge and repseq_merge cannot
+    run with duplicate sample names.
+    '''
+    ##Example updated code
+    ###https://docs.qiime2.org/2017.12/plugins/available/feature-table/merge/
+    #input:
+    #    expand(proj_dir + 'qza_results/demux/{runID}_' + demux_param + '.qza',runID=RUN_IDS)
+    #output:
+    #    proj_dir + 'qza_results/table/final_' + demux_param + '.qza',
+    #params:
+    #    q2 = qiime_version,
+    #    demux_param = demux_param
+    #shell:
+    #    'source activate qiime2-2017.11;'
+    #    'qiime feature-table merge \
+    #        --i-tables {input} \
+    #        --o-merged-table {output}'
 
-#     # pairwise merging only - can you merge with an empty qza? what about merging with self?
+    input:
+        out_dir + 'qza_results/table/{runID}_' + demux_param + '.qza',
+    output:
+        out_dir + 'qza_results/table/final_' + demux_param + '.qza',
+    params:
+        q2 = qiime_version,
+        demux_param = demux_param,
+        tab_dir = directory( out_dir + 'qza_results/table/'),
+        e = exec_dir
+    shell:
+        'table_merge.sh {params.tab_dir} {params.e}'
+
+#     # pairwise merging only - can you merge with an empty qza? what about merging with self? ##:Not possible
 #     input:
 #         proj_dir + 'qza_results/table/{runID}_' + demux_param + '.qza'
 #     output:

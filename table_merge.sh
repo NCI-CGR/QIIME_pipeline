@@ -3,51 +3,60 @@
 #input
 	#1) input directory for individual table files
 	#2) output file full path
+		#Example: /path/to/output/directory/table/final_dada2.qza
+
+#output
+	#If there is more than one flow cell: a merged table file called final_{demux_param}.qza
+	#If there is only one flow cell: the flowcell table.qza renamed to final_{demux_param}.qza
+
+#usage
+
+INPUT_DIR=$1
+shift
+
+OUTPUT_DIR=$1
+shift
 
 count=1
 
-for flowcells in $(ls -v $table_split_parts_dir/*); do
-	while [ $count -le 2 ]
+total_cells=$(ls -v $INPUT_DIR/* | wc -l)
 
-	do
-		echo $count
-		flowcell_merged_1 = flowcells
+final_merged=$OUTPUT_DIR
 
-		count=$(( count + 1 ))
+for flowcells in $(ls -v $INPUT_DIR/*); do
+	#If there more than one flowcell, cells need to be merged in a step-wise fashion
+	#Example: flowcell1 + flowcell2= mergedcell_2 | mergedcell2 + flowcell3 = mergedcell3
+	if  [ $total_cells != 1 ]; then
 
-	while [ $count -gt 1 ]
+		#if this is the first loop, assign the first flow cell to avoid duplicating
+		#sample ID's and failing the qiime command
+		if [ $count == 1 ]; then
+				flowcell_input1=$flowcells
+				((count++))
+		else
+			flowcell_input2=$flowcells
 
-	do
-		echo $count
-		flowcell_merged_2=$flowcells
+			flowcell_output="merged_"$count.qza
 
-		cmd="qiime feature-table merge \
-				--i-table1 $flowcell_merged_1 \
-				--i-table2 $flowcell_merged_2 \
-				--o-merged-table $output_table_temp_qza" #fix
+			# cmd="qiime feature-table merge \
+			# 	--i-table1 $flowcell_input1 \
+			# 	--i-table2 $flowcell_input2 \
+			# 	--o-merged-table $flowcell_output"
 
-			echo $cmd
-			eval $cmd
+			((count++))
 
+		fi
 
-		flowcell_merged_1=output_table #fix
+		#Rename the final iteration as the final file
+		cmd="cp ${flowcell_output} ${OUTPUT_DIR}"
 
-		count=$(( count + 1 ))
+	else
 
-Rename flowcells
-	while [ $count -le 2 ]
+		#Rename the only flowcell as the final file
+		cmd="cp $flowcells $final_merged"
 
-	do
-		echo $count
-		flowcell_merged_1=table_dada2_merged_final
-		cmd="cp ${output_table_merged_temp_qza} ${output_table_merged_final_qza}"
-		echo $cmd
 		eval $cmd
 
-	while [ $count -gt 1 ]
+	fi
 
-	do
-		table_count = table_dada2_merged_final
-		cmd="cp ${output_table_merged_temp_qza} ${output_table_merged_final_qza}"
-		echo $cmd
-		eval $cmd
+done
