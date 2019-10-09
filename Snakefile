@@ -151,7 +151,7 @@ rule check_manifest:
     simple deviations or exiting with informative errors prior to
     attempts to start QIIME2-based analysis steps.
 
-    NOTE: this manifest is currently not used anywhere.  ?
+    NOTE: this manifest is currently not used anywhere.  ? SS: Will be used downstream!
     '''
     input:
         meta_man_fullpath
@@ -225,10 +225,10 @@ rule demux_summary_qza:
     If data is multiplexed, this step would de-~.  But, our data is already demultiplexed.
     provdes summaries and plots per flow cell (as QZA - not human-readable).
 
-    SS: QZA files are artifacts that contain the QIIME2 parameters that were used within the pipeline being run. They
-    would theoretically allow you to repeat parts of the pipeline if you didn't have a workflow or documentation
-
-    Next step converts to QZV - human readable.
+    Summary files are created for each flowcell (run ID) in QZA format. QZA files are
+    QIIME2 artifacts that contain the QIIME2 parameters used to run the current step of the pipeline.
+    They are meant to allow the user to repeat parts of the pipeline if you didn't have a
+    workflow or other such documentation.
     '''
     input:
         out_dir + 'manifests/{runID}_Q2_manifest.txt'
@@ -251,7 +251,8 @@ rule demux_summary_qza:
 
 rule demux_summary_qzv:
     '''
-
+    The human-readble version of QZA files are QZV files, created in this step. QZV files can be viewed at
+    www.view.qiime2.org
     '''
     input:
         out_dir + 'qza_results/demux/{runID}_' + demux_param + '.qza'
