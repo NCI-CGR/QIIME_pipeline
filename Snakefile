@@ -514,9 +514,19 @@ rule phylo_tree_rooted:
 
 rule alpha_beta_diversity:
     '''
-    This step will perform alpha and beta diversity analysis.
+    This step will perform alpha and beta diversity analysis. This includes:
+    - Vector of Faith PD values by sample
+    - Vector of Observed OTUs values by sample
+    - Vector of Shannon diversity values by sample
+    - Vector of Pielou's evenness values by sample
+    - Matrices of unweighted and weighted UniFrac distances, Jaccard distances,
+        and Bray-Curtis distances between pairs of samples.
+    - PCoA matrix computed from unweighted and weighted UniFrac distances, Jaccard distances,
+        and Bray-Curtis distances between samples.
+    - Emperor plot of the PCoA matrix computed from unweighted and weighted UniFrac, Jaccard,
+        and Bray-Curtis.
 
-    #SS: For this step you can use the --output-dir parameter instead of writing
+    NOTE: For this step you can use the --output-dir parameter instead of writing
     out all of the outputs BUT QIIME2 wants to create this directory itself and
     won't overwrite the directory if it already exits. This leads to an error since
     Snakemake will make the dir first, and Q2 errors
@@ -574,7 +584,7 @@ rule alpha_beta_diversity:
 #         	--m-input-file ${output_dir}/evenness_vector.qza \
 #         	--m-input-file ${output_dir}/faith_pd_vector.qza \
 #         	--o-visualization ${output_dir}/alpha-table.qzv'
-
+#
 # rule core_metrics:
 #     '''
 #     '''
