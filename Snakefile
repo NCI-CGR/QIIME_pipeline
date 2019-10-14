@@ -339,7 +339,7 @@ rule table_merge_qza:
     #     'touch {output}; qiime feature-table merge --i-table1 {input} --i-table2 {output} --o-merged-table {output}'
 
     input:
-        expand(out_dir + 'qza_results/demux/{runID}_' + demux_param + '.qza',runID=RUN_IDS)
+        expand(out_dir + 'qza_results/table/{runID}_' + demux_param + '.qza',runID=RUN_IDS)
     output:
         out_dir + 'qza_results/table/final_' + demux_param + '.qza'
     params:
