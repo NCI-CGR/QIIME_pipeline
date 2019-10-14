@@ -44,7 +44,7 @@
 ## Stage 2
 #demux_qza_split_parts_dir=${QZA_RESULTS_DIR}/demux_qza_split_parts ##snakemake
 #demux_qzv_split_parts_dir=${QZV_RESULTS_DIR}/demux_qzv_split_parts ##snakemake
-#table_dada2_qza_split_parts_dir=${QZA_RESULTS_DIR}/table_dada2_qza_split_parts ##snakemake 
+#table_dada2_qza_split_parts_dir=${QZA_RESULTS_DIR}/table_dada2_qza_split_parts ##snakemake
 #repseqs_dada2_qza_split_parts_dir=${QZA_RESULTS_DIR}/repseqs_dada2_qza_split_parts ##snakemake
 #log_dir_stage_2=${LOG_DIR}/stage2_qiime2 ##not needed
 
@@ -55,18 +55,18 @@
 
 #################################################
 # Stage 3 Directories
-table_dada2_qza_merged_parts_tmp_dir=${QZA_RESULTS_DIR}/table_dada2_qza_merged_parts_tmp
-table_dada2_qza_merged_parts_final_dir=${QZA_RESULTS_DIR}/table_dada2_qza_merged_parts_final
-repseqs_dada2_qza_merged_parts_tmp_dir=${QZA_RESULTS_DIR}/repseqs_dada2_qza_merged_parts_tmp
-repseqs_dada2_qza_merged_parts_final_dir=${QZA_RESULTS_DIR}/repseqs_dada2_qza_merged_parts_final
-log_dir_stage_3=${LOG_DIR}/stage3_qiime2
-
-# Stage 3 Parameters
-table_dada2_merged_temp_param=table_dada2_merged_temp
-table_dada2_merged_final_param=table_dada2_merged_final
-table_dada2_merged_final_filt_param=table_dada2_merged_final_filt
-repseqs_dada2_merged_temp_param=repseqs_dada2_merged_temp
-repseqs_dada2_merged_final_param=repseqs_dada2_merged_final
+# table_dada2_qza_merged_parts_tmp_dir=${QZA_RESULTS_DIR}/table_dada2_qza_merged_parts_tmp
+# table_dada2_qza_merged_parts_final_dir=${QZA_RESULTS_DIR}/table_dada2_qza_merged_parts_final
+# repseqs_dada2_qza_merged_parts_tmp_dir=${QZA_RESULTS_DIR}/repseqs_dada2_qza_merged_parts_tmp
+# repseqs_dada2_qza_merged_parts_final_dir=${QZA_RESULTS_DIR}/repseqs_dada2_qza_merged_parts_final
+# log_dir_stage_3=${LOG_DIR}/stage3_qiime2
+#
+# # Stage 3 Parameters
+# table_dada2_merged_temp_param=table_dada2_merged_temp
+# table_dada2_merged_final_param=table_dada2_merged_final
+# table_dada2_merged_final_filt_param=table_dada2_merged_final_filt
+# repseqs_dada2_merged_temp_param=repseqs_dada2_merged_temp
+# repseqs_dada2_merged_final_param=repseqs_dada2_merged_final
 
 ################################################
 # Stage 4 Directories
