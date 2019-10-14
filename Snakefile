@@ -53,6 +53,7 @@ demux_param = config['demux_param']
 input_type = config['input_type']
 phred_score = config['phred_score']
 filt_min = config['filt_param']
+sampling_depth = config['sampling_depth']
 denoise_method = config['denoise_method']  # not yet implemented - space-holder for adding additional denoise software options
 if denoise_method in ['dada2', 'DADA2']:
     trim_left_f = config['dada2_denoise']['trim_left_forward']
@@ -123,7 +124,6 @@ def get_orig_r2_fq(wildcards):
         sys.exit('ERROR: More than one R2 fastq detected in ' + p)
     return p + file[0]
 
-
 rule all:
     input:
         expand(sym_link_path + '{sample}_R1.fastq.gz', sample=sampleDict.keys()),
@@ -142,7 +142,9 @@ rule all:
         out_dir + 'qza_results/phylogeny/aligned_repseq.qza',
         out_dir + 'qza_results/phylogeny/aligned_repseq_masked.qza',
         out_dir + 'qza_results/phylogeny/phylo_tree_unrooted.qza',
-        out_dir + 'qza_results/phylogeny/phylo_tree_rooted.qza'
+        out_dir + 'qza_results/phylogeny/phylo_tree_rooted.qza',
+        directory(out_dir + 'qza_results/core_metrics/'),
+        directory(out_dir + 'qzv_results/core_metrics/')
 
 # if report only = no
     # include: Snakefile_q2
@@ -509,3 +511,74 @@ rule phylo_tree_rooted:
         cmd='qiime phylogeny midpoint-root \
           --i-tree {input} \
           --o-rooted-tree {output}'
+
+rule alpha_beta_diversity:
+    '''
+    This step will perform alpha and beta diversity analysis.
+
+    #SS: For this step you can use the --output-dir parameter instead of writing
+    out all of the outputs BUT QIIME2 wants to create this directory itself and
+    won't overwrite the directory if it already exits. This leads to an error since
+    Snakemake will make the dir first, and Q2 errors
+    '''
+    input:
+        out_dir + 'qza_results/phylogeny/phylo_tree_rooted.qza'
+    output:
+        qza_dir=directory(out_dir + 'qza_results/core_metrics/'),
+        qzv_dir=directory(out_dir + 'qzv_results/core_metrics/')
+    params:
+        q2 = qiime_version,
+        tab_filt = out_dir + 'qza_results/table/final_filt_' + demux_param + '.qza',
+        samp_depth = sampling_depth,
+        q2_man = out_dir + 'manifests/manifest_qiime2.tsv'
+    shell:
+        cmd='qiime diversity core-metrics-phylogenetic \
+            --i-phylogeny {input} \
+        	--i-table {params.tab_filt} \
+        	--p-sampling-depth {params.samp_depth} \
+        	--m-metadata-file {params.q2_man} \
+            --o-rarefied-table {output.qza_dir}/rareifed_table.qza \
+            --o-faith-pd-vector {output.qza_dir}/faith.qza \
+            --o-observed-otus-vector {output.qza_dir}/observed.qza \
+            --o-shannon-vector {output.qza_dir}/shannon.qza \
+            --o-evenness-vector {output.qza_dir}/evenness.qza \
+            --o-unweighted-unifrac-distance-matrix {output.qza_dir}/unweighted_dist.qza \
+            --o-unweighted-unifrac-pcoa-results {output.qza_dir}/unweighted_pcoa.qza \
+            --o-unweighted-unifrac-emperor {output.qzv_dir}/unweighted_emperor.qzv \
+            --o-weighted-unifrac-distance-matrix {output.qza_dir}/weighted_dist.qza \
+            --o-weighted-unifrac-pcoa-results {output.qza_dir}/weighted_pcoa.qza \
+            --o-weighted-unifrac-emperor {output.qzv_dir}/weighted_emperor.qzv \
+            --o-jaccard-distance-matrix {output.qza_dir}/jaccard_dist.qza \
+            --o-jaccard-pcoa-results {output.qza_dir}/jaccard_pcoa.qza \
+            --o-jaccard-emperor {output.qzv_dir}/jaccard_emperor.qzv \
+            --o-bray-curtis-distance-matrix {output.qza_dir}/bray-curtis_dist.qza \
+            --o-bray-curtis-pcoa-results {output.qza_dir}/bray-curtis_pcoa.qza \
+            --o-bray-curtis-emperor {output.qzv_dir}/bray-curtis_emperor.qzv '
+
+# rule alpha_diversity_summary:
+#     '''
+#     cmd="qiime metadata tabulate \
+#     	--m-input-file ${output_dir}/observed_otus_vector.qza \
+#     	--m-input-file ${output_dir}/shannon_vector.qza \
+#     	--m-input-file ${output_dir}/evenness_vector.qza \
+#     	--m-input-file ${output_dir}/faith_pd_vector.qza \
+#     	--o-visualization ${output_dir}/alpha-table.qzv"
+#     '''
+#     input:
+#     outut:
+#     params:
+#     shell:
+#         cmd='qiime metadata tabulate \
+#         	--m-input-file ${output_dir}/observed_otus_vector.qza \
+#         	--m-input-file ${output_dir}/shannon_vector.qza \
+#         	--m-input-file ${output_dir}/evenness_vector.qza \
+#         	--m-input-file ${output_dir}/faith_pd_vector.qza \
+#         	--o-visualization ${output_dir}/alpha-table.qzv'
+
+# rule core_metrics:
+#     '''
+#     '''
+#     input:
+#     outut:
+#     params:
+#     shell:
