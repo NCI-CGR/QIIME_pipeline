@@ -1,10 +1,13 @@
 #!/bin/bash
 
 #input
-	#1) input directory for individual table files
+	#1) input directory for individual table or repseq files
 		#Example: /DCEG/Projects/Microbiome/CGR_MB/MicroBiome/Testing/Project_NP0084-MB4/QIIME2_Test/QIIME2/qza_results/table
+		#Example: /DCEG/Projects/Microbiome/CGR_MB/MicroBiome/Testing/Project_NP0084-MB4/QIIME2_Test/QIIME2/qza_results/repseq
+
 	#2) output file name full path
 		#Example: /path/to/output/directory/qza_results/table/final_dada2.qza
+		#Example: /path/to/output/directory/qza_results/repseq/final_dada2.qza
 
 #output
 	#If there is more than one flow cell: a merged table file called final_{demux_param}.qza
@@ -40,10 +43,18 @@ for flowcells in $(ls -v $INPUT_DIR*); do
 
 			flowcell_output=$INPUT_DIR"merged_"$count.qza
 
-			cmd="qiime feature-table merge \
-				--i-table1 $flowcell_input1 \
-				--i-table2 $flowcell_input2 \
-				--o-merged-table $flowcell_output"
+			#qiime command differs for repseq and feature table merging
+			if [[ $flowcell_output =~ "repseq" ]]; then
+				cmd="qiime feature-table merge-seq-data \
+			  		--i-data1 $flowcell_input1 \
+			  		--i-data2 $flowcell_input2 \
+			  		--o-merged-data $flowcell_output"
+			else
+				cmd="qiime feature-table merge \
+					--i-table1 $flowcell_input1 \
+					--i-table2 $flowcell_input2 \
+					--o-merged-table $flowcell_output"
+			fi
 
 			echo $cmd
 			eval $cmd
@@ -55,7 +66,6 @@ for flowcells in $(ls -v $INPUT_DIR*); do
 	#If there is only one flow cell or we've reached the last flowcell, then the cell
 	#needs to be renamed to match multiple flowcell naming IE. final_paired_end_demux.qza
 	if [ $total_cells == $count ]; then
-
 		#Rename the only flowcell as the final file
 		cmd="cp $flowcell_input1 $OUTPUT_FILE"
 
