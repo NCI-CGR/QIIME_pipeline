@@ -1,8 +1,9 @@
-metadata_manifest: '/DCEG/CGF/Bioinformatics/Production/Bari/QIIME_test/test_manifest.txt'
+metadata_manifest: '/DCEG/Projects/Microbiome/CGR_MB/MicroBiome/Testing/Project_NP0084-MB4/QIIME2_Test/NP0084-MB4_08_29_19_metadata_seq.txt'
 
 ## Directories
-out_dir: '/DCEG/CGF/Bioinformatics/Production/Bari/QIIME_test/'
-exec_dir: '/DCEG/CGF/Bioinformatics/Production/Bari/QIIME_pipeline/'
+out_dir: '/DCEG/Projects/Microbiome/CGR_MB/MicroBiome/Testing/Project_NP0084-MB4/QIIME2_Test'
+#exec_dir: '/DCEG/CGF/Bioinformatics/Production/Bari/QIIME_pipeline/'
+exec_dir: '/DCEG/Projects/Microbiome/CGR_MB/MicroBiome/sc_scripts_qiime2_pipeline/dev'
 fastq_abs_path: '/DCEG/CGF/Sequencing/Illumina/MiSeq/PostRun_Analysis/Data/'
 
 # Run mode
@@ -24,6 +25,7 @@ dada2_denoise:
 phred_score: 33
 demux_param: 'paired_end_demux'
 input_type: 'SampleData[PairedEndSequencesWithQuality]'
+filt_param: 1
 
 ## Cluster submission parameters
 cluster_mode: 'local'  # 'qsub -q xlong.q -V -j y -o $path/to/QIIME2/logs/'  # options are 'qsub ...', 'local', 'dryrun', 'unlock'

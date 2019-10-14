@@ -52,6 +52,7 @@ qiime_version = config['qiime_version']  # not yet implemented - offer support f
 demux_param = config['demux_param']
 input_type = config['input_type']
 phred_score = config['phred_score']
+filt_min = config['filt_param']
 denoise_method = config['denoise_method']  # not yet implemented - space-holder for adding additional denoise software options
 if denoise_method in ['dada2', 'DADA2']:
     trim_left_f = config['dada2_denoise']['trim_left_forward']
@@ -134,7 +135,8 @@ rule all:
         expand(out_dir + 'qza_results/table/{runID}_' + demux_param + '.qza',runID=RUN_IDS),
         expand(out_dir + 'qza_results/repseq/{runID}_' + demux_param + '.qza',runID=RUN_IDS),
         out_dir + 'qza_results/table/final_' + demux_param + '.qza',
-        out_dir + 'qza_results/repseq/final_' + demux_param + '.qza'
+        out_dir + 'qza_results/repseq/final_' + demux_param + '.qza',
+        out_dir + 'qza_results/table/final_filt_' + demux_param + '.qza'
 
 # if report only = no
     # include: Snakefile_q2
@@ -381,3 +383,22 @@ rule repseq_merge_qza:
         tab_dir = directory( out_dir + 'qza_results/repseq/')
     shell:
         'sh table_repseq_merge.sh {params.tab_dir} {output}'
+
+rule filter_reads:
+    '''
+    This step will filter out samples that have zero reads from the final merged
+    feature table. Necessary for downstream PhyloSeq manipulation
+
+    '''
+    input:
+        out_dir + 'qza_results/table/final_' + demux_param + '.qza'
+    output:
+        out_dir + 'qza_results/table/final_filt_' + demux_param + '.qza'
+    params:
+        q2 = qiime_version,
+        f_min = filt_min
+    shell:
+        'qiime feature-table filter-samples \
+          	--i-table {input} \
+          	--p-min-features {params.f_min} \
+          	--o-filtered-table {output}'
