@@ -54,6 +54,7 @@ input_type = config['input_type']
 phred_score = config['phred_score']
 filt_min = config['filt_param']
 sampling_depth = config['sampling_depth']
+max_depth = config['max_depth']
 denoise_method = config['denoise_method']  # not yet implemented - space-holder for adding additional denoise software options
 if denoise_method in ['dada2', 'DADA2']:
     trim_left_f = config['dada2_denoise']['trim_left_forward']
@@ -159,7 +160,8 @@ rule all:
         out_dir + 'qza_results/core_metrics/bray-curtis_dist.qza',
         out_dir + 'qza_results/core_metrics/bray-curtis_pcoa.qza',
         out_dir + 'qzv_results/core_metrics/bray-curtis_emperor.qzv',
-        out_dir + 'qzv_results/core_metrics/alpha_diversity_metadata.qzv'
+        out_dir + 'qzv_results/core_metrics/alpha_diversity_metadata.qzv',
+        out_dir + 'qzv_results/core_metrics/rarefaction.qzv'
 
 # if report only = no
     # include: Snakefile_q2
@@ -621,3 +623,30 @@ rule alpha_diversity_summary:
         	--m-input-file {input.even} \
         	--m-input-file {input.faith} \
         	--o-visualization {output}'
+
+rule alpha_rarefaction:
+    '''
+
+    '''
+    input:
+        tab_filt = out_dir + 'qza_results/table/final_filt_' + demux_param + '.qza',
+        rooted = out_dir + 'qza_results/phylogeny/phylo_tree_rooted.qza',
+        q2_man = out_dir + 'manifests/manifest_qiime2.tsv'
+    output:
+        out_dir + 'qzv_results/core_metrics/rarefaction.qzv'
+    params:
+        m_depth = max_depth
+    shell:
+        'qiime diversity alpha-rarefaction \
+          	--i-table {input.tab_filt} \
+          	--i-phylogeny {input.rooted} \
+          	--p-max-depth {params.m_depth} \
+          	--m-metadata-file {input.q2_man} \
+          	--o-visualization {output}'
+
+    # '''
+    # '''
+    # input:
+    # output:
+    # params:
+    # shell:
