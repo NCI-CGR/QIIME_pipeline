@@ -158,7 +158,8 @@ rule all:
         out_dir + 'qzv_results/core_metrics/jaccard_emperor.qzv',
         out_dir + 'qza_results/core_metrics/bray-curtis_dist.qza',
         out_dir + 'qza_results/core_metrics/bray-curtis_pcoa.qza',
-        out_dir + 'qzv_results/core_metrics/bray-curtis_emperor.qzv'
+        out_dir + 'qzv_results/core_metrics/bray-curtis_emperor.qzv',
+        out_dir + 'qzv_results/core_metrics/alpha_diversity_metadata.qzv'
 
 # if report only = no
     # include: Snakefile_q2
@@ -599,24 +600,24 @@ rule alpha_beta_diversity:
             --o-bray-curtis-pcoa-results {output.bc_pcoa} \
             --o-bray-curtis-emperor {output.bc_emp} '
 
-# rule alpha_diversity_summary:
-#     '''
-#     This generates a tabular view of the metadata in a human viewable format.
-#
-#     '''
-#     input:
-#         obs = out_dir + 'qza_results/core_metrics/observed.qza',
-#         shan = out_dir + 'qza_results/core_metrics/shannon.qza',
-#         even = out_dir + 'qza_results/core_metrics/evenness.qza',
-#         faith = out_dir + 'qza_results/core_metrics/faith.qza'
-#     output:
-#         out_dir + 'qzv_results/core_metrics/alpha_diversity_metadata.qzv'
-#     params:
-#         q2 = qiime_version
-#     shell:
-#         'qiime metadata tabulate \
-#             --m-input-file {input.obs} \
-#         	--m-input-file {input.shan} \
-#         	--m-input-file {input.even} \
-#         	--m-input-file {input.faith} \
-#         	--o-visualization {output}'
+rule alpha_diversity_summary:
+    '''
+    This generates a tabular view of the metadata in a human viewable format.
+
+    '''
+    input:
+        obs = out_dir + 'qza_results/core_metrics/observed.qza',
+        shan = out_dir + 'qza_results/core_metrics/shannon.qza',
+        even = out_dir + 'qza_results/core_metrics/evenness.qza',
+        faith = out_dir + 'qza_results/core_metrics/faith.qza'
+    output:
+        out_dir + 'qzv_results/core_metrics/alpha_diversity_metadata.qzv'
+    params:
+        q2 = qiime_version
+    shell:
+        'qiime metadata tabulate \
+            --m-input-file {input.obs} \
+        	--m-input-file {input.shan} \
+        	--m-input-file {input.even} \
+        	--m-input-file {input.faith} \
+        	--o-visualization {output}'
