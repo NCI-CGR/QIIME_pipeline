@@ -91,7 +91,6 @@ with open(meta_man_fullpath) as f:
         RUN_IDS.append(l[5])
 RUN_IDS = list(set(RUN_IDS))
 
-
 def get_orig_r1_fq(wildcards):
     '''Return original R1 fastq with path based on filename
 
@@ -143,8 +142,23 @@ rule all:
         out_dir + 'qza_results/phylogeny/aligned_repseq_masked.qza',
         out_dir + 'qza_results/phylogeny/phylo_tree_unrooted.qza',
         out_dir + 'qza_results/phylogeny/phylo_tree_rooted.qza',
-        directory(out_dir + 'qza_results/core_metrics/'),
-        directory(out_dir + 'qzv_results/core_metrics/')
+        out_dir + 'qza_results/core_metrics/rareifed_table.qza',
+        out_dir + 'qza_results/core_metrics/faith.qza',
+        out_dir + 'qza_results/core_metrics/observed.qza',
+        out_dir + 'qza_results/core_metrics/shannon.qza',
+        out_dir + 'qza_results/core_metrics/evenness.qza',
+        out_dir + 'qza_results/core_metrics/unweighted_dist.qza',
+        out_dir + 'qza_results/core_metrics/unweighted_pcoa.qza',
+        out_dir + 'qzv_results/core_metrics/unweighted_emperor.qzv',
+        out_dir + 'qza_results/core_metrics/weighted_dist.qza',
+        out_dir + 'qza_results/core_metrics/weighted_pcoa.qza',
+        out_dir + 'qzv_results/core_metrics/weighted_emperor.qzv',
+        out_dir + 'qza_results/core_metrics/jaccard_dist.qza',
+        out_dir + 'qza_results/core_metrics/jaccard_pcoa.qza',
+        out_dir + 'qzv_results/core_metrics/jaccard_emperor.qzv',
+        out_dir + 'qza_results/core_metrics/bray-curtis_dist.qza',
+        out_dir + 'qza_results/core_metrics/bray-curtis_pcoa.qza',
+        out_dir + 'qzv_results/core_metrics/bray-curtis_emperor.qzv'
 
 # if report only = no
     # include: Snakefile_q2
@@ -530,12 +544,32 @@ rule alpha_beta_diversity:
     out all of the outputs BUT QIIME2 wants to create this directory itself and
     won't overwrite the directory if it already exits. This leads to an error since
     Snakemake will make the dir first, and Q2 errors
+
+    #SS: Is listing all the output files necessary ? Should we create a list of these files?
+    Not sure if there is a better way
+
+    https://docs.qiime2.org/2017.11/plugins/available/diversity/core-metrics-phylogenetic/
     '''
     input:
         out_dir + 'qza_results/phylogeny/phylo_tree_rooted.qza'
     output:
-        qza_dir=directory(out_dir + 'qza_results/core_metrics/'),
-        qzv_dir=directory(out_dir + 'qzv_results/core_metrics/')
+        rare = out_dir + 'qza_results/core_metrics/rareifed_table.qza',
+        faith = out_dir + 'qza_results/core_metrics/faith.qza',
+        obs = out_dir + 'qza_results/core_metrics/observed.qza',
+        shan = out_dir + 'qza_results/core_metrics/shannon.qza',
+        even = out_dir + 'qza_results/core_metrics/evenness.qza',
+        unw_dist = out_dir + 'qza_results/core_metrics/unweighted_dist.qza',
+        unw_pcoa = out_dir + 'qza_results/core_metrics/unweighted_pcoa.qza',
+        unw_emp = out_dir + 'qzv_results/core_metrics/unweighted_emperor.qzv',
+        w_dist = out_dir + 'qza_results/core_metrics/weighted_dist.qza',
+        w_pcoa = out_dir + 'qza_results/core_metrics/weighted_pcoa.qza',
+        w_emp = out_dir + 'qzv_results/core_metrics/weighted_emperor.qzv',
+        jac_dist = out_dir + 'qza_results/core_metrics/jaccard_dist.qza',
+        jac_pcoa = out_dir + 'qza_results/core_metrics/jaccard_pcoa.qza',
+        jac_emp = out_dir + 'qzv_results/core_metrics/jaccard_emperor.qzv',
+        bc_dist = out_dir + 'qza_results/core_metrics/bray-curtis_dist.qza',
+        bc_pcoa = out_dir + 'qza_results/core_metrics/bray-curtis_pcoa.qza',
+        bc_emp = out_dir + 'qzv_results/core_metrics/bray-curtis_emperor.qzv'
     params:
         q2 = qiime_version,
         tab_filt = out_dir + 'qza_results/table/final_filt_' + demux_param + '.qza',
@@ -547,48 +581,42 @@ rule alpha_beta_diversity:
         	--i-table {params.tab_filt} \
         	--p-sampling-depth {params.samp_depth} \
         	--m-metadata-file {params.q2_man} \
-            --o-rarefied-table {output.qza_dir}/rareifed_table.qza \
-            --o-faith-pd-vector {output.qza_dir}/faith.qza \
-            --o-observed-otus-vector {output.qza_dir}/observed.qza \
-            --o-shannon-vector {output.qza_dir}/shannon.qza \
-            --o-evenness-vector {output.qza_dir}/evenness.qza \
-            --o-unweighted-unifrac-distance-matrix {output.qza_dir}/unweighted_dist.qza \
-            --o-unweighted-unifrac-pcoa-results {output.qza_dir}/unweighted_pcoa.qza \
-            --o-unweighted-unifrac-emperor {output.qzv_dir}/unweighted_emperor.qzv \
-            --o-weighted-unifrac-distance-matrix {output.qza_dir}/weighted_dist.qza \
-            --o-weighted-unifrac-pcoa-results {output.qza_dir}/weighted_pcoa.qza \
-            --o-weighted-unifrac-emperor {output.qzv_dir}/weighted_emperor.qzv \
-            --o-jaccard-distance-matrix {output.qza_dir}/jaccard_dist.qza \
-            --o-jaccard-pcoa-results {output.qza_dir}/jaccard_pcoa.qza \
-            --o-jaccard-emperor {output.qzv_dir}/jaccard_emperor.qzv \
-            --o-bray-curtis-distance-matrix {output.qza_dir}/bray-curtis_dist.qza \
-            --o-bray-curtis-pcoa-results {output.qza_dir}/bray-curtis_pcoa.qza \
-            --o-bray-curtis-emperor {output.qzv_dir}/bray-curtis_emperor.qzv '
+            --o-rarefied-table {output.rare} \
+            --o-faith-pd-vector {output.faith} \
+            --o-observed-otus-vector {output.obs} \
+            --o-shannon-vector {output.shan} \
+            --o-evenness-vector {output.even} \
+            --o-unweighted-unifrac-distance-matrix {output.unw_dist} \
+            --o-unweighted-unifrac-pcoa-results {output.unw_pcoa} \
+            --o-unweighted-unifrac-emperor {output.unw_emp} \
+            --o-weighted-unifrac-distance-matrix {output.w_dist} \
+            --o-weighted-unifrac-pcoa-results {output.w_pcoa} \
+            --o-weighted-unifrac-emperor {output.w_emp} \
+            --o-jaccard-distance-matrix {output.jac_dist} \
+            --o-jaccard-pcoa-results {output.jac_pcoa} \
+            --o-jaccard-emperor {output.jac_emp} \
+            --o-bray-curtis-distance-matrix {output.bc_dist} \
+            --o-bray-curtis-pcoa-results {output.bc_pcoa} \
+            --o-bray-curtis-emperor {output.bc_emp} '
 
 # rule alpha_diversity_summary:
 #     '''
-#     cmd="qiime metadata tabulate \
-#     	--m-input-file ${output_dir}/observed_otus_vector.qza \
-#     	--m-input-file ${output_dir}/shannon_vector.qza \
-#     	--m-input-file ${output_dir}/evenness_vector.qza \
-#     	--m-input-file ${output_dir}/faith_pd_vector.qza \
-#     	--o-visualization ${output_dir}/alpha-table.qzv"
-#     '''
-#     input:
-#     outut:
-#     params:
-#     shell:
-#         cmd='qiime metadata tabulate \
-#         	--m-input-file ${output_dir}/observed_otus_vector.qza \
-#         	--m-input-file ${output_dir}/shannon_vector.qza \
-#         	--m-input-file ${output_dir}/evenness_vector.qza \
-#         	--m-input-file ${output_dir}/faith_pd_vector.qza \
-#         	--o-visualization ${output_dir}/alpha-table.qzv'
+#     This generates a tabular view of the metadata in a human viewable format.
 #
-# rule core_metrics:
-#     '''
 #     '''
 #     input:
-#     outut:
+#         obs = out_dir + 'qza_results/core_metrics/observed.qza',
+#         shan = out_dir + 'qza_results/core_metrics/shannon.qza',
+#         even = out_dir + 'qza_results/core_metrics/evenness.qza',
+#         faith = out_dir + 'qza_results/core_metrics/faith.qza'
+#     output:
+#         out_dir + 'qzv_results/core_metrics/alpha_diversity_metadata.qzv'
 #     params:
+#         q2 = qiime_version
 #     shell:
+#         'qiime metadata tabulate \
+#             --m-input-file {input.obs} \
+#         	--m-input-file {input.shan} \
+#         	--m-input-file {input.even} \
+#         	--m-input-file {input.faith} \
+#         	--o-visualization {output}'
