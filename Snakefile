@@ -166,7 +166,9 @@ rule all:
         out_dir + 'qzv_results/core_metrics/bray-curtis_emperor.qzv',
         out_dir + 'qzv_results/core_metrics/alpha_diversity_metadata.qzv',
         out_dir + 'qzv_results/core_metrics/rarefaction.qzv',
-        out_dir + 'qza_results/taxonomy/' + ref_db + '.qza'
+        out_dir + 'qza_results/taxonomy/' + ref_db + '.qza',
+        out_dir + 'qzv_results/taxonomy/' + ref_db + '.qzv',
+        out_dir + 'qzv_results/taxonomy/' + ref_db + '_barplots.qzv'
 
 # if report only = no
     # include: Snakefile_q2
@@ -666,28 +668,32 @@ rule taxonomy_qza:
           	--i-reads {input} \
           	--o-classification {output}'
 
-# rule taxonomy_summary_qzv:
-#     '''
-# cmd="qiime metadata tabulate \
-#   	--m-input-file ${taxonomy_qza_1}\
-#   	--o-visualization ${taxonomy_qzv_1}"
-#
-#     '''
-#     input:
-#     output:
-#     params:
-#     shell:
-#
-#
-# rule taxonomy_barplots_qzv:
-#     '''
-# cmd="qiime taxa barplot \
-#   	--i-table ${input_table_merged_final_qza} \
-#   	--i-taxonomy ${taxonomy_qza_1} \
-#   	--m-metadata-file ${Manifest_File} \
-#   	--o-visualization ${taxa_bar_plots_qzv_1}"
-#     '''
-#     input:
-#     output:
-#     params:
-#     shell:
+rule taxonomy_summary_qzv:
+    '''
+
+    '''
+    input:
+        out_dir + 'qza_results/taxonomy/' + ref_db + '.qza'
+    output:
+        out_dir + 'qzv_results/taxonomy/' + ref_db + '.qzv'
+    shell:
+        'qiime metadata tabulate \
+            --m-input-file {input} \
+          	--o-visualization {output}'
+
+rule taxonomy_barplots_qzv:
+    '''
+
+    '''
+    input:
+        tab_filt = out_dir + 'qza_results/table/final_filt_' + demux_param + '.qza',
+        tax = out_dir + 'qza_results/taxonomy/' + ref_db + '.qza',
+        mani = out_dir + 'manifests/manifest_qiime2.tsv'
+    output:
+        out_dir + 'qzv_results/taxonomy/' + ref_db + '_barplots.qzv'
+    shell:
+        'qiime taxa barplot \
+          	--i-table {input.tab_filt} \
+          	--i-taxonomy {input.tax} \
+          	--m-metadata-file {input.mani} \
+          	--o-visualization {output}'
