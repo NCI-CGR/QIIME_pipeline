@@ -303,13 +303,15 @@ rule table_repseqs_qza:
 
 rule table_merge_qza:
     '''
-    Future qiime2 versions allow for mutliple tables/repseqs to be given at
-    one time, however, this version does not allow this and one must be given at
-    a time. Once upgrading occurs, we can eliminate the sh script entirely and example
-    below can be used
+    This step will merge each of the individual flowcell feature tables into one
+    final QZA file.
 
-    Pair-wise merging is not allowed with this version, as table_merge and repseq_merge cannot
-    run with duplicate sample names.
+    NOTE: Future qiime2 versions allow for multiple tables to be given at
+    one time, however, this version does not allow this and one must be given at
+    a time. This is because pair-wise merging is not allowed with this version,
+    as table_merge cannot run with duplicate sample names. Once upgrading to version
+    2019, we can eliminate the sh script entirely and example below can be used.
+
     '''
     ##Example updated code
     ###https://docs.qiime2.org/2017.12/plugins/available/feature-table/merge/
