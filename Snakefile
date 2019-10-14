@@ -137,7 +137,8 @@ rule all:
         out_dir + 'qza_results/table/final_' + demux_param + '.qza',
         out_dir + 'qza_results/repseq/final_' + demux_param + '.qza',
         out_dir + 'qza_results/table/final_filt_' + demux_param + '.qza',
-        out_dir + 'qzv_results/table/final_filt_' + demux_param + '.qzv'
+        out_dir + 'qzv_results/table/final_filt_' + demux_param + '.qzv',
+        out_dir + 'qzv_results/repseq/final_' + demux_param + '.qzv'
 
 # if report only = no
     # include: Snakefile_q2
@@ -423,3 +424,20 @@ rule table_summary_qzv:
           	--i-table {input} \
           	--o-visualization {output} \
           	--m-sample-metadata-file {params.q2_man}'
+
+rule repseq_summary_qzv:
+    '''
+    This will generate a mapping of feature IDs to sequences, and provide links
+    to easily BLAST each sequence against the NCBI nt database in a human viewable
+    format.
+    '''
+    input:
+        out_dir + 'qza_results/repseq/final_' + demux_param + '.qza'
+    output:
+        out_dir + 'qzv_results/repseq/final_' + demux_param + '.qzv'
+    params:
+        q2 = qiime_version
+    shell:
+        'qiime feature-table tabulate-seqs \
+            --i-data {input} \
+            --o-visualization {output}'
