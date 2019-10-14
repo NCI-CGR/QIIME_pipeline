@@ -55,6 +55,9 @@ phred_score = config['phred_score']
 filt_min = config['filt_param']
 sampling_depth = config['sampling_depth']
 max_depth = config['max_depth']
+classify_method = config['classify_method']
+ref_dir = config ['reference_dir']
+ref_db=config['reference_db']
 denoise_method = config['denoise_method']  # not yet implemented - space-holder for adding additional denoise software options
 if denoise_method in ['dada2', 'DADA2']:
     trim_left_f = config['dada2_denoise']['trim_left_forward']
@@ -63,6 +66,7 @@ if denoise_method in ['dada2', 'DADA2']:
     trunc_len_r = config['dada2_denoise']['truncate_length_reverse']
 
 sym_link_path = out_dir + 'fastqs/'
+ref_db_path = ref_dir + ref_db
 
 """Parse manifest to set up sample IDs and other info
 
@@ -161,7 +165,8 @@ rule all:
         out_dir + 'qza_results/core_metrics/bray-curtis_pcoa.qza',
         out_dir + 'qzv_results/core_metrics/bray-curtis_emperor.qzv',
         out_dir + 'qzv_results/core_metrics/alpha_diversity_metadata.qzv',
-        out_dir + 'qzv_results/core_metrics/rarefaction.qzv'
+        out_dir + 'qzv_results/core_metrics/rarefaction.qzv',
+        out_dir + 'qza_results/taxonomy/' + ref_db + '.qza'
 
 # if report only = no
     # include: Snakefile_q2
@@ -644,9 +649,45 @@ rule alpha_rarefaction:
           	--m-metadata-file {input.q2_man} \
           	--o-visualization {output}'
 
-    # '''
-    # '''
-    # input:
-    # output:
-    # params:
-    # shell:
+rule taxonomy_qza:
+    '''
+
+    '''
+    input:
+        out_dir + 'qza_results/repseq/final_' + demux_param + '.qza'
+    output:
+        out_dir + 'qza_results/taxonomy/' + ref_db + '.qza'
+    params:
+        c_method =classify_method,
+        ref_db_path = ref_db_path
+    shell:
+        'qiime feature-classifier {params.c_method} \
+          	--i-classifier {params.ref_db_path}.qza \
+          	--i-reads {input} \
+          	--o-classification {output}'
+
+# rule taxonomy_summary_qzv:
+#     '''
+# cmd="qiime metadata tabulate \
+#   	--m-input-file ${taxonomy_qza_1}\
+#   	--o-visualization ${taxonomy_qzv_1}"
+#
+#     '''
+#     input:
+#     output:
+#     params:
+#     shell:
+#
+#
+# rule taxonomy_barplots_qzv:
+#     '''
+# cmd="qiime taxa barplot \
+#   	--i-table ${input_table_merged_final_qza} \
+#   	--i-taxonomy ${taxonomy_qza_1} \
+#   	--m-metadata-file ${Manifest_File} \
+#   	--o-visualization ${taxa_bar_plots_qzv_1}"
+#     '''
+#     input:
+#     output:
+#     params:
+#     shell:
