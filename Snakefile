@@ -166,9 +166,9 @@ rule all:
         out_dir + 'qzv_results/core_metrics/bray-curtis_emperor.qzv',
         out_dir + 'qzv_results/core_metrics/alpha_diversity_metadata.qzv',
         out_dir + 'qzv_results/core_metrics/rarefaction.qzv',
-        out_dir + 'qza_results/taxonomy/' + ref_db + '.qza',
-        out_dir + 'qzv_results/taxonomy/' + ref_db + '.qzv',
-        out_dir + 'qzv_results/taxonomy/' + ref_db + '_barplots.qzv'
+        out_dir + 'qza_results/taxonomy/' + classify_method + '_' + ref_db + '.qza',
+        out_dir + 'qzv_results/taxonomy/' + classify_method + '_' + ref_db + '.qzv',
+        out_dir + 'qzv_results/taxonomy/' + classify_method + '_' + ref_db + '_barplots.qzv'
 
 # if report only = no
     # include: Snakefile_q2
@@ -658,7 +658,7 @@ rule taxonomy_qza:
     input:
         out_dir + 'qza_results/repseq/final_' + demux_param + '.qza'
     output:
-        out_dir + 'qza_results/taxonomy/' + ref_db + '.qza'
+        out_dir + 'qza_results/taxonomy/' + classify_method + '_' + ref_db + '.qza'
     params:
         c_method =classify_method,
         ref_db_path = ref_db_path
@@ -673,9 +673,9 @@ rule taxonomy_summary_qzv:
 
     '''
     input:
-        out_dir + 'qza_results/taxonomy/' + ref_db + '.qza'
+        out_dir + 'qza_results/taxonomy/' + classify_method + '_' + ref_db + '.qza'
     output:
-        out_dir + 'qzv_results/taxonomy/' + ref_db + '.qzv'
+        out_dir + 'qzv_results/taxonomy/' + classify_method + '_' + ref_db + '.qzv'
     shell:
         'qiime metadata tabulate \
             --m-input-file {input} \
@@ -690,7 +690,7 @@ rule taxonomy_barplots_qzv:
         tax = out_dir + 'qza_results/taxonomy/' + ref_db + '.qza',
         mani = out_dir + 'manifests/manifest_qiime2.tsv'
     output:
-        out_dir + 'qzv_results/taxonomy/' + ref_db + '_barplots.qzv'
+        out_dir + 'qzv_results/taxonomy/' + classify_method + '_' + ref_db + '_barplots.qzv'
     shell:
         'qiime taxa barplot \
           	--i-table {input.tab_filt} \
