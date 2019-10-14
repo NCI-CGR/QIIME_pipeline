@@ -69,19 +69,19 @@
 # repseqs_dada2_merged_final_param=repseqs_dada2_merged_final
 
 ################################################
-# Stage 4 Directories
-table_dada2_qzv_merged_parts_final_dir=${QZV_RESULTS_DIR}/table_dada2_qzv_merged_parts_final
-repseqs_dada2_qzv_merged_parts_final_dir=${QZV_RESULTS_DIR}/repseqs_dada2_qzv_merged_parts_final
-log_dir_stage_4=${LOG_DIR}/stage4_qiime2
-phylogeny_qza_dir=${QZA_RESULTS_DIR}/phylogeny_qza_results
-
-# Stage 4 Parameters
-table_dada2_merged_final_param=table_dada2_merged_final
-repseqs_dada2_merged_final_param=repseqs_dada2_merged_final
-output1_param=aligned_rep_seqs
-output2_param=masked_aligned_rep_seqs
-output3_param=unrooted_tree
-output4_param=rooted_tree
+# # Stage 4 Directories
+# table_dada2_qzv_merged_parts_final_dir=${QZV_RESULTS_DIR}/table_dada2_qzv_merged_parts_final
+# repseqs_dada2_qzv_merged_parts_final_dir=${QZV_RESULTS_DIR}/repseqs_dada2_qzv_merged_parts_final
+# log_dir_stage_4=${LOG_DIR}/stage4_qiime2
+# phylogeny_qza_dir=${QZA_RESULTS_DIR}/phylogeny_qza_results
+#
+# # Stage 4 Parameters
+# table_dada2_merged_final_param=table_dada2_merged_final
+# repseqs_dada2_merged_final_param=repseqs_dada2_merged_final
+# output1_param=aligned_rep_seqs
+# output2_param=masked_aligned_rep_seqs
+# output3_param=unrooted_tree
+# output4_param=rooted_tree
 
 ###############################################
 # Stage 5 Directories
