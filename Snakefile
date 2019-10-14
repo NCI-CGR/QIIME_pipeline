@@ -133,7 +133,7 @@ rule all:
         expand(out_dir + 'qzv_results/demux/{runID}_' + demux_param + '.qzv',runID=RUN_IDS),
         expand(out_dir + 'qza_results/table/{runID}_' + demux_param + '.qza',runID=RUN_IDS),
         expand(out_dir + 'qza_results/repseq/{runID}_' + demux_param + '.qza',runID=RUN_IDS),
-        out_dir + 'qza_results/table/final_' + demux_param + '.qza'
+        out_dir + 'qza_results/table/final_' + demux_param + '.qza',
         out_dir + 'qza_results/repseq/final_' + demux_param + '.qza'
 
 # if report only = no
@@ -349,7 +349,7 @@ rule table_merge_qza:
     shell:
         'sh table_repseq_merge.sh {params.tab_dir} {output}'
 
-rule repseq_merge_qza
+rule repseq_merge_qza:
     '''
     This step will merge each of the individual flowcell repseq tables into one
     final QZA file.
