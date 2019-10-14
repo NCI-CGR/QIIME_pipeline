@@ -136,7 +136,8 @@ rule all:
         expand(out_dir + 'qza_results/repseq/{runID}_' + demux_param + '.qza',runID=RUN_IDS),
         out_dir + 'qza_results/table/final_' + demux_param + '.qza',
         out_dir + 'qza_results/repseq/final_' + demux_param + '.qza',
-        out_dir + 'qza_results/table/final_filt_' + demux_param + '.qza'
+        out_dir + 'qza_results/table/final_filt_' + demux_param + '.qza',
+        out_dir + 'qzv_results/table/final_filt_' + demux_param + '.qzv'
 
 # if report only = no
     # include: Snakefile_q2
@@ -402,3 +403,23 @@ rule filter_reads:
           	--i-table {input} \
           	--p-min-features {params.f_min} \
           	--o-filtered-table {output}'
+
+rule table_summary_qzv:
+    '''
+    This will generate information on how many sequences are associated with each sample
+    and with each feature, histograms of those distributions, and some related summary statistics
+    in a human viewable format.
+
+    '''
+    input:
+        out_dir + 'qza_results/table/final_filt_' + demux_param + '.qza'
+    output:
+        out_dir + 'qzv_results/table/final_filt_' + demux_param + '.qzv'
+    params:
+        q2 = qiime_version,
+        q2_man = out_dir + 'manifests/manifest_qiime2.tsv'
+    shell:
+        'qiime feature-table summarize \
+          	--i-table {input} \
+          	--o-visualization {output} \
+          	--m-sample-metadata-file {params.q2_man}'
