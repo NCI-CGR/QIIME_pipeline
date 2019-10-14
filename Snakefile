@@ -132,8 +132,8 @@ rule all:
         # expand(out_dir + 'qza_results/demux/{runID}_' + demux_param + '.qza',runID=RUN_IDS),
         expand(out_dir + 'qzv_results/demux/{runID}_' + demux_param + '.qzv',runID=RUN_IDS),
         expand(out_dir + 'qza_results/table/{runID}_' + demux_param + '.qza',runID=RUN_IDS),
-        expand(out_dir + 'qza_results/repseq/{runID}_' + demux_param + '.qza',runID=RUN_IDS)#,
-        # proj_dir + 'qza_results/table/final_' + demux_param + '.qza',
+        expand(out_dir + 'qza_results/repseq/{runID}_' + demux_param + '.qza',runID=RUN_IDS),
+        out_dir + 'qza_results/table/final_' + demux_param + '.qza'
         # proj_dir + 'qza_results/repseq/final_' + demux_param + '.qza',
 
 # if report only = no
@@ -301,7 +301,7 @@ rule table_repseqs_qza:
             --p-trunc-len-f {params.trun_len_f} \
             --p-trunc-len-r {params.trun_len_r}'
 
-rule table_merge_qza
+rule table_merge_qza:
     '''
     Future qiime2 versions allow for mutliple tables/repseqs to be given at
     one time, however, this version does not allow this and one must be given at
@@ -326,29 +326,26 @@ rule table_merge_qza
     #        --i-tables {input} \
     #        --o-merged-table {output}'
 
+    # pairwise merging only - can you merge with an empty qza? what about merging with self? SS: No, it's not possible
+    # input:
+    #     proj_dir + 'qza_results/table/{runID}_' + demux_param + '.qza'
+    # output:
+    #     proj_dir + 'qza_results/table/final_' + demux_param + '.qza'
+    # params:
+    #     q2 = qiime_version
+    # shell:
+    #     'touch {output}; qiime feature-table merge --i-table1 {input} --i-table2 {output} --o-merged-table {output}'
+
     input:
-        out_dir + 'qza_results/table/{runID}_' + demux_param + '.qza',
+        expand(out_dir + 'qza_results/demux/{runID}_' + demux_param + '.qza',runID=RUN_IDS)
     output:
-        out_dir + 'qza_results/table/final_' + demux_param + '.qza',
+        out_dir + 'qza_results/table/final_' + demux_param + '.qza'
     params:
         q2 = qiime_version,
         demux_param = demux_param,
-        tab_dir = directory( out_dir + 'qza_results/table/'),
-        e = exec_dir
+        tab_dir = directory( out_dir + 'qza_results/table/')
     shell:
-        'table_merge.sh {params.tab_dir} {params.e}'
-
-#     # pairwise merging only - can you merge with an empty qza? what about merging with self? ##:Not possible
-#     input:
-#         proj_dir + 'qza_results/table/{runID}_' + demux_param + '.qza'
-#     output:
-#         proj_dir + 'qza_results/table/final_' + demux_param + '.qza'
-#     params:
-#         q2 = qiime_version
-#     shell:
-#         'touch {output}; qiime feature-table merge --i-table1 {input} --i-table2 {output} --o-merged-table {output}'
-
-
+        'sh table_merge.sh {params.tab_dir} {output}'
 
 # rule repseq_merge_qza
 #     '''
