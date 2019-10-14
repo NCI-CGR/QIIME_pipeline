@@ -138,7 +138,11 @@ rule all:
         out_dir + 'qza_results/repseq/final_' + demux_param + '.qza',
         out_dir + 'qza_results/table/final_filt_' + demux_param + '.qza',
         out_dir + 'qzv_results/table/final_filt_' + demux_param + '.qzv',
-        out_dir + 'qzv_results/repseq/final_' + demux_param + '.qzv'
+        out_dir + 'qzv_results/repseq/final_' + demux_param + '.qzv',
+        out_dir + 'qza_results/phylogeny/aligned_repseq.qza',
+        out_dir + 'qza_results/phylogeny/aligned_repseq_masked.qza',
+        out_dir + 'qza_results/phylogeny/phylo_tree_unrooted.qza',
+        out_dir + 'qza_results/phylogeny/phylo_tree_rooted.qza'
 
 # if report only = no
     # include: Snakefile_q2
@@ -441,3 +445,67 @@ rule repseq_summary_qzv:
         'qiime feature-table tabulate-seqs \
             --i-data {input} \
             --o-visualization {output}'
+
+rule seq_alignment:
+    '''
+    This will perform a multiple sequence alignment of the all sequence files
+    '''
+    input:
+        out_dir + 'qza_results/repseq/final_' + demux_param + '.qza'
+    output:
+        out_dir + 'qza_results/phylogeny/aligned_repseq.qza'
+    params:
+        q2 = qiime_version
+    shell:
+        cmd='qiime alignment mafft \
+          	--i-sequences {input} \
+          	--o-alignment {output}'
+
+rule seq_alignment_filt:
+    '''
+    This will filter the alignment to remove positions that are highly variable
+
+    '''
+    input:
+        out_dir + 'qza_results/phylogeny/aligned_repseq.qza'
+    output:
+        out_dir + 'qza_results/phylogeny/aligned_repseq_masked.qza'
+    params:
+        q2 = qiime_version
+    shell:
+        cmd='qiime alignment mask \
+          --i-alignment {input} \
+          --o-masked-alignment {output}'
+
+rule phylo_tree_unrooted:
+    '''
+    This will apply FastTree to generate a phylogenetic tree from the masked alignment
+
+    '''
+    input:
+        out_dir + 'qza_results/phylogeny/aligned_repseq_masked.qza'
+    output:
+        out_dir + 'qza_results/phylogeny/phylo_tree_unrooted.qza'
+    params:
+        q2 = qiime_version
+    shell:
+        cmd='qiime phylogeny fasttree \
+          --i-alignment {input} \
+          --o-tree {output}'
+
+rule phylo_tree_rooted:
+    '''
+    This will us  midpoint rooting to place the root of the tree at the midpoint
+    of the longest tip-to-tip distance in the unrooted tree
+
+    '''
+    input:
+        out_dir + 'qza_results/phylogeny/phylo_tree_unrooted.qza'
+    output:
+        out_dir + 'qza_results/phylogeny/phylo_tree_rooted.qza'
+    params:
+        q2 = qiime_version
+    shell:
+        cmd='qiime phylogeny midpoint-root \
+          --i-tree {input} \
+          --o-rooted-tree {output}'
