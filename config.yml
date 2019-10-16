@@ -5,6 +5,7 @@ out_dir: '/DCEG/Projects/Microbiome/CGR_MB/MicroBiome/Testing/Project_NP0084-MB4
 #exec_dir: '/DCEG/CGF/Bioinformatics/Production/Bari/QIIME_pipeline/'
 exec_dir: '/DCEG/Projects/Microbiome/CGR_MB/MicroBiome/sc_scripts_qiime2_pipeline/dev'
 fastq_abs_path: '/DCEG/CGF/Sequencing/Illumina/MiSeq/PostRun_Analysis/Data/'
+reference_dir: '/DCEG/Projects/Microbiome/CGR_MB/MicroBiome/sc_scripts_qiime2_pipeline/working/Resources/'
 
 # Run mode
 # standard (for CGR full run)
@@ -26,6 +27,10 @@ phred_score: 33
 demux_param: 'paired_end_demux'
 input_type: 'SampleData[PairedEndSequencesWithQuality]'
 filt_param: 1
+sampling_depth: 10000
+max_depth: 54000
+classify_method: 'classify-sklearn'
+reference_db: 'gg-13-8-99-nb-classifier' #silva-119-99-nb-classifier
 
 ## Cluster submission parameters
 cluster_mode: 'local'  # 'qsub -q xlong.q -V -j y -o $path/to/QIIME2/logs/'  # options are 'qsub ...', 'local', 'dryrun', 'unlock'
