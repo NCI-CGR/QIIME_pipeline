@@ -1,11 +1,17 @@
-metadata_manifest: '/DCEG/Projects/Microbiome/CGR_MB/MicroBiome/Testing/Project_NP0084-MB4/QIIME2_Test/NP0084-MB4_08_29_19_metadata_seq.txt'
+# CGR QIIME2 pipeline for microbiome analysis.
+# 
+# AUTHORS:
+#     S. Sevilla Chill
+#     W. Zhou
+#     B. Ballew
+
+## Manifest
+metadata_manifest: '/DCEG/CGF/Bioinformatics/Production/Bari/QIIME_test/NP0084-MB4_10_14_19_metadata_ext.txt'
 
 ## Directories
-out_dir: '/DCEG/Projects/Microbiome/CGR_MB/MicroBiome/Testing/Project_NP0084-MB4/QIIME2_Test'
-#exec_dir: '/DCEG/CGF/Bioinformatics/Production/Bari/QIIME_pipeline/'
-exec_dir: '/DCEG/Projects/Microbiome/CGR_MB/MicroBiome/sc_scripts_qiime2_pipeline/dev'
+out_dir: '/DCEG/CGF/Bioinformatics/Production/Bari/QIIME_test/2019'
+exec_dir: '/DCEG/CGF/Bioinformatics/Production/Bari/QIIME_pipeline/'
 fastq_abs_path: '/DCEG/CGF/Sequencing/Illumina/MiSeq/PostRun_Analysis/Data/'
-reference_dir: '/DCEG/Projects/Microbiome/CGR_MB/MicroBiome/sc_scripts_qiime2_pipeline/working/Resources/'
 
 # Run mode
 # standard (for CGR full run)
@@ -14,7 +20,7 @@ reference_dir: '/DCEG/Projects/Microbiome/CGR_MB/MicroBiome/sc_scripts_qiime2_pi
   # report configs
 
 ## QIIME version
-qiime_version: '2017.11'  # not yet implemented
+qiime2_version: '2019.1'  # 2017.11 or 2019.1
 
 ## Analysis parameters
 denoise_method: 'dada2' # not yet implemented
@@ -30,9 +36,11 @@ filt_param: 1
 sampling_depth: 10000
 max_depth: 54000
 classify_method: 'classify-sklearn'
-reference_db: 'gg-13-8-99-nb-classifier' #silva-119-99-nb-classifier
+reference_db:  # change based on qiime version
+- '/DCEG/CGF/Bioinformatics/Production/Bari/refDatabases/scikit_0.20.2_q2_2019.1/gg-13-8-99-nb-classifier.qza'
+- '/DCEG/CGF/Bioinformatics/Production/Bari/refDatabases/scikit_0.20.2_q2_2019.1/silva-132-99-nb-classifier.qza'
 
 ## Cluster submission parameters
-cluster_mode: 'local'  # 'qsub -q xlong.q -V -j y -o $path/to/QIIME2/logs/'  # options are 'qsub ...', 'local', 'dryrun', 'unlock'
+cluster_mode: 'qsub -q long.q -V -j y -o /DCEG/CGF/Bioinformatics/Production/Bari/QIIME_test/2019/logs/'  # options are 'qsub ...', 'local', 'dryrun', 'unlock'
 num_jobs: 10
 latency: 60
