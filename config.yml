@@ -12,6 +12,7 @@ metadata_manifest: '/DCEG/CGF/Bioinformatics/Production/Bari/QIIME_test/NP0084-M
 out_dir: '/DCEG/CGF/Bioinformatics/Production/Bari/QIIME_test/2019'
 exec_dir: '/DCEG/CGF/Bioinformatics/Production/Bari/QIIME_pipeline/'
 fastq_abs_path: '/DCEG/CGF/Sequencing/Illumina/MiSeq/PostRun_Analysis/Data/'
+temp_dir: '/scratch/ballewbj/test/'
 
 # Run mode
 # standard (for CGR full run)
@@ -41,6 +42,6 @@ reference_db:  # change based on qiime version
 - '/DCEG/CGF/Bioinformatics/Production/Bari/refDatabases/scikit_0.20.2_q2_2019.1/silva-132-99-nb-classifier.qza'
 
 ## Cluster submission parameters
-cluster_mode: 'qsub -q long.q -V -j y -o /DCEG/CGF/Bioinformatics/Production/Bari/QIIME_test/2019/logs/'  # options are 'qsub ...', 'local', 'dryrun', 'unlock'
+cluster_mode: 'qsub -q long.q -V -j y -S /bin/bash -o /DCEG/CGF/Bioinformatics/Production/Bari/QIIME_test/2019/logs/ -pe by_node {threads}'  # options are 'qsub ...', 'local', 'dryrun', 'unlock'
 num_jobs: 10
 latency: 60
