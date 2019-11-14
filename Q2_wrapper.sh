@@ -14,54 +14,70 @@
 #     Submit this script to a cluster or run locally
 #     See run_pipeline.sh for example
 
+# POSIX compliance notes: 
+    # -o pipefail 
+    # possibly `source activate conda-env`
+
 set -euo pipefail
+
+unset module
+
+usage="Usage: $0 /path/to/config.yaml"
 
 # custom exit function
 die() {
-    echo "ERROR: $*" 1>&2
+    printf "ERROR: %s\n" "$*" 1>&2
     exit 1
 }
 
 config_file=""
 if [ $# -eq 0 ]; then
-    die "Please specify config file with full path."
+    die "Please specify config file with full path.\n$usage"
 else 
     config_file=$1
 fi
 
 if [ ! -f "$config_file" ]; then
-    die "Config file not found."
+    die "Config file not found.\n$usage"
 fi
 
 # note that this will only work for simple, single-level yaml
 # and requires a whitespace between the key and value pair in the config
 # (except for the cluster command, which requires single or double quotes)
-exec_dir=$(awk '($0~/^exec_dir/){print $2}' $config_file | sed "s/['\"]//g")
-out_dir=$(awk '($0~/^out_dir/){print $2}' $config_file | sed "s/['\"]//g") 
+exec_dir=$(awk '($0~/^exec_dir/){print $2}' "$config_file" | sed "s/['\"]//g")
+out_dir=$(awk '($0~/^out_dir/){print $2}' "$config_file" | sed "s/['\"]//g") 
 log_dir="${out_dir}/logs/"
-# tempDir=$(awk '($0~/^tempDir/){print $2}' $config_file | sed "s/['\"]//g")
-num_jobs=$(awk '($0~/^num_jobs/){print $2}' $config_file | sed "s/['\"]//g")
-latency=$(awk '($0~/^latency/){print $2}' $config_file | sed "s/['\"]//g")
-cluster_line=$(awk '($0~/^cluster_mode/){print $0}' $config_file | sed "s/\"/'/g")
+temp_dir=$(awk '($0~/^temp_dir/){print $2}' "$config_file" | sed "s/['\"]//g")
+num_jobs=$(awk '($0~/^num_jobs/){print $2}' "$config_file" | sed "s/['\"]//g")
+latency=$(awk '($0~/^latency/){print $2}' "$config_file" | sed "s/['\"]//g")
+cluster_line=$(awk '($0~/^cluster_mode/){print $0}' "$config_file" | sed "s/\"/'/g")
     # allows single or double quoting of the qsub command in the config file
-cluster_mode='"'$(echo $cluster_line | awk -F\' '($0~/^cluster_mode/){print $2}')'"'
-qiime2_version=$(awk '($0~/^qiime2_version/){print $2}' $config_file | sed "s/['\"]//g")
-
+cluster_mode='"'$(echo "$cluster_line" | awk -F\' '($0~/^cluster_mode/){print $2}')'"'
+qiime2_version=$(awk '($0~/^qiime2_version/){print $2}' "$config_file" | sed "s/['\"]//g")
 
 # TODO: enforce minimal version requirements
 # check dependencies and print to stdout
 echo "Dependencies:"
-conda --version || die "conda not detected."
-perl --version | head -n2 | tail -n1 || die "Perl not detected."
-python --version || die "Python not detected."
+conda --version 2> /dev/null || die "conda not detected."
+perl --version 2> /dev/null | head -n2 | tail -n1 || die "Perl not detected."
+python --version 2> /dev/null || die "Python not detected."
+printf "Snakemake: " 
+snakemake --version 2> /dev/null || die "Snakemake not detected."
 
 # only allow tested and confirmed versions of Q2
-if [[ "$qiime2_version" != "2017.11" ]] && [[ "$qiime2_version" != "2019.1" ]]; then
+if [ "$qiime2_version" != "2017.11" ] && [ "$qiime2_version" != "2019.1" ]; then
     die "QIIME2 version ${qiime2_version} is not supported.  Please select 2017.11 or 2019.1."
 else
-    source activate qiime2-${qiime2_version}
+    source activate qiime2-"${qiime2_version}"
     qiime --version | head -n1
 fi
+
+# export temp directory (otherwise defaults to /tmp)
+# https://forum.qiime2.org/t/tmp-directory-for-qiime-dada2-denoise-paired/6384
+if [ ! -d "$temp_dir" ]; then
+    mkdir -p "$temp_dir" || die "mkdir -p ${temp_dir} failed."
+fi
+export TMPDIR="$temp_dir"
 
 # check config file for errors (TODO)
 # perl ${execDir}/scripts/check_config.pl $config_file
@@ -73,7 +89,7 @@ fi
 DATE=$(date +"%Y%m%d%H%M")
 
 cmd=""
-if [ "$cluster_mode" == '"'"local"'"' ]; then
+if [ "$cluster_mode" = '"'"local"'"' ]; then
     cmd="conf=$config_file snakemake -p -s ${exec_dir}/Snakefile --rerun-incomplete &> ${log_dir}/Q2_${DATE}.out"
 elif [ "$cluster_mode" = '"'"unlock"'"' ]; then
     cmd="conf=$config_file snakemake -p -s ${exec_dir}/Snakefile --unlock"  # convenience unlock
@@ -84,4 +100,4 @@ else
 fi
 
 echo "Command run: $cmd"
-eval $cmd 
+eval "$cmd"
