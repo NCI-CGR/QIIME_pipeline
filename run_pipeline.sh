@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # CGR QIIME2 pipeline for microbiome analysis.
 # 
@@ -15,12 +15,13 @@
 
 set -euo pipefail
 
-source /etc/profile.d/modules.sh; module load sge perl/5.18.0 miniconda/3
+. /etc/profile.d/modules.sh; module load sge perl/5.18.0 miniconda/3
+unset module
 
 # cluster:
 cmd="qsub -q long.q -V -j y -S /bin/sh -o ${PWD} path/to/pipeline/Q2_wrapper.sh ${PWD}/config.yml"
 echo "Command run: $cmd"
-eval $cmd
+eval "$cmd"
 
 # local:
 # cmd="bash /DCEG/CGF/Bioinformatics/Production/Bari/QIIME_pipeline/Q2_wrapper.sh ${PWD}/config.yml"
