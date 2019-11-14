@@ -1,12 +1,13 @@
 # CGR QIIME2 Microbiome Pipeline
 
-This is the Cancer Genomics Research Laboratory's (CGR) microbiome analysis pipeline. This pipeline utilizes [QIIME2](https://qiime2.org/).
+This is the Cancer Genomics Research Laboratory's (CGR) microbiome analysis pipeline. This pipeline utilizes [QIIME2](https://qiime2.org/) to classify sequence data, calculate relative abundance, and perform alpha- and beta-diversity analysis.
 
-## How to run:
+## How to run
 
-### Input requirements:
+### Input requirements
+
 - Manifest file
-    - First X columns are required as shown here:
+    - First X columns are required as shown here: (update!)
     ```
     #SampleID   External-ID    Sample-Type Source-Material  Source-PCR-Plate  Run-ID    Project-ID  Reciept   Sample_Cat SubjectID    Sample_Aliquot  Ext_Company   ...
     ```
@@ -14,203 +15,125 @@ This is the Cancer Genomics Research Laboratory's (CGR) microbiome analysis pipe
 - (for production runs) run_pipeline.sh
 
 
-### Options to run the pipeline (choose one):
-- Production run: Copy the `run_pipeline.sh` script to your directory and edit as needed, then execute that script.
-- For dev/testing only: Run the snakefile directly, e.g.:
+### Options to run the pipeline (choose one)
+
+A. Production run: Copy `run_pipeline.sh` and `config.yaml` to your directory, edit as needed, then execute the script.
+B. For dev/testing only: Copy and edit `config.yaml`, then run the snakefile directly, e.g.:
 ```
 module load perl/5.18.0 python3/3.6.3 miniconda/3
 source activate qiime2-2017.11
 conf=${PWD}/config.yml snakemake -s /path/to/pipeline/Snakefile
 ```
 
+## Configuration details
 
+- metadata_manifest: full path to manifest file
+- out_dir: full path to desired output directory
+- exec_dir: full path to pipeline (e.g. Snakefile)
+- fastq_abs_path: full path to fastqs
+- temp_dir: full path to temp/scratch space
+- qiime2_version: only two versions permitted (2017.11 or 2019.1)
+- reference_db: list classifiers (1+) to be used for taxonomic classification; be sure to match trained classifiers with correct qiime version
+- cluster_mode: options are `'qsub ...'`, `'local'`, `'dryrun'`, `'unlock'`
+  - Example for cgems: `'qsub -q long.q -V -j y -S /bin/bash -o /DCEG/CGF/Bioinformatics/Production/Bari/QIIME_test/2019/logs/ -pe by_node {threads}'`
+  - When running on an HPC, it is important to:
+    - Set the shell (`-S /bin/bash` above)
+    - Set the environment (`-V` above to export environemnt variables to job environments)
+    - Allocate the appropriate number of parallel resources via `{threads}`, which links the number of threads requested by the job scheduler to the number of threads specified in the snakemake rule (-pe by_node `{threads}` above)
+
+## Workflow summary
+
+1. Manifest management:
+  - Manifest provided in config.yaml is checked for compliance with QIIME2 specifications
+  - Per-flow cell manifests are created
+2. Symlink fastqs to be viewable by DCEG PIs
+3. Import and demultiplex fastqs
+4. Denoise
+5. Merge feature and sequence tables across flow cells; drop samples with zero reads
+6. Build multiple sequence alignment, then build rooted and unrooted phylogenetic trees
+7. Perform alpha- and beta-diversity analysis, rarefaction, and taxonomic classification
+
+## Example output directory structure
+
+- Within parent directory `<out_dir>/` defined in config.yaml
+```
+.
+├── denoising
+│   ├── feature_tables
+│   │   ├── 180112_M01354_0104_000000000-BFN3F_paired_end_demux.qza
+│   │   ├── 180112_M03599_0134_000000000-BFD9Y_paired_end_demux.qza
+│   │   ├── 180328_M01354_0106_000000000-BFMHC_paired_end_demux.qza
+│   │   ├── merged_filtered_paired_end_demux.qza
+│   │   ├── merged_filtered_paired_end_demux.qzv
+│   │   └── merged_paired_end_demux.qza
+│   └── sequence_tables
+│       ├── 180112_M01354_0104_000000000-BFN3F_paired_end_demux.qza
+│       ├── 180112_M03599_0134_000000000-BFD9Y_paired_end_demux.qza
+│       ├── 180328_M01354_0106_000000000-BFMHC_paired_end_demux.qza
+│       ├── merged_paired_end_demux.qza
+│       └── merged_paired_end_demux.qzv
+├── diversity_core_metrics
+│   ├── alpha_diversity_metadata.qzv
+│   ├── bray-curtis_dist.qza
+│   ├── bray-curtis_emperor.qzv
+│   ├── bray-curtis_pcoa.qza
+│   ├── evenness.qza
+│   ├── faith.qza
+│   ├── jaccard_dist.qza
+│   ├── jaccard_emperor.qzv
+│   ├── jaccard_pcoa.qza
+│   ├── observed.qza
+│   ├── rarefaction.qzv
+│   ├── rareifed_table.qza
+│   ├── shannon.qza
+│   ├── unweighted_dist.qza
+│   ├── unweighted_emperor.qzv
+│   ├── unweighted_pcoa.qza
+│   ├── weighted_dist.qza
+│   ├── weighted_emperor.qzv
+│   └── weighted_pcoa.qza
+├── fastqs
+│   ├── SC249358_R1.fastq.gz -> /DCEG/CGF/Sequencing/Illumina/MiSeq/PostRun_Analysis/Data/180112_M01354_0104_000000000-BFN3F/CASAVA/L1/Project_NP0084-MB4/Sample_SC249358/SC249358_GAAGAAGCGGTA_L001_R1_001.fastq.gz
+│   ├── SC249358_R2.fastq.gz -> /DCEG/CGF/Sequencing/Illumina/MiSeq/PostRun_Analysis/Data/180112_M01354_0104_000000000-BFN3F/CASAVA/L1/Project_NP0084-MB4/Sample_SC249358/SC249358_GAAGAAGCGGTA_L001_R2_001.fastq.gz
+│   └── ...
+├── import_and_demultiplex
+│   ├── 180112_M01354_0104_000000000-BFN3F_paired_end_demux.qza
+│   ├── 180112_M01354_0104_000000000-BFN3F_paired_end_demux.qzv
+│   ├── 180112_M03599_0134_000000000-BFD9Y_paired_end_demux.qza
+│   ├── 180112_M03599_0134_000000000-BFD9Y_paired_end_demux.qzv
+│   ├── 180328_M01354_0106_000000000-BFMHC_paired_end_demux.qza
+│   └── 180328_M01354_0106_000000000-BFMHC_paired_end_demux.qzv
+├── logs
+│   ├── Q2_201911131438.out
+│   ├── snakejob.alpha_beta_diversity.21.sh.o1741971
+│   └── ...
+├── manifests
+│   ├── 180112_M01354_0104_000000000-BFN3F_Q2_manifest.txt
+│   ├── 180112_M03599_0134_000000000-BFD9Y_Q2_manifest.txt
+│   ├── 180328_M01354_0106_000000000-BFMHC_Q2_manifest.txt
+│   └── manifest_qiime2.tsv
+├── phylogenetics
+│   ├── masked_msa.qza
+│   ├── msa.qza
+│   ├── rooted_tree.qza
+│   └── unrooted_tree.qza
+└── taxonomic_classification
+    ├── barplots_classify-sklearn_gg-13-8-99-nb-classifier.qzv
+    ├── barplots_classify-sklearn_silva-119-99-nb-classifier.qzv
+    ├── classify-sklearn_gg-13-8-99-nb-classifier.qza
+    ├── classify-sklearn_gg-13-8-99-nb-classifier.qzv
+    ├── classify-sklearn_silva-119-99-nb-classifier.qza
+    └── classify-sklearn_silva-119-99-nb-classifier.qzv
+```
+
+------------------------------------------------------------------------------------
+
+## Notes 
 
 - Testing examples:
 `/DCEG/Projects/Microbiome/CGR_MB/MicroBiome/Project_NP0501_MB1and2`
 `/DCEG/Projects/Microbiome/CGR_MB/MicroBiome/Project_NP0440_MB4_Complete`
 
-## Workflow summary
-
-- Step1
-  - Create project directory folders
-  - Creates QIIME2 TSV formatted manifest file
-  - Creates FASTQ directories and moves files to folders
-
-- Step2
-  - Demultiplexes data
-  - Creates features tables and sequencing tables
-
-- Step3
-  - Will merge split data into one file file or rename file to match multiple flowcell outputs
-  - Removes samples with zero reads from subsequent analysis
-
-- Step4
-  - Creates sequencing summary visuals
-  - Maps and aligns sequences
-  - Creates rooted and unrooted tree files
-
-- Step5
-  - Performs alpha and beta diversity
-  - Performs taxonomic assignment using both greengenes and silva references
-  - Creates barplot visuals for both references
-
-## Output directory structure (within parent directory `<project>/Output/`):
-```
-.
-├── qza_results
-│   ├── abundance_qza_results
-│   ├── core_metrics_results
-│   │   ├── alpha-table.qzv
-│   │   ├── bray_curtis_distance_matrix.qza
-│   │   ├── bray_curtis_emperor.qzv
-│   │   ├── bray_curtis_pcoa_results.qza
-│   │   ├── evenness_vector.qza
-│   │   ├── faith_pd_vector.qza
-│   │   ├── jaccard_distance_matrix.qza
-│   │   ├── jaccard_emperor.qzv
-│   │   ├── jaccard_pcoa_results.qza
-│   │   ├── observed_otus_vector.qza
-│   │   ├── rarefied_table.qza
-│   │   ├── shannon_vector.qza
-│   │   ├── unweighted_unifrac_distance_matrix.qza
-│   │   ├── unweighted_unifrac_emperor.qzv
-│   │   ├── unweighted_unifrac_pcoa_results.qza
-│   │   ├── weighted_unifrac_distance_matrix.qza
-│   │   ├── weighted_unifrac_emperor.qzv
-│   │   └── weighted_unifrac_pcoa_results.qza
-│   ├── demux_qza_split_parts
-│   │   └── paired_end_demux_1.qza
-│   ├── phylogeny_qza_results
-│   │   ├── aligned_rep_seqs.qza
-│   │   ├── masked_aligned_rep_seqs.qza
-│   │   ├── rooted_tree.qza
-│   │   └── unrooted_tree.qza
-│   ├── repseqs_dada2_qza_merged_parts_final
-│   │   └── repseqs_dada2_merged_final.qza
-│   ├── repseqs_dada2_qza_merged_parts_tmp
-│   ├── repseqs_dada2_qza_split_parts
-│   │   └── repseqs_dada2_1.qza
-│   ├── table_dada2_qza_merged_parts_final
-│   │   └── table_dada2_merged_final.qza
-│   ├── table_dada2_qza_merged_parts_tmp
-│   ├── table_dada2_qza_split_parts
-│   │   └── table_dada2_1.qza
-│   └── taxonomy_qza_results
-│       ├── taxonomy_greengenes.qza
-│       └── taxonomy_silva.qza
-└── qzv_results
-    ├── demux_qzv_split_parts
-    │   └── paired_end_demux_1.qzv
-    ├── otu_relative_abundance_results
-    ├── rarefaction_qzv_results
-    │   └── rarefaction.qzv
-    ├── repseqs_dada2_qzv_merged_parts_final
-    │   └── repseqs_dada2_merged_final.qzv
-    ├── table_dada2_qzv_merged_parts_final
-    │   └── table_dada2_merged_final.qzv
-    ├── taxonomy_qzv_results
-    │   ├── taxonomy_greengenes_bar_plots.qzv
-    │   ├── taxonomy_greengenes.qzv
-    │   ├── taxonomy_silva_bar_plots.qzv
-    │   └── taxonomy_silva.qzv
-    └── taxonomy_relative_abundance_results
-```
-## Input Requirements
-- Edited config.yaml file
-- LIMS downloaded (w/ or w/o metadata added) manifest txt file
-
-## Workflow Details
-
-### Manifest
-QIIME2 has specific metadata requirements for headers and columns, and as the user is creating manifest (likely) in Excel, need to parse files to ensure that it meets requirements. Samples are run at a flowcell level, and manifest files are generated to include sample lists by flowcell.
-
-__Note:__ Samples are run at a flowcell level, due to DADA2 run requirements. The algorithm that DADA2 uses includes an error model that assumes one sequencing run. The pitfall of merging them together prior to running DADA2 is that a lower-quality run (but still passing threshold) may have samples thrown out because they are significantly lower than a high performing run.
-
-### Symlinks
-Investigators need access to FASTQ files, as they are not able to access these files from our network directly.
-
-### Demultiplexed Summaries
-Flowcells are processed and summary information including sequence reads by sample, is generated in QIIME2 artifact format (QZA) and in visualization format (QZV).
-
-### Step 1
-
-Using the command line, the project directory and manifest text file are input. Directories are created, a manifest file in the qiime2 format (TSV) is created, FASTQ directories are created (based on the number of flowcells), and soft links to FASTQ files are placed in correct directories.
-- Project folder creation
-- QIIME2 TSV file creation
-- Split manifest
-
-Required scripts:
-  - Step1.pl
-
-__Note:__   After creating the QIIME2 manifest file, www.keemi.qiime2.org can be used from Google Chrome to verify the manifest is in the correct format.
-
-__Note:__ Samples are run at a flowcell level, due to DADA2 run requirements. The algorithm that DADA2 uses includes an error model that assumes one sequencing run. The pitfall of merging them together prior to running DADA2 is that a lower-quality run (but still passing threshold) may have samples thrown out because they are significantly lower than a high performing run.
-
-### Step 2
-
-Inputs the split fastq manifest(s) and creates QC summaries, including visualizations for sample quality
-- Demultiplexing FastQ Summary
-- Create demultiplexing visual
-- Create feature tables
-
-Required scripts:
-- Global.rc
-- Step2.sh
-  - Step2_1.sh
-
-### Step 3
-
-This step will merge multiple flowcells into one file, or rename the singular flowcell to match requirements.
-- If multiple flowcells:
-  - Merge multiple flowcells (table merging)
-  - Finalize multiple flowcells
-  - Merge multiple flowcells (Repseq merging)
-  - Finalize Multiple Flowcells (Repseq)
-  - Filter zero reads
-- If single flowcell:
-  - Finalize single flowcell (Table)
-  - Finalize single flowcell (RepSeq)
-  - Filter zero reads
-
-Required scripts:
-- Global.sh
-- Step3.sh
-  - Step3_1.sh
-  - Step3_2.sh
-
-### Step 4
-
-This step creates sequencing summary visuals, maps and aligns sequences, and creates rooted and unrooted tree files.
-- General table sequencing summary
-- General mapping
-- Alignment
-- Masked alignment
-- Unrooted tree
-- Rooted tree
-
-Required scripts:
-- Global.sh
-- Step4.sh
-  - Step4_1.sh
-  - Step4_2.sh
-
-### Step 5
-
-This step performs alpha and beta diversity, taxonomic assignment using both greengenes and silva references, and creates barplot visuals for both references.
-- Alpha and Beta Diversity
-- Creates Alpha Visualizations
-- Greengenes:
-  - Taxonomy results
-  - Taxonomy results visualization
-  - Taxonomic bar plot visualization
-- Silva:
-  - Taxonomy results
-  - Taxonomy results visualization
-  - Taxonomic bar plot visualization
-
-Required scripts:
-- Global.sh
-- Step5.sh
-  - Step5_1.sh
-  - Step5_2.sh
-  - Step5_3.sh
+- Samples are run at a flowcell level, due to DADA2 run requirements. The algorithm that DADA2 uses includes an error model that assumes one sequencing run. The pitfall of merging them together prior to running DADA2 is that a lower-quality run (but still passing threshold) may have samples thrown out because they are significantly lower than a high performing run.
+- After creating the QIIME2 manifest file, www.keemi.qiime2.org can be used from Google Chrome to verify the manifest is in the correct format.
+- Samples are run at a flowcell level, due to DADA2 run requirements. The algorithm that DADA2 uses includes an error model that assumes one sequencing run. The pitfall of merging them together prior to running DADA2 is that a lower-quality run (but still passing threshold) may have samples thrown out because they are significantly lower than a high performing run.
