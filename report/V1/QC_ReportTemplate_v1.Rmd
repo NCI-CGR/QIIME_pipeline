@@ -1,0 +1,130 @@
+---
+output:
+  word_document: default
+editor_options: 
+  chunk_output_type: console
+---
+```{r, include=FALSE}
+#1. Load required libraries
+#Old version of vegan
+#require(devtools)
+#install_version("vegan", version ="2.4-5", repos = "http://cran.us.r-project.org")
+
+library(tm)
+library(vegan)
+library("biom")
+library(tidyr)
+library(ggplot2)
+library(cowplot)
+library(scales)
+library(phyloseq)
+library(backports)
+library(qiime2R)
+library(tibble)
+
+#Source MiSeqR
+#http://deneflab.github.io/MicrobeMiseq/
+source("sources/miseqR.R")
+load("workspace.RData")
+```
+QC Report
+
+
+#Project Information
+ProjectID: NP0440-MB4
+
+Source: sTVOM
+
+Date Reported:
+
+Pipeline: Version2
+
+QIIME: 2017.11
+
+#Metadata
+##Summary
+###Sample Type
+Sample types for the project included study samples, robogut, artifical colony, extraction blank, sequencing blank, and non-template controls.
+
+###Before filtering
+Prior to filtering, these were the number of samples observed:
+
+###After Filtering
+After filtering to a minimum of 10,000 reads, only taxa with a mean absolute abundance greater than 0.1% were included. Taxonomically, only taxa in the Bacteria kingdom, that were not in the chrloroplast class or mitochondrial family were included. Rarefying to 20,000 was implemented, to more clearly cluster samples according to biological origin, by drawing without replacement from each sample so that all samples have the same total count. The maximum rarefaction rate was set to 54,000 (the highest count of all samples) for this particular dataset. A citation on measurements of richness can be found here: https://onlinelibrary.wiley.com/doi/full/10.1046/j.1461-0248.2001.00230.x
+
+After filtering, these were the number of samples observed:
+
+###Variables
+The filtered cohort was broken down by the following variables:
+
+
+#Analysis Parameters
+Beta diversity was measured using both quantitative (weighted UniFrac and Bray-Curtis) and qualitative measures (unweighted UniFrac and Binomial). Quantitative measures (weighted unifrac) are ideally suited to revealing community differences that are due to changes in relative taxon abundance (e.g., when a particular set of taxa flourish because a limiting nutrient source becomes abundant). Qualitative measures (unweighted unifrac) are most informative when communities differ primarily by what can live in them (e.g., at high temperatures), in part because abundance information can obscure significant patterns of variation in which taxa are present. Binomial index is derived from Binomial deviance under null hypothesis that the two compared communities are equal.
+
+#Results
+##Sequencing Depth
+This image shows the sequencing depth prior to filtering:
+![](Graphs/SeqDepth_prefilter.tiff)
+
+This image shows the depth after filtering:
+![](Graphs/SeqDepth_filter.tiff)
+
+##Alpha Diversity
+###Subjects and Sample Types
+This image shows alpha diversity metrics by sample type:
+![](Graphs/sampletype_alphadiv.tiff)
+
+This image shows alpha diversity metrics by subject:
+![](Graphs/subjectid_alphadiv.tiff)
+
+###Top Genus by Subject
+The top 20 genus across all subject, in terms of abundance, were graphed by subject:
+![](Graphs/subjectid_topgenus_1.jpeg)
+![](Graphs/subjectid_topgenus_2.jpeg)
+![](Graphs/subjectid_topgenus_3.jpeg)
+![](Graphs/subjectid_topgenus_4.jpeg)
+![](Graphs/subjectid_topgenus_5.jpeg)
+
+
+##Beta Diversity - pCOA Graphs
+###Bray Curtis
+Results by Sample Type:
+
+![](Graphs/sampletype_bray.tiff)
+
+Results by subject:
+
+![](Graphs/subjectid_bray.tiff)
+
+
+
+
+###Weighted Unifrac
+Results by subject:
+
+![](Graphs/subjectid_weightunifrac.tiff)
+
+
+Results by Sample Type:
+
+![](Graphs/sampletype_weightunifrac.tiff)
+
+#Alpha Diversity Metrics
+Viewing the dataset by extraction and sequencing batches, helps to ensure consistency between processing:
+By Extraction batch:
+![](Graphs/alpha_extractionbatch.tiff)
+By Sequencing Batch:
+![](Graphs/alpha_sequencingbatch.tiff)
+
+
+#Additional Information
+Viewing the dataset by other feature variables, provided the following insights:
+![](Graphs/alpha_collection.tiff)
+![](Graphs/alpha_instrument.tiff)
+![](Graphs/alpha_month.tiff)
+![](Graphs/summary_genus_all.tiff)
+![](Graphs/summary_genus_-20C.tiff)
+
+
+
+

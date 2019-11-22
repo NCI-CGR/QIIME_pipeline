@@ -1,0 +1,445 @@
+---
+title: "R Notebook"
+output: word_document
+editor_options: 
+  chunk_output_type: console
+---
+
+#############################################################################################
+#To Update
+```{r}
+project_name="Project_NP0440_MB4_Complete"
+seq_depth = 10000
+sample_depth = 20000
+include_reps = "N" #(Y or N)
+```
+#############################################################################################
+
+#Requirements
+```{r}
+#Usage:
+#-QC Analysis of microbiome projects for CGR Production team to generate QC/Data Delivery reports
+
+#Input (user provided):
+#-project name
+#-sample depth
+
+#Input (files):
+#-otu table
+#-rooted tree
+#-taxonomy file
+#-metadata QIIME2 file
+
+#Output
+#-Pre-Filtering data summary text file
+#-Pre-Filtering data summary text file, by Sample Type
+#-Pre-Filtering data summary text file, by Subject
+#-Pre-Filtering data histograph by sample type
+#-Post-Filtering data histograph by sample type
+#-Post-Filtering data summary text file
+#-Post-Filtering data summary text file, by Sample Type
+#-Post-Filtering data summary text file, by Subject
+
+```
+
+#1. Load required libraries and source code
+```{r}
+library(tm)
+library(vegan)
+library("biom")
+library(tidyr)
+library(ggplot2)
+library(cowplot)
+library(scales)
+library(phyloseq)
+library(qiime2R)
+library(tibble)
+library(gridExtra)
+library(GGally)
+
+#Source MiSeqR
+source("sources/miseqR.R")
+
+#Other packages that were used in testing, but not necessary for final report
+#source("sources/Microbiome.Barplot.R")
+#source("sources/Summarize.Taxa.R")
+#source("sources/Make.Percent.R")
+#source("sources/TidyConvert.R")
+#require(devtools)
+#install_version("vegan", version ="2.4-5", repos = "http://cran.us.r-project.org")
+
+#Resources
+#http://deneflab.github.io/MicrobeMiseq/
+#http://joey711.github.io/phyloseq-demo/phyloseq-demo.html
+```
+
+#2 Create PhySeq Object
+```{r}
+project_location = paste("T:\\DCEG\\Projects\\Microbiome\\CGR_MB\\MicroBiome\\",project_name,sep="")
+
+#Read in files
+otus <- read_qza(paste(project_location,"\\Output\\qza_results\\table_dada2_qza_merged_parts_final\\table_dada2_merged_final.qza",sep=""))
+tree <- read_qza(paste(project_location,"\\Output\\qza_results\\phylogeny_qza_results\\rooted_tree.qza",sep=""))
+taxonomy <- read_qza(paste(project_location,"\\Output\\qza_results\\taxonomy_qza_results\\taxonomy_greengenes.qza",sep=""))
+metadata <-read.table(paste(project_location,"\\Input\\manifest_qiime2.tsv",sep=""),sep='\t', header=T, row.names=1, comment="")
+metadata<-metadata[-1,]#remove the second line that specifies the data type
+
+#Split the taxonomy file into readable levels for taxonomic assignment
+tax_table<-do.call(rbind, strsplit(as.character(taxonomy$data$Taxon), "; "))
+  colnames(tax_table)<-c("Kingdom","Phylum","Class","Order","Family","Genus","Species")
+  rownames(tax_table)<-taxonomy$data$Feature.ID
+
+#Create phylo object and output initial summary info for production QC to review
+physeq_complete<-phyloseq(otu_table(otus$data, taxa_are_rows = T), phy_tree(tree$data), tax_table(tax_table), sample_data(metadata))
+s<-summary(sample_data(physeq_complete))
+capture.output(s, file = "../Data/summary_prefilter.txt")
+
+#Resources
+#https://github.com/jbisanz/qiime2R
+```
+
+#3 Initial pruning
+```{r}
+#Exclude all data that is not bacteria
+physeq_filt <- physeq_complete %>%
+  subset_taxa(
+    Kingdom == "k__Bacteria" &
+    Family  != "k__Bacteria; p__Proteobacteria; c__Alphaproteobacteria; o__Rickettsiales; f__mitochondria" &
+    Class   != "k__Bacteria; p__Cyanobacteria; c__Chloroplast"
+  )
+```
+
+#4. Pre-filtered read summary
+```{r}
+#Print summaries
+a<-summary(sample_data(physeq_filt)$SampleType)
+capture.output(a, file = "../Data/summary_sampletype_prefilter.txt")
+a<-summary(sample_data(physeq_filt)$Subject)
+capture.output(a, file = "../Data/summary_subject_prefilter.txt")
+
+# Make a data frame with a column for the read counts of each sample
+sample_sum_df <- data.frame(sum = sample_sums(physeq_filt),sample_data(physeq_filt))
+
+# Histogram of sample read counts by sampletype
+p1<-ggplot(sample_sum_df, aes(x = sum)) + 
+  geom_histogram(binwidth = 2500,color="black",aes(fill=SampleType)) +
+  geom_vline(aes(xintercept=median(sum,na.rm=T)),color="yellow",size=2)+
+  xlab("Read counts") +
+  ggtitle("Distribution of sample sequencing depth - Pre-Filtering")+
+  theme(axis.title.y = element_blank())
+
+#Plot
+title <- ggdraw() + draw_label("Distribution of sample sequencing depth - Pre-Filtering", fontface='bold')
+file_name =("../Graphs/SeqDepth_prefilter.tiff")
+tiff(file_name, width=800)
+print(p1)
+dev.off()
+```
+
+#5. Filter taxa
+```{r}
+#filter taxa that is represented in >.001 of samples as this is likely background noise
+#physeq_filt #note taxa number
+physeq_filt = filter_taxa(physeq_filt, function(x) mean(x) > 1e-2, TRUE) 
+#physeq_filt #note new taxa number and sample number
+
+#filter samples that have less than seq_depth (default is 10000) reads as this is our standard seq threshold
+physeq_filt = prune_samples(sample_sums(physeq_filt) > seq_depth, physeq_filt)
+#physeq_filt #note new sample number
+```
+
+#6. Filtered read summary
+```{r}
+#Print summaries
+s<-summary(sample_data(physeq_filt))
+capture.output(s, file = "../Data/summary_filter.txt")
+a<-summary(sample_data(physeq_filt)$SampleType)
+capture.output(a, file = "../Data/summary_sampletype_postfilter.txt")
+a<-summary(sample_data(physeq_filt)$Subject)
+capture.output(a, file = "../Data/summary_subject_postfilter.txt")
+
+# Make a data frame with a column for the read counts of each sample
+sample_sum_df <- data.frame(sum = sample_sums(physeq_filt),sample_data(physeq_filt))
+
+# Histogram of sample read counts by sampletype
+p1<-ggplot(sample_sum_df, aes(x = sum)) + 
+  geom_histogram(binwidth = 2500,color="black",aes(fill=SampleType)) +
+  geom_vline(aes(xintercept=median(sum,na.rm=T)),color="yellow",size=2) +
+  xlab("Read Counts") +
+  ggtitle("Distribution of sample sequencing depth - Post-Filtering") +
+  theme(axis.title.y = element_blank())
+file_name =("../Graphs/SeqDepth_filter.tiff")
+tiff(file_name, width=800)
+print(p1)
+dev.off()
+```
+
+#7 Scale and Subset filtered data
+```{r}
+#Only samples
+physeq_filt_samples <- physeq_filt %>%
+  subset_samples(
+    SampleType == "Study" 
+  )
+
+#Only replicates
+physeq_filt_reps <- physeq_filt %>%
+  subset_samples(
+    Replicate == "Y" 
+  )
+
+# Scale reads to even depth that user can vary by project
+physeq_scale <- physeq_filt %>% scale_reads(n=sample_depth) 
+ 
+physeq_scale_samples <- physeq_filt_samples %>% scale_reads(n=sample_depth) 
+sample_data(physeq_scale_samples)$SampleType <- factor(
+  sample_data(physeq_scale_samples)$SampleType, 
+  levels = unique(sample_data(physeq_scale_samples)$SampleType)
+)
+
+physeq_scale_reps <- physeq_filt_reps %>% scale_reads(n=sample_depth) 
+sample_data(physeq_scale_reps)$SampleType <- factor(
+  sample_data(physeq_scale_reps)$SampleType, 
+  levels = unique(sample_data(physeq_scale_reps)$SampleType)
+)
+sample_data(physeq_scale_reps)$Subject <- factor(
+  sample_data(physeq_scale_reps)$Subject, 
+  levels = unique(sample_data(physeq_scale_reps)$Subject)
+)
+```
+
+#8 Plot PCOA Data
+```{r}
+#######################
+## Bray-Curtis
+#######################
+# Ordinate for sample type
+physeq_pcoa <- ordinate(
+  physeq = physeq_filt, 
+  method = "PCoA", 
+  distance = "bray"
+)
+
+physeq_pcoa_sub<-as.data.frame((physeq_pcoa$vectors[,1:5])) #select PC1-PC5
+physeq_pcoa_sub<-merge(physeq_pcoa_sub,metadata[,c("RunID","SampleType")],by=0)
+p<-ggpairs(physeq_pcoa_sub,columns=2:6,
+        mapping= ggplot2::aes(colour=SampleType),
+        title="Bray-Curtis: Sample Type")
+file_name =("../Graphs/sampletype_bray.tiff")
+tiff(file_name, width=800)
+print(p)
+dev.off()
+
+
+# Ordinate for samples only, by run ID
+physeq_pcoa <- ordinate(
+  physeq = physeq_scale_samples, 
+  method = "PCoA", 
+  distance = "bray"
+)
+
+physeq_pcoa_sub<-as.data.frame((physeq_pcoa$vectors[,1:5])) #select PC1-PC5
+physeq_pcoa_sub<-merge(physeq_pcoa_sub,metadata[,c("RunID","ExtractionBatchID")],by=0)
+p<-ggpairs(physeq_pcoa_sub,columns=2:6,
+        mapping= ggplot2::aes(colour=RunID),
+        title="Bray-Curtis: Study Samples only by Run ID")
+file_name =("../Graphs/samplesonly_runid_bray.tiff")
+tiff(file_name, width=800)
+print(p)
+dev.off()
+
+# Ordinate for Replicates
+if (include_reps == "Y"){
+ physeq_pcoa <- ordinate(
+  physeq = physeq_scale_reps, 
+  method = "PCoA", 
+  distance = "bray"
+ )
+ 
+ physeq_pcoa_sub<-as.data.frame((physeq_pcoa$vectors[,1:5])) #select PC1-PC5
+ physeq_pcoa_sub<-merge(physeq_pcoa_sub,metadata[,c("RunID","Subject")],by=0)
+ p<-ggpairs(physeq_pcoa_sub,columns=2:6,
+         mapping= ggplot2::aes(colour=Subject),
+         title="Bray-Curtis: Replicates only by SubjectID")
+ file_name =("../Graphs/repsonly_runid_bray.tiff")
+ tiff(file_name, width=800)
+ print(p)
+ dev.off()
+}
+
+#######################
+## Weighted
+#######################
+# Ordinate for sample type
+physeq_pcoa <- ordinate(
+  physeq = physeq_filt, 
+  method = "PCoA", 
+  distance = "wunifrac"
+)
+
+physeq_pcoa_sub<-as.data.frame((physeq_pcoa$vectors[,1:5])) #select PC1-PC5
+physeq_pcoa_sub<-merge(physeq_pcoa_sub,metadata[,c("RunID","SampleType")],by=0)
+p<-ggpairs(physeq_pcoa_sub,columns=2:6,
+        mapping= ggplot2::aes(colour=SampleType),
+        title="Weighted Unifrac: Sample Type")
+file_name =("../Graphs/sampletype_weightunifrac.tiff")
+tiff(file_name, width=800)
+print(p)
+dev.off()
+
+# Ordinate for samples only, by run ID
+physeq_pcoa <- ordinate(
+  physeq = physeq_scale_samples, 
+  method = "PCoA", 
+  distance = "wunifrac"
+)
+
+physeq_pcoa_sub<-as.data.frame((physeq_pcoa$vectors[,1:5])) #select PC1-PC5
+physeq_pcoa_sub<-merge(physeq_pcoa_sub,metadata[,c("RunID","ExtractionBatchID")],by=0)
+p<-ggpairs(physeq_pcoa_sub,columns=2:6,
+        mapping= ggplot2::aes(colour=RunID),
+        title="Weighted Unifrac: Study Samples only by Run ID")
+file_name =("../Graphs/samplesonly_runid_weightedunifrac.tiff")
+tiff(file_name, width=800)
+print(p)
+dev.off()
+
+# Ordinate for Replicates
+if (include_reps == "Y"){
+ physeq_pcoa <- ordinate(
+  physeq = physeq_scale_reps, 
+  method = "PCoA", 
+  distance = "wunifrac"
+ )
+ 
+ physeq_pcoa_sub<-as.data.frame((physeq_pcoa$vectors[,1:5])) #select PC1-PC5
+ physeq_pcoa_sub<-merge(physeq_pcoa_sub,metadata[,c("RunID","Subject")],by=0)
+ p<-ggpairs(physeq_pcoa_sub,columns=2:6,
+         mapping= ggplot2::aes(colour=Subject),
+        title="Weighted Unifrac: Replicates only by SubjectID")
+ file_name =("../Graphs/repsonly_runid_weightedunifrac.tiff")
+ tiff(file_name, width=800)
+ print(p)
+ dev.off()
+}
+```
+
+#9 Alpha Diversity - All samples
+```{r}
+#Sample Type
+p<- plot_richness(physeq_scale, x="SampleType", 
+                  measures=c("Observed", "ACE", "Shannon", "Simpson", "InvSimpson", "Fisher")) + 
+ geom_boxplot()
+file_name =("../Graphs/sampletype_alphadiv.tiff")
+tiff(file_name, width=800)
+print(p)
+dev.off()
+
+#Reference
+#https://joey711.github.io/phyloseq/plot_bar-examples.html
+```
+
+#10 View top Genus - All study samples
+```{r}
+#Filter the top OTUS
+TopNOTUs = names(sort(taxa_sums(physeq_filt_samples), TRUE)[1:30])
+physeq_scale30 = prune_taxa(TopNOTUs, physeq_filt_samples)
+
+#Plot top 30 OTUS by Genus
+p<-plot_bar(physeq_scale30, "Genus", fill = "Genus", title="Top 30 OTUs Across Study Samples")+geom_bar(stat="identity")+theme(axis.text.x=element_blank())
+
+file_name =("../Graphs/study_topgenus.tiff")
+tiff(file_name, width=1000)
+print(p)
+dev.off()
+```
+
+#11 Alpha Metrics
+```{r}
+# Scale reads to even depth 
+physeq_scale <- physeq_filt_samples %>%
+  scale_reads(n=1000) 
+
+
+#Extraction Batch
+p<- plot_richness(physeq_scale, x="ExtractionBatchID") + geom_boxplot()+ theme(axis.text.x=element_blank())
+file_name =("../Graphs/alpha_extractionbatch.tiff")
+tiff(file_name, width=1500)
+print(p)
+dev.off()
+
+#Sequencing Batch
+p<- plot_richness(physeq_scale, x="RunID") + geom_boxplot() + theme(axis.text.x=element_blank())
+file_name =("../Graphs/alpha_sequencingbatch.tiff")
+tiff(file_name, width=800)
+print(p)
+dev.off()
+
+```
+
+###################################################
+#Varied by Project
+
+#1 Alpha Diversity
+```{r}
+#https://joey711.github.io/phyloseq/plot_bar-examples.html
+# Scale reads to even depth 
+physeq_scale <- physeq_filt_samples %>%
+  scale_reads(n=1000) 
+
+#Month
+p<- plot_richness(physeq_scale, x="Month") + geom_boxplot()
+file_name =("../Graphs/alpha_month.tiff")
+tiff(file_name, width=800)
+print(p)
+dev.off()
+
+#Instrument
+p<- plot_richness(physeq_scale, x="Instrument") + geom_boxplot()
+file_name =("../Graphs/alpha_instrument.tiff")
+tiff(file_name, width=800)
+print(p)
+dev.off()
+
+#Collection Method
+p<- plot_richness(physeq_scale, x="CollectionMethod") + geom_boxplot()
+file_name =("../Graphs/alpha_collection.tiff")
+tiff(file_name, width=800)
+print(p)
+dev.off()
+
+#Overall comparison at -80*C
+physeq_subset<- subset_samples(physeq_scale30, Storage=="-80*C")
+p<- plot_bar(physeq_subset, "Instrument", fill="Genus", facet_grid=~CollectionMethod~Month, title="Genus Abundances by Collection Type/ Month/ Instrument at -80*C")+geom_bar(stat="identity")
+
+#Save file
+file_name =("../Graphs/summary_genus_-80C.tiff")
+tiff(file_name, width=800)
+print(p)
+dev.off()
+
+#Overall comparison at -20*C
+physeq_subset<- subset_samples(physeq_scale30, Storage=="-20*C")
+p<- plot_bar(physeq_subset, "Instrument", fill="Genus", facet_grid=~Storage~CollectionMethod, title="Genus Abundances by Collection Type/ Month/ Instrument at -20*C")+geom_bar(stat="identity")
+
+#Save file
+file_name =("../Graphs/summary_genus_-20C.tiff")
+tiff(file_name, width=800)
+print(p)
+dev.off()
+
+```
+
+#Data values
+```{r}
+a<-sample_data(physeq_filt)
+write.table(a,"../Data/Tab_input.txt")
+```
+
+#Save workspace
+```{r}
+save.image("workspace.RData")
+```
+
+#History
+#6/17 - updates to remove by subject, replace with replicate; add top genus for all samples; create variable for sequencing depth
