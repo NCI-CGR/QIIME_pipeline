@@ -284,9 +284,12 @@ rule import_fastq_and_demultiplex:
             --{params.cmd_flag} PairedEndFastqManifestPhred{params.phred}'
 
 rule import_and_demultiplex_visualization:
-    """
-    QZA files are converted to QZV files for visualization (viewable at
-    www.view.qiime2.org).
+    """ Conversion of QZA to QZV for QC summary
+    Summarize counts per sample for all samples, and generate interactive
+    positional quality plots based on `n` randomly selected sequences.
+
+    Note: QZA files are converted to QZV files for visualization
+    Viewable at www.view.qiime2.org
     """
     input:
         out_dir + 'import_and_demultiplex/{runID}_' + demux_param + '.qza'
@@ -300,13 +303,15 @@ rule import_and_demultiplex_visualization:
 if denoise_method in ['dada2', 'DADA2']:
     if Q2_2017:
         rule dada2_denoise:
-            """
-            Generates feature tables and feature sequences. Each feature in the table is represented by one sequence (joined paired-end).
-            QIIME 2017.11 does not require that both the table and sequences are generated in one step, however, QIIME 2019 does require
-            they are generated together.
+            """ Generates feature tables and feature sequences
+            This method denoises paired-end sequences, dereplicates them, and filters chimeras.
+            Each feature in the table is represented by one sequence (joined paired-end).
 
-            SS: do we want to have the trimming be config features? We are giving it already demultiplexed data, so we don't need to trim
-            but if PI's are using on external data, we may want to add that feature.
+            NOTE: QIIME 2017.11 does not require that both the table and sequences are generated
+            in one step, however, QIIME 2019 does require they are generated together.
+
+            NOTE: Although CGR does not require trimming at this step, as it is done upstream of
+            this pipeline, external use may require trimming.
             """
             input:
                 qza = out_dir + 'import_and_demultiplex/{runID}_' + demux_param + '.qza'
@@ -332,13 +337,11 @@ if denoise_method in ['dada2', 'DADA2']:
 
     elif not Q2_2017:
         rule dada2_denoise:
-            """
-            Generates feature tables and feature sequences. Each feature in the table is represented by one sequence (joined paired-end).
-            QIIME 2017.10 does not require that both the table and sequences are generated in one step, however, QIIME 2019 does require
-            they are generated together.
+            """ Generates feature tables and feature sequences
+            This method denoises paired-end sequences, dereplicates them, and filters chimeras.
+            Each feature in the table is represented by one sequence (joined paired-end).
 
-            SS: do we want to have the trimming be config features? We are giving it already demultiplexed data, so we don't need to trim
-            but if PI's are using on external data, we may want to add that feature.
+            See notes above.
             """
             input:
                 qza = out_dir + 'import_and_demultiplex/{runID}_' + demux_param + '.qza'
@@ -366,6 +369,10 @@ if denoise_method in ['dada2', 'DADA2']:
 
         rule dada2_stats_visualization:
             """Generating visualization for DADA2 stats by flowcell.
+
+            SS: This can actually be used for both both 2017 and 2019 (currently only under 2019)
+
+            https://docs.qiime2.org/2017.10/plugins/available/metadata/tabulate/
             """
             input:
                 out_dir + 'denoising/stats/{runID}_' + demux_param + '.qza'
@@ -378,7 +385,7 @@ if denoise_method in ['dada2', 'DADA2']:
 
 
 
-# to add in metadata, start here: plus re- run perl check!  Must have the qza results for samples 
+# to add in metadata, start here: plus re- run perl check!  Must have the qza results for samples
 rule merge_feature_tables:
     """Merge per-flowcell feature tables into one qza file
 
@@ -442,10 +449,11 @@ rule merge_sequence_tables:
             shell('qiime feature-table merge-seqs ' + l + ' --o-merged-data {output}')
 
 rule remove_zero_read_samples:
-    """
-    Remove samples that have zero reads (e.g. blanks or failed samples)
-    from the merged feature table. Necessary for downstream PhyloSeq
-    manipulation.
+    """ Remove samples that have zero reads
+    This will include unexpected failed study samples, and expected sequencing/extraction blanks
+    from the merged feature table.
+
+    NOTE: This is necessary for downstream PhyloSeq manipulation.
     """
     input:
         out_dir + 'denoising/feature_tables/merged_' + demux_param + '.qza'
@@ -460,9 +468,9 @@ rule remove_zero_read_samples:
             --o-filtered-table {output}'
 
 rule feature_table_visualization:
-    """
+    """Generate visual and tabular summaries of a feature table
     Generate information on how many sequences are associated with each sample
-    and with each feature, histograms of those distributions, and some related 
+    and with each feature, histograms of those distributions, and some related
     summary statistics.
     """
     input:
@@ -477,7 +485,7 @@ rule feature_table_visualization:
             --m-sample-metadata-file {input.q2_man}'
 
 rule sequence_table_visualization:
-    """
+    """Generate visual and tabular summaries for sequences
     Generate a mapping of feature IDs to sequences, and provide links to easily
     BLAST each sequence against the NCBI nt database.
     """
@@ -492,8 +500,8 @@ rule sequence_table_visualization:
 
 if Q2_2017:
     rule build_multiple_seq_alignment:
-        """
-        Perform a multiple sequence alignment of the all sequence files.
+        """Sequence alignment
+        Perform de novo multiple sequence alignment using MAFFT.
         """
         input:
             out_dir + 'denoising/sequence_tables/merged_' + demux_param + '.qza'
@@ -505,8 +513,9 @@ if Q2_2017:
                 --o-alignment {output}'
 
     rule mask_multiple_seq_alignment:
-        """
-        Filter the alignment to remove positions that are highly variable
+        """Filtering alignments
+        Filter unconserved and highly gapped columns from an alignment.
+        Default min_conservation was chosen to reproduce the mask presented in Lane (1991)
         """
         input:
             out_dir + 'phylogenetics/msa.qza'
@@ -518,7 +527,7 @@ if Q2_2017:
                 --o-masked-alignment {output}'
 
     rule unrooted_tree:
-        """
+        """ Construct a phylogenetic tree with FastTree.
         Apply FastTree to generate a phylogenetic tree from the masked
         alignment.
         """
@@ -532,7 +541,7 @@ if Q2_2017:
                 --o-tree {output}'
 
     rule rooted_tree:
-        """
+        """Midpoint root an unrooted phylogenetic tree.
         Perform midpoint rooting to place the root of the tree at the midpoint
         of the longest tip-to-tip distance in the unrooted tree
         """
@@ -547,6 +556,11 @@ if Q2_2017:
 
 if not Q2_2017:
     rule phylogenetic_tree:
+        """Sequence alignment, phylogentic tree assignment, rooting at midpoint
+        Starts by creating a sequence alignment using MAFFT, remove any phylogenetically
+        uninformative or ambiguously aligned reads, infer a phylogenetic tree
+        and then root at its midpoint.
+        """
         input:
             out_dir + 'denoising/sequence_tables/merged_' + demux_param + '.qza'
         output:
@@ -564,8 +578,8 @@ if not Q2_2017:
 
 # possible site of entry if you want to change sampling depth threshold!
 rule alpha_beta_diversity:
-    """
-    This step will perform alpha and beta diversity analysis. This includes:
+    """Performs alpha and beta diversity analysis.
+    This includes:
     - Vector of Faith PD values by sample
     - Vector of Observed OTUs values by sample
     - Vector of Shannon diversity values by sample
@@ -582,14 +596,7 @@ rule alpha_beta_diversity:
     won't overwrite the directory if it already exits. This leads to an error since
     Snakemake will make the dir first, and Q2 errors
 
-    #SS: Is listing all the output files necessary ? Should we create a list of these files?
-    Not sure if there is a better way
-
     https://docs.qiime2.org/2017.11/plugins/available/diversity/core-metrics-phylogenetic/
-
-    BB: fine to err a little on the verbose side.  One workaround to this sort of thing
-    is to have output: d = directory(/some/path), then in the shell section, start off with
-    the command rm -r {output.d}; qiime... but obviously this method has drawbacks.
 
     Unifrac attempt with one sample causes this step to core dump:
     https://forum.qiime2.org/t/core-metrics-phylogenetic-crashed-free-invalid-next-size/8408/6
@@ -644,8 +651,9 @@ rule alpha_beta_diversity:
             --o-bray-curtis-emperor {output.bc_emp}'
 
 rule alpha_diversity_visualization:
-    """
-    This generates a tabular view of the metadata in a human viewable format.
+    """Metadata visualization wtih alpha diversity metrics
+    This generates a tabular view of the metadata in a human viewable format merged with select alpha diversity
+    metrics, created in alpha_beta_diversity.
     """
     input:
         obs = out_dir + 'diversity_core_metrics/observed.qza',
@@ -663,7 +671,15 @@ rule alpha_diversity_visualization:
             --o-visualization {output}'
 
 rule alpha_rarefaction:
-    """
+    """ Generates interactive rarefaction curves.
+     Computes rarefactions based on values between `min_depth` and `max_depth`.
+     The number of intermediate depths to compute is controlled by the `steps` parameter,
+     with n `iterations` being computed at each rarefaction depth. Samples can be grouped
+     based on distinct values within a metadata column.
+
+     SS: May want to include steps into our parameters - it is the same for both 2017 and 2019
+
+     TODO: --p-steps INTEGER RANGE         [default: 10]
     """
     input:
         tab_filt = out_dir + 'denoising/feature_tables/merged_filtered_' + demux_param + '.qza',
@@ -682,9 +698,26 @@ rule alpha_rarefaction:
             --o-visualization {output}'
 
 rule taxonomic_classification:
-    """
+    """Classify reads by taxon using a fitted classifier
+
     Note that different classification methods have entirely different command
     line flags, so they will each need their own invocation.
+
+    https://docs.qiime2.org/2019.4/plugins/available/feature-classifier/
+
+    sklearn:
+
+    consensus-blast: Performs BLAST+ local alignment between query and
+    reference_reads, then assigns consensus taxonomy to each query sequence
+    from among maxaccepts hits, min_consensus of which share that taxonomic
+    assignment. Note that maxaccepts selects the first N hits with >
+    perc_identity similarity to query, not the top N matches.
+
+    consensus-vsearch: Performs VSEARCH global alignment between query and
+    reference_reads, then assigns consensus taxonomy to each query sequence
+    from among maxaccepts top hits, min_consensus of which share that taxonomic
+    assignment. Unlike classify-consensus-blast, this method searches the entire
+    reference database before choosing the top N hits, not the first N hits.
     """
     input:
         tab_filt = out_dir + 'denoising/sequence_tables/merged_' + demux_param + '.qza',
@@ -703,7 +736,12 @@ rule taxonomic_classification:
                 --o-classification {output}')
 
 rule taxonomic_class_visualization:
-    """
+    """Metadata visualization wtih taxonomic information
+
+    This generates a tabular view of the metadata in a human viewable format merged
+    with taxonomic information created in taxonomic_classification
+
+    SS: may want to change name of rule so that "class" since class =/ taxonomic "class"
     """
     input:
         out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qza'
@@ -715,7 +753,12 @@ rule taxonomic_class_visualization:
             --o-visualization {output}'
 
 rule taxonomic_class_plots:
-    """
+    """Interactive barplot visualization of taxonomies
+
+    This allows for multi-level sorting, plot recoloring, category
+    selection/highlighting, sample relabeling, and SVG figure export.
+
+    SS: may want to change name of rule so that "class" since class =/ taxonomic "class"
     """
     input:
         tab_filt = out_dir + 'denoising/feature_tables/merged_filtered_' + demux_param + '.qza',
