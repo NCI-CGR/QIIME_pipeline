@@ -1,0 +1,232 @@
+#!/bin/bash
+
+# QIIME version
+qiime_version=2017.11
+
+# Initiate QIIME
+module load miniconda/3
+source activate qiime2-${qiime_version}
+
+
+# Parameters
+
+#QUEUE=research.q
+QUEUE=seq-gvcf.q
+
+SAMPLE_PREFIX=SC
+
+Phred_score=33
+
+# Directories
+
+PROJECT_DIR=/DCEG/Projects/Microbiome/CGR_MB/MicroBiome/Project_NP0501_MB1and2
+
+TEMP_DIR=${PROJECT_DIR}/Input/tmp
+
+LOG_DIR=${PROJECT_DIR}/Input/Log
+
+#SCRIPT_DIR=${PROJECT_DIR}/ss_scripts_qiime2_pipeline_draft
+SCRIPT_DIR=/DCEG/Projects/Microbiome/CGR_MB/MicroBiome/ss_scripts_microbiome_analysis/ss_scripts_qiime2_pipeline_V1
+
+RESOURCES_DIR=${SCRIPT_DIR}/resources
+
+FASTA_DIR=${PROJECT_DIR}/Input/Fasta
+
+FASTA_DIR_TOTAL=${PROJECT_DIR}/Input/Fasta_Total
+
+MANIFEST_FILE_SPLIT_PARTS_DIR=${PROJECT_DIR}/Input/manifest_file_split_parts
+
+MANIFEST_FILE_SPLIT_PARTS_FASTQ_IMPORT_DIR=${PROJECT_DIR}/Input/manifest_file_split_parts_fastq_import
+
+QZA_RESULTS_DIR=${PROJECT_DIR}/Input/qza_results
+QZV_RESULTS_DIR=${PROJECT_DIR}/Input/qzv_results
+
+# Here the Directories are generated 
+
+mkdir -p $TEMP_DIR 2>/dev/null
+mkdir -p $LOG_DIR 2>/dev/null
+mkdir -p $MANIFEST_FILE_SPLIT_PARTS_DIR 2>/dev/null
+mkdir -p $MANIFEST_FILE_SPLIT_PARTS_FASTQ_IMPORT_DIR 2>/dev/null
+mkdir -p $FASTA_DIR 2>/dev/null
+mkdir -p $FASTA_DIR_TOTAL 2>/dev/null
+mkdir -p $QZA_RESULTS_DIR 2>/dev/null
+mkdir -p $QZV_RESULTS_DIR 2>/dev/null
+
+# Files
+
+#MANIFEST_FILE_XLSX=${PROJECT_DIR}/NP0440-MB3-manifest_withmeta&MB2.xlsx
+
+MANIFEST_FILE_TXT_WITH_HEADER=${PROJECT_DIR}/NP0501_MB1and2.txt
+
+MANIFEST_FILE=${PROJECT_DIR}/NP0501_MB1and2.txt
+
+MANIFEST_FILE_qiime2_format=${PROJECT_DIR}/Input/manifest_qiime2.tsv
+
+#################################################
+
+## Stage 3
+
+# Stage 3 Directories
+
+demux_qza_split_parts_dir=${QZA_RESULTS_DIR}/demux_qza_split_parts
+
+demux_qzv_split_parts_dir=${QZV_RESULTS_DIR}/demux_qzv_split_parts
+
+table_dada2_qza_split_parts_dir=${QZA_RESULTS_DIR}/table_dada2_qza_split_parts
+
+repseqs_dada2_qza_split_parts_dir=${QZA_RESULTS_DIR}/repseqs_dada2_qza_split_parts
+
+log_dir_stage_3=${LOG_DIR}/stage3_qiime2
+
+# Stage 3 Parameters
+
+demux_param=paired_end_demux
+
+table_dada2_param=table_dada2
+
+repseqs_dada2_param=repseqs_dada2
+
+
+#################################################
+
+## Stage 4: Merging
+
+# Stage 4 Directories
+
+table_dada2_qza_merged_parts_tmp_dir=${QZA_RESULTS_DIR}/table_dada2_qza_merged_parts_tmp
+
+table_dada2_qza_merged_parts_final_dir=${QZA_RESULTS_DIR}/table_dada2_qza_merged_parts_final
+
+repseqs_dada2_qza_merged_parts_tmp_dir=${QZA_RESULTS_DIR}/repseqs_dada2_qza_merged_parts_tmp
+
+repseqs_dada2_qza_merged_parts_final_dir=${QZA_RESULTS_DIR}/repseqs_dada2_qza_merged_parts_final
+
+log_dir_stage_4=${LOG_DIR}/stage4_qiime2
+
+# Stage 4 Parameters
+
+table_dada2_merged_temp_param=table_dada2_merged_temp
+
+table_dada2_merged_final_param=table_dada2_merged_final
+
+repseqs_dada2_merged_temp_param=repseqs_dada2_merged_temp
+
+repseqs_dada2_merged_final_param=repseqs_dada2_merged_final
+
+################################################
+
+## Stage 5: Feature-Table & Seqs Summary
+
+# Stage 5 Directories
+
+table_dada2_qzv_merged_parts_final_dir=${QZV_RESULTS_DIR}/table_dada2_qzv_merged_parts_final
+
+repseqs_dada2_qzv_merged_parts_final_dir=${QZV_RESULTS_DIR}/repseqs_dada2_qzv_merged_parts_final
+
+log_dir_stage_5=${LOG_DIR}/stage5_qiime2
+
+# Stage 5 Parameters
+
+table_dada2_merged_final_param=table_dada2_merged_final
+
+repseqs_dada2_merged_final_param=repseqs_dada2_merged_final
+
+
+
+###############################################
+
+## Stage 6: Phylogenetic Tree Analysis
+
+# Stage 6 Directories
+
+phylogeny_qza_dir=${QZA_RESULTS_DIR}/phylogeny_qza_results
+
+log_dir_stage_6=${LOG_DIR}/stage6_qiime2
+
+# Stage 6 Parameters
+
+output1_param=aligned_rep_seqs
+output2_param=masked_aligned_rep_seqs
+output3_param=unrooted_tree
+output4_param=rooted_tree
+
+
+
+###############################################
+
+## Stage 7: Alpha-Beta Diversity Analysis
+
+# Stage 7 Directories
+
+core_metrics_output_dir=${QZA_RESULTS_DIR}/core_metrics_results
+
+log_dir_stage_7=${LOG_DIR}/stage7_qiime2
+
+# Stage 7 Parameters
+
+sampling_depth=10000
+
+
+###############################################
+
+
+## Stage 8: Rarefaction Analysis
+
+# Stage 8 Directories
+
+rarefaction_qzv_dir=${QZV_RESULTS_DIR}/rarefaction_qzv_results
+
+log_dir_stage_8=${LOG_DIR}/stage8_qiime2
+
+# Stage 8 Parameters
+
+
+rarefaction_param=rarefaction
+
+max_depth=62000
+
+
+
+###############################################
+
+
+## Stage 9: Taxonomic Analysis
+
+# Stage 9 Directories
+
+taxonomy_qza_dir=${QZA_RESULTS_DIR}/taxonomy_qza_results
+taxonomy_qzv_dir=${QZV_RESULTS_DIR}/taxonomy_qzv_results
+
+log_dir_stage_9=${LOG_DIR}/stage9_qiime2
+
+# Stage 9 Parameters
+
+refernce_1=${RESOURCES_DIR}/gg-13-8-99-nb-classifier.qza
+refernce_2=${RESOURCES_DIR}/silva-119-99-nb-classifier.qza
+
+taxonomy_1=taxonomy_greengenes
+taxonomy_2=taxonomy_silva
+
+
+
+
+###############################################
+
+
+
+#REPORT_DIR=${PROJECT_DIR}/Input/Reports
+
+
+#SAMPLE_PREFIX=SC
+
+#Mapping_File_Mock_Samples=${PROJECT_DIR}/mock_samples_list.txt
+#Mapping_File_Non_Samples=${PROJECT_DIR}/non_samples_list.txt
+
+#REPORT_FILE1=${REPORT_DIR}/Fastq_Seq_Count.txt
+#REPORT_FILE2=${REPORT_DIR}/Fastq_with_zero.txt
+
+#PRE_DATA_PREP_FLAG_RUNNING=${PROJECT_DIR}/Pre_Data_Prep_Analysis.running
+#PRE_DATA_PREP_FLAG_DONE=${PROJECT_DIR}/Pre_Data_Prep_Analysis.done
+
+#REPORT_FILE_FLAG_RUNNING=${PROJECT_DIR}/Report_File_Analysis.running
+#REPORT_FILE_FLAG_DONE=${PROJECT_DIR}/Report_File_Analysis.done
