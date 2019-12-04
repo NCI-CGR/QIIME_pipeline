@@ -28,7 +28,7 @@ conf=${PWD}/config.yml snakemake -s /path/to/pipeline/Snakefile
 ## Configuration details
 
 - metadata_manifest: full path to manifest file
-- out_dir: full path to desired output directory
+- out_dir: full path to desired output directory (note that production runs are stored at `/DCEG/Projects/Microbiome/Analysis/`)
 - exec_dir: full path to pipeline (e.g. Snakefile)
 - fastq_abs_path: full path to fastqs
 - temp_dir: full path to temp/scratch space
