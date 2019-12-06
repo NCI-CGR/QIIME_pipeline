@@ -15,7 +15,7 @@
 
 set -euo pipefail
 
-. /etc/profile.d/modules.sh; module load sge perl/5.18.0 miniconda/3
+. /etc/profile.d/modules.sh; module load sge perl/5.18.0 python3/3.6.3 miniconda/3
 unset module
 
 # cluster:
