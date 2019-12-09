@@ -41,8 +41,8 @@ do
     echo "max_depth: 54000" >> ${outPath}/TESTconfig.yml
     echo "classify_method: 'classify-sklearn'" >> ${outPath}/TESTconfig.yml
     echo "cluster_mode: 'qsub -q xlong.q -V -j y -S /bin/bash -o ${outPath}/logs/ -pe by_node {threads}'" >> ${outPath}/TESTconfig.yml
-    echo "num_jobs: 10" >> ${outPath}/TESTconfig.yml
-    echo "latency: 60" >> ${outPath}/TESTconfig.yml
+    echo "num_jobs: 100" >> ${outPath}/TESTconfig.yml
+    echo "latency: 120" >> ${outPath}/TESTconfig.yml
 
 done
 
