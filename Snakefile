@@ -29,7 +29,7 @@ TO RUN (choose one):
     directory and edit as needed, then execute that script.
 
     B. For dev/testing: Run the snakefile directly, e.g.:
-        module load perl/5.18.0 miniconda/3  # miniconda3 has python 3.5.4
+        module load perl/5.18.0 miniconda/3 python3/3.6.3  # miniconda3 has python 3.5.4 but not snakemake
         source activate qiime2-2017.11  # or 2019.1
         conf=${PWD}/config.yml snakemake -s /path/to/pipeline/Snakefile
 """
@@ -199,6 +199,8 @@ rule check_manifest:
     params:
         o = out_dir,
         e = exec_dir
+    benchmark:
+        out_dir + 'run_times/check_manifest/check_manifest.tsv'
     shell:
         # 'source /etc/profile.d/modules.sh; module load perl/5.18.0;'
         'dos2unix -n {input} {output};'
@@ -224,6 +226,8 @@ rule create_per_sample_Q2_manifest:
         man = out_dir + 'manifests/manifest_qiime2.tsv'
     output:
         temp(out_dir + 'manifests/{sample}_Q2_manifest.txt')
+    benchmark:
+        out_dir + 'run_times/create_per_sample_Q2_manifest/{sample}.tsv'
     shell:
         'echo "{wildcards.sample},{input.fq1},forward" > {output};'
         'echo "{wildcards.sample},{input.fq2},reverse" >> {output}'
@@ -240,6 +244,8 @@ rule combine_Q2_manifest_by_runID:
         expand(out_dir + 'manifests/{sample}_Q2_manifest.txt', sample=sampleDict.keys())
     output:
         out_dir + 'manifests/{runID}_Q2_manifest.txt'
+    benchmark:
+        out_dir + 'run_times/combine_Q2_manifest_by_runID/{runID}.tsv'
     shell:
         'cat {input} | awk \'BEGIN{{FS=OFS="/"}}NR==1{{print "sample-id,absolute-filepath,direction"}}$9=="{wildcards.runID}"{{print $0}}\' > {output}'
 
@@ -252,6 +258,8 @@ rule create_symlinks:
     output:
         sym1 = out_dir + 'fastqs/' + '{sample}_R1.fastq.gz',
         sym2 = out_dir + 'fastqs/' + '{sample}_R2.fastq.gz'
+    benchmark:
+        out_dir + 'run_times/create_symlinks/{sample}.tsv'
     shell:
         'ln -s {input.fq1} {output.sym1};'
         'ln -s {input.fq2} {output.sym2}'
@@ -276,6 +284,8 @@ rule import_fastq_and_demultiplex:
         in_type = input_type,
         phred = phred_score,
         cmd_flag = 'source-format' if Q2_2017 else 'input-format'
+    benchmark:
+        out_dir + 'run_times/import_fastq_and_demultiplex/{runID}.tsv'
     shell:
         'qiime tools import \
             --type {params.in_type} \
@@ -295,6 +305,8 @@ rule import_and_demultiplex_visualization:
         out_dir + 'import_and_demultiplex/{runID}_' + demux_param + '.qza'
     output:
         out_dir + 'import_and_demultiplex/{runID}_' + demux_param + '.qzv'
+    benchmark:
+        out_dir + 'run_times/import_and_demultiplex_visualization/{runID}.tsv'
     shell:
         'qiime demux summarize \
             --i-data {input} \
@@ -323,6 +335,8 @@ if denoise_method in ['dada2', 'DADA2']:
                 trim_l_r = trim_left_r,
                 trun_len_f = trunc_len_f,
                 trun_len_r = trunc_len_r
+            benchmark:
+                out_dir + 'run_times/dada2_denoise/{runID}.tsv'
             threads: 8
             run:
                 shell('qiime dada2 denoise-paired \
@@ -354,6 +368,8 @@ if denoise_method in ['dada2', 'DADA2']:
                 trim_l_r = trim_left_r,
                 trun_len_f = trunc_len_f,
                 trun_len_r = trunc_len_r
+            benchmark:
+                out_dir + 'run_times/dada2_denoise/{runID}.tsv'
             threads: 8
             run:
                 shell('qiime dada2 denoise-paired \
@@ -378,6 +394,8 @@ if denoise_method in ['dada2', 'DADA2']:
                 out_dir + 'denoising/stats/{runID}_' + demux_param + '.qza'
             output:
                 out_dir + 'denoising/stats/{runID}_' + demux_param + '.qzv'
+            benchmark:
+                out_dir + 'run_times/dada2_stats_visualization/{runID}.tsv'
             shell:
                 'qiime metadata tabulate \
                     --m-input-file {input} \
@@ -413,6 +431,8 @@ rule merge_feature_tables:
         tab_dir = out_dir + 'denoising/feature_tables/',
         tp = 'feature',
         e = exec_dir
+    benchmark:
+        out_dir + 'run_times/merge_feature_tables/merge_feature_tables.tsv'
     run:
         if len(RUN_IDS) == 1:
             shell('cp {input.tables} {output}')
@@ -439,6 +459,8 @@ rule merge_sequence_tables:
         tab_dir = out_dir + 'denoising/sequence_tables/',
         tp = 'sequence',
         e = exec_dir
+    benchmark:
+        out_dir + 'run_times/merge_sequence_tables/merge_sequence_tables.tsv'
     run:
         if len(RUN_IDS) == 1:
             shell('cp {input.tables} {output}')
@@ -461,6 +483,8 @@ rule remove_zero_read_samples:
         out_dir + 'denoising/feature_tables/merged_filtered_' + demux_param + '.qza'
     params:
         f = filt_min
+    benchmark:
+        out_dir + 'run_times/remove_zero_read_samples/remove_zero_read_samples.tsv'
     shell:
         'qiime feature-table filter-samples \
             --i-table {input} \
@@ -478,6 +502,8 @@ rule feature_table_visualization:
         q2_man = out_dir + 'manifests/manifest_qiime2.tsv'
     output:
         out_dir + 'denoising/feature_tables/merged_filtered_' + demux_param + '.qzv'
+    benchmark:
+        out_dir + 'run_times/feature_table_visualization/feature_table_visualization.tsv'
     shell:
         'qiime feature-table summarize \
             --i-table {input.qza} \
@@ -493,6 +519,8 @@ rule sequence_table_visualization:
         out_dir + 'denoising/sequence_tables/merged_' + demux_param + '.qza'
     output:
         out_dir + 'denoising/sequence_tables/merged_' + demux_param + '.qzv'
+    benchmark:
+        out_dir + 'run_times/sequence_table_visualization/sequence_table_visualization.tsv'
     shell:
         'qiime feature-table tabulate-seqs \
             --i-data {input} \
@@ -507,6 +535,8 @@ if Q2_2017:
             out_dir + 'denoising/sequence_tables/merged_' + demux_param + '.qza'
         output:
             out_dir + 'phylogenetics/msa.qza'
+        benchmark:
+            out_dir + 'run_times/build_multiple_seq_alignment/build_multiple_seq_alignment.tsv'
         shell:
             'qiime alignment mafft \
                 --i-sequences {input} \
@@ -521,6 +551,8 @@ if Q2_2017:
             out_dir + 'phylogenetics/msa.qza'
         output:
             out_dir + 'phylogenetics/masked_msa.qza'
+        benchmark:
+            out_dir + 'run_times/mask_multiple_seq_alignment/mask_multiple_seq_alignment.tsv'
         shell:
             'qiime alignment mask \
                 --i-alignment {input} \
@@ -535,6 +567,8 @@ if Q2_2017:
             out_dir + 'phylogenetics/masked_msa.qza'
         output:
             out_dir + 'phylogenetics/unrooted_tree.qza'
+        benchmark:
+            out_dir + 'run_times/unrooted_tree/unrooted_tree.tsv'
         shell:
             'qiime phylogeny fasttree \
                 --i-alignment {input} \
@@ -549,6 +583,8 @@ if Q2_2017:
             out_dir + 'phylogenetics/unrooted_tree.qza'
         output:
             out_dir + 'phylogenetics/rooted_tree.qza'
+        benchmark:
+            out_dir + 'run_times/rooted_tree/rooted_tree.tsv'
         shell:
             'qiime phylogeny midpoint-root \
                 --i-tree {input} \
@@ -568,6 +604,8 @@ if not Q2_2017:
             masked_msa = out_dir + 'phylogenetics/masked_msa.qza',
             unrooted_tree = out_dir + 'phylogenetics/unrooted_tree.qza',
             rooted_tree = out_dir + 'phylogenetics/rooted_tree.qza'
+        benchmark:
+            out_dir + 'run_times/phylogenetic_tree/phylogenetic_tree.tsv'
         shell:
             'qiime phylogeny align-to-tree-mafft-fasttree \
                 --i-sequences {input} \
@@ -626,6 +664,8 @@ rule alpha_beta_diversity:
         bc_emp = out_dir + 'diversity_core_metrics/bray-curtis_emperor.qzv'
     params:
         samp_depth = sampling_depth
+    benchmark:
+        out_dir + 'run_times/alpha_beta_diversity/alpha_beta_diversity.tsv'
     shell:
         'qiime diversity core-metrics-phylogenetic \
             --i-phylogeny {input.rooted_tree} \
@@ -662,6 +702,8 @@ rule alpha_diversity_visualization:
         faith = out_dir + 'diversity_core_metrics/faith.qza'
     output:
         out_dir + 'diversity_core_metrics/alpha_diversity_metadata.qzv'
+    benchmark:
+        out_dir + 'run_times/alpha_diversity_visualization/alpha_diversity_visualization.tsv'
     shell:
         'qiime metadata tabulate \
             --m-input-file {input.obs} \
@@ -689,6 +731,8 @@ rule alpha_rarefaction:
         out_dir + 'diversity_core_metrics/rarefaction.qzv'
     params:
         m_depth = max_depth
+    benchmark:
+        out_dir + 'run_times/alpha_rarefaction/alpha_rarefaction.tsv'
     shell:
         'qiime diversity alpha-rarefaction \
             --i-table {input.tab_filt} \
@@ -726,6 +770,8 @@ rule taxonomic_classification:
         out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qza'
     params:
         c_method = classify_method
+    benchmark:
+        out_dir + 'run_times/taxonomic_classification/{ref}.tsv'
     threads: 8
     run:
         if classify_method == 'classify-sklearn':
@@ -747,6 +793,8 @@ rule taxonomic_class_visualization:
         out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qza'
     output:
         out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qzv'
+    benchmark:
+        out_dir + 'run_times/taxonomic_class_visualization/{ref}.tsv'
     shell:
         'qiime metadata tabulate \
             --m-input-file {input} \
@@ -766,6 +814,8 @@ rule taxonomic_class_plots:
         mani = out_dir + 'manifests/manifest_qiime2.tsv'
     output:
         out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}.qzv'
+    benchmark:
+        out_dir + 'run_times/taxonomic_class_plots/{ref}.tsv'
     shell:
         'qiime taxa barplot \
             --i-table {input.tab_filt} \
