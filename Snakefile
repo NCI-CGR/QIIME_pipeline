@@ -90,13 +90,15 @@ Use pandas?
 sampleDict = {}
 RUN_IDS = []
 with open(meta_man_fullpath) as f:
-    next(f)
+    header = f.readline().rstrip().split('\t') 
+    runID = header.index('Run-ID')
+    projID = header.index('Project-ID')
     for line in f:
         l = line.split('\t')
         if l[0] in sampleDict.keys():
             sys.exit('ERROR: Duplicate sample IDs detected in' + meta_man_fullpath)
-        sampleDict[l[0]] = (l[5], l[6])  # SampleID, Run-ID, Project-ID
-        RUN_IDS.append(l[5])
+        sampleDict[l[0]] = (l[runID], l[projID])  # SampleID, Run-ID, Project-ID
+        RUN_IDS.append(l[runID])
 RUN_IDS = list(set(RUN_IDS))
 
 

@@ -3,9 +3,9 @@
 set -euo pipefail
 
 DATE=$(date +"%Y%m%d%H%M")
-myExecPath="/DCEG/CGF/Bioinformatics/Production/Bari/QIIME_pipeline"
+myExecPath="/DCEG/CGF/Bioinformatics/Production/Microbiome/QIIME_pipeline"
 myOutPath="${myExecPath}/tests/out_${DATE}"
-myTempPath="/scratch/bballew/${DATE}"
+myTempPath="/scratch/microbiome/${DATE}"
 
 MODES=("2017.11" "2019.1")
 
