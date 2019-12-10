@@ -37,6 +37,7 @@ TO RUN (choose one):
 import os
 import re
 import subprocess
+import sys
 
 # reference the config file
 conf = os.environ.get("conf")
@@ -91,8 +92,11 @@ sampleDict = {}
 RUN_IDS = []
 with open(meta_man_fullpath) as f:
     header = f.readline().rstrip().split('\t') 
-    runID = header.index('Run-ID')
-    projID = header.index('Project-ID')
+    try:
+        runID = header.index('Run-ID')
+        projID = header.index('Project-ID')
+    except ValueError:
+        sys.exit('ERROR: Manifest file ' + meta_man_fullpath + ' must contain headers Run-ID and Project-ID')
     for line in f:
         l = line.split('\t')
         if l[0] in sampleDict.keys():
