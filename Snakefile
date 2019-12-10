@@ -45,14 +45,13 @@ configfile: conf
 
 # import variables from the config file
 # TODO: write some error checking for the config file
+cgr_data = True if config['data_source'] == 'internal' else False
 meta_man_fullpath = config['metadata_manifest']
 out_dir = config['out_dir'].rstrip('/') + '/'
 exec_dir = config['exec_dir'].rstrip('/') + '/'
 fastq_abs_path = config['fastq_abs_path'].rstrip('/') + '/'
 qiime2_version = config['qiime2_version']
-Q2_2017 = False
-if qiime2_version == '2017.11':
-    Q2_2017 = True
+Q2_2017 = True if qiime2_version == '2017.11' else False
 demux_param = config['demux_param']
 input_type = config['input_type']
 phred_score = config['phred_score']
@@ -85,7 +84,8 @@ Note that run ID and project ID are currently being pulled from
 the manifest based on column order.  If column order is subject to
 change, we may want to pull based on column header.
 
-TODO: change to name.  easier to check; possibly less subject to change.
+TODO: add error check if no fq1/fq2 on external data
+
 Use pandas?
 """
 sampleDict = {}
@@ -95,13 +95,22 @@ with open(meta_man_fullpath) as f:
     try:
         runID = header.index('Run-ID')
         projID = header.index('Project-ID')
+        if cgr_data is False:
+            fq1 = header.index('fq1')
+            fq2 = header.index('fq2')
     except ValueError:
-        sys.exit('ERROR: Manifest file ' + meta_man_fullpath + ' must contain headers Run-ID and Project-ID')
+        if cgr_data:
+            sys.exit('ERROR: Manifest file ' + meta_man_fullpath + ' must contain headers Run-ID and Project-ID')
+        else:
+            sys.exit('ERROR: Manifest file ' + meta_man_fullpath + ' must contain headers Run-ID, Project-ID, fq1, and fq2')
     for line in f:
-        l = line.split('\t')
+        l = line.rstrip().split('\t')
         if l[0] in sampleDict.keys():
             sys.exit('ERROR: Duplicate sample IDs detected in' + meta_man_fullpath)
-        sampleDict[l[0]] = (l[runID], l[projID])  # SampleID, Run-ID, Project-ID
+        if cgr_data is True:
+            sampleDict[l[0]] = (l[runID], l[projID])  # SampleID, Run-ID, Project-ID
+        else:
+            sampleDict[l[0]] = (l[runID], l[projID], l[fq1], l[fq2])
         RUN_IDS.append(l[runID])
 RUN_IDS = list(set(RUN_IDS))
 
@@ -137,6 +146,20 @@ def get_orig_r2_fq(wildcards):
     if len(file) != 1:
         sys.exit('ERROR: More than one R2 fastq detected in ' + p)
     return p + file[0]
+
+
+def get_external_r1_fq(wildcards):
+    """
+    """
+    (runID, projID, fq1, fq2) = sampleDict[wildcards.sample]
+    return fq1
+
+
+def get_external_r2_fq(wildcards):
+    """
+    """
+    (runID, projID, fq1, fq2) = sampleDict[wildcards.sample]
+    return fq2
 
 
 refDict = {}
@@ -227,8 +250,8 @@ rule create_per_sample_Q2_manifest:
     check completes successfully.
     """
     input:
-        fq1 = get_orig_r1_fq,
-        fq2 = get_orig_r2_fq,
+        fq1 = get_orig_r1_fq if cgr_data else get_external_r1_fq,
+        fq2 = get_orig_r2_fq if cgr_data else get_external_r2_fq,
         man = out_dir + 'manifests/manifest_qiime2.tsv'
     output:
         temp(out_dir + 'manifests/{sample}_Q2_manifest.txt')
@@ -257,10 +280,12 @@ rule combine_Q2_manifest_by_runID:
 
 rule create_symlinks:
     """Symlink the original fastqs in an area that PIs can access
+
+    Not strictly necessary for external data.
     """
     input:
-        fq1 = get_orig_r1_fq,
-        fq2 = get_orig_r2_fq
+        fq1 = get_orig_r1_fq if cgr_data else get_external_r1_fq,
+        fq2 = get_orig_r2_fq if cgr_data else get_external_r2_fq
     output:
         sym1 = out_dir + 'fastqs/' + '{sample}_R1.fastq.gz',
         sym2 = out_dir + 'fastqs/' + '{sample}_R2.fastq.gz'
