@@ -7,7 +7,7 @@ myExecPath="/DCEG/CGF/Bioinformatics/Production/Bari/QIIME_pipeline"
 myOutPath="${myExecPath}/tests/out_${DATE}"
 myTempPath="/scratch/Bari/${DATE}"
 
-MODES=("2017.11_internal" "2019.1_internal" "2017.11_external" "2019.1_external")
+MODES=("2017.11_internal" "2019.1_internal" "2017.11_external" "2019.1_external" "external_config_no_fq1" "config_no_Run-ID" "config_dup_IDs")
 
 for i in "${MODES[@]}"
 do
@@ -42,41 +42,43 @@ do
     echo "cluster_mode: 'qsub -q xlong.q -V -j y -S /bin/bash -o ${outPath}/logs/ -pe by_node {threads}'" >> ${outPath}/TESTconfig.yml
     echo "num_jobs: 100" >> ${outPath}/TESTconfig.yml
     echo "latency: 120" >> ${outPath}/TESTconfig.yml
+    echo "metadata_manifest: '${myExecPath}/tests/input/smaller_manifest.txt'" >> ${outPath}/TESTconfig.yml
+    echo "data_source: 'internal'" >> ${outPath}/TESTconfig.yml
+    echo "qiime2_version: '2017.11'" >> ${outPath}/TESTconfig.yml
+    echo "reference_db:" >> ${outPath}/TESTconfig.yml
+    echo "- '/DCEG/CGF/Bioinformatics/Production/Bari/refDatabases/scikit_0.19.1_q2_2017.11/gg-13-8-99-nb-classifier.qza'" >> ${outPath}/TESTconfig.yml
+    echo "- '/DCEG/CGF/Bioinformatics/Production/Bari/refDatabases/scikit_0.19.1_q2_2017.11/silva-119-99-nb-classifier.qza'" >> ${outPath}/TESTconfig.yml
 
 done
 
 # 2017.11_internal
-echo "metadata_manifest: '${myExecPath}/tests/input/smaller_manifest.txt'" >> ${myOutPath}_2017.11_internal/TESTconfig.yml
-echo "data_source: 'internal'" >> ${myOutPath}_2017.11_internal/TESTconfig.yml
-echo "qiime2_version: '2017.11'" >> ${myOutPath}_2017.11_internal/TESTconfig.yml
-echo "reference_db:" >> ${myOutPath}_2017.11_internal/TESTconfig.yml
-echo "- '/DCEG/CGF/Bioinformatics/Production/Bari/refDatabases/scikit_0.19.1_q2_2017.11/gg-13-8-99-nb-classifier.qza'" >> ${myOutPath}_2017.11_internal/TESTconfig.yml
-echo "- '/DCEG/CGF/Bioinformatics/Production/Bari/refDatabases/scikit_0.19.1_q2_2017.11/silva-119-99-nb-classifier.qza'" >> ${myOutPath}_2017.11_internal/TESTconfig.yml
+# no changes
 
 # 2019.1_internal
-echo "metadata_manifest: '${myExecPath}/tests/input/smaller_manifest.txt'" >> ${myOutPath}_2019.1_internal/TESTconfig.yml
-echo "data_source: 'internal'" >> ${myOutPath}_2019.1_internal/TESTconfig.yml
-echo "qiime2_version: '2019.1'" >> ${myOutPath}_2019.1_internal/TESTconfig.yml
-echo "reference_db:" >> ${myOutPath}_2019.1_internal/TESTconfig.yml
-echo "- '/DCEG/CGF/Bioinformatics/Production/Bari/refDatabases/scikit_0.20.2_q2_2019.1/gg-13-8-99-nb-classifier.qza'" >> ${myOutPath}_2019.1_internal/TESTconfig.yml
-echo "- '/DCEG/CGF/Bioinformatics/Production/Bari/refDatabases/scikit_0.20.2_q2_2019.1/silva-132-99-nb-classifier.qza'" >> ${myOutPath}_2019.1_internal/TESTconfig.yml
+sed -i "s/qiime2_version: '2017.11'/qiime2_version: '2019.1'/" ${myOutPath}_2019.1_internal/TESTconfig.yml
+sed -i 's/scikit_0.19.1_q2_2017.11\/gg-13-8-99-nb-classifier.qza/scikit_0.20.2_q2_2019.1\/gg-13-8-99-nb-classifier.qza/' ${myOutPath}_2019.1_internal/TESTconfig.yml
+sed -i 's/scikit_0.19.1_q2_2017.11\/silva-119-99-nb-classifier.qza/scikit_0.20.2_q2_2019.1\/silva-132-99-nb-classifier.qza/' ${myOutPath}_2019.1_internal/TESTconfig.yml
 
 # 2017.11_external
-echo "metadata_manifest: '${myExecPath}/tests/input/smaller_manifest_external_data.txt'" >> ${myOutPath}_2017.11_external/TESTconfig.yml
-echo "data_source: 'external'" >> ${myOutPath}_2017.11_external/TESTconfig.yml
-echo "qiime2_version: '2017.11'" >> ${myOutPath}_2017.11_external/TESTconfig.yml
-echo "reference_db:" >> ${myOutPath}_2017.11_external/TESTconfig.yml
-echo "- '/DCEG/CGF/Bioinformatics/Production/Bari/refDatabases/scikit_0.19.1_q2_2017.11/gg-13-8-99-nb-classifier.qza'" >> ${myOutPath}_2017.11_external/TESTconfig.yml
-echo "- '/DCEG/CGF/Bioinformatics/Production/Bari/refDatabases/scikit_0.19.1_q2_2017.11/silva-119-99-nb-classifier.qza'" >> ${myOutPath}_2017.11_external/TESTconfig.yml
+sed -i 's/input\/smaller_manifest.txt/input\/smaller_manifest_external_data.txt/' ${myOutPath}_2017.11_external/TESTconfig.yml
+sed -i "s/data_source: 'internal'/data_source: 'external'/" ${myOutPath}_2017.11_external/TESTconfig.yml
 
 # 2019.1_external
-echo "metadata_manifest: '${myExecPath}/tests/input/smaller_manifest_external_data.txt'" >> ${myOutPath}_2019.1_external/TESTconfig.yml
-echo "data_source: 'external'" >> ${myOutPath}_2019.1_external/TESTconfig.yml
-echo "qiime2_version: '2019.1'" >> ${myOutPath}_2019.1_external/TESTconfig.yml
-echo "reference_db:" >> ${myOutPath}_2019.1_external/TESTconfig.yml
-echo "- '/DCEG/CGF/Bioinformatics/Production/Bari/refDatabases/scikit_0.20.2_q2_2019.1/gg-13-8-99-nb-classifier.qza'" >> ${myOutPath}_2019.1_external/TESTconfig.yml
-echo "- '/DCEG/CGF/Bioinformatics/Production/Bari/refDatabases/scikit_0.20.2_q2_2019.1/silva-132-99-nb-classifier.qza'" >> ${myOutPath}_2019.1_external/TESTconfig.yml
+sed -i 's/input\/smaller_manifest.txt/input\/smaller_manifest_external_data.txt/' ${myOutPath}_2019.1_external/TESTconfig.yml
+sed -i "s/data_source: 'internal'/data_source: 'external'/" ${myOutPath}_2019.1_external/TESTconfig.yml
+sed -i "s/qiime2_version: '2017.11'/qiime2_version: '2019.1'/" ${myOutPath}_2019.1_external/TESTconfig.yml
+sed -i 's/scikit_0.19.1_q2_2017.11\/gg-13-8-99-nb-classifier.qza/scikit_0.20.2_q2_2019.1\/gg-13-8-99-nb-classifier.qza/' ${myOutPath}_2019.1_external/TESTconfig.yml
+sed -i 's/scikit_0.19.1_q2_2017.11\/silva-119-99-nb-classifier.qza/scikit_0.20.2_q2_2019.1\/silva-132-99-nb-classifier.qza/' ${myOutPath}_2019.1_external/TESTconfig.yml
 
+# external_config_no_fq1
+sed -i 's/input\/smaller_manifest.txt/input\/smaller_manifest_external_data_no_fq1.txt/' ${myOutPath}_external_config_no_fq1/TESTconfig.yml
+sed -i "s/data_source: 'internal'/data_source: 'external'/" ${myOutPath}_external_config_no_fq1/TESTconfig.yml
+
+# config_no_Run-ID
+sed -i 's/input\/smaller_manifest.txt/input\/smaller_manifest_no_Run-ID.txt/' ${myOutPath}_config_no_Run-ID/TESTconfig.yml
+
+# config_dup_IDs
+sed -i 's/input\/smaller_manifest.txt/input\/smaller_manifest_dup_IDs.txt/' ${myOutPath}_config_dup_IDs/TESTconfig.yml
 
 module load sge perl/5.18.0 miniconda/3 python3/3.6.3
 unset module
