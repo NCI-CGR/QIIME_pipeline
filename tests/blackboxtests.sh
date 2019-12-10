@@ -3,11 +3,11 @@
 set -euo pipefail
 
 DATE=$(date +"%Y%m%d%H%M")
-myExecPath="/DCEG/CGF/Bioinformatics/Production/Microbiome/QIIME_pipeline"
+myExecPath="/DCEG/CGF/Bioinformatics/Production/Bari/QIIME_pipeline"
 myOutPath="${myExecPath}/tests/out_${DATE}"
-myTempPath="/scratch/microbiome/${DATE}"
+myTempPath="/scratch/Bari/${DATE}"
 
-MODES=("2017.11" "2019.1")
+MODES=("2017.11_internal" "2019.1_internal" "2017.11_external" "2019.1_external")
 
 for i in "${MODES[@]}"
 do
@@ -22,7 +22,6 @@ do
     fi
 
     # generate a test config:
-    echo "metadata_manifest: '${myExecPath}/tests/input/smaller_manifest.txt'" > ${outPath}/TESTconfig.yml
     echo "out_dir: '${outPath}'" >> ${outPath}/TESTconfig.yml
     echo "exec_dir: '${myExecPath}'" >> ${outPath}/TESTconfig.yml
     echo "fastq_abs_path: '/DCEG/CGF/Sequencing/Illumina/MiSeq/PostRun_Analysis/Data/'" >> ${outPath}/TESTconfig.yml
@@ -46,17 +45,38 @@ do
 
 done
 
-# 2017.11
-echo "qiime2_version: '2017.11'" >> ${myOutPath}_2017.11/TESTconfig.yml
-echo "reference_db:" >> ${myOutPath}_2017.11/TESTconfig.yml
-echo "- '/DCEG/CGF/Bioinformatics/Production/Bari/refDatabases/scikit_0.19.1_q2_2017.11/gg-13-8-99-nb-classifier.qza'" >> ${myOutPath}_2017.11/TESTconfig.yml
-echo "- '/DCEG/CGF/Bioinformatics/Production/Bari/refDatabases/scikit_0.19.1_q2_2017.11/silva-119-99-nb-classifier.qza'" >> ${myOutPath}_2017.11/TESTconfig.yml
+# 2017.11_internal
+echo "metadata_manifest: '${myExecPath}/tests/input/smaller_manifest.txt'" >> ${myOutPath}_2017.11_internal/TESTconfig.yml
+echo "data_source: 'internal'" >> ${myOutPath}_2017.11_internal/TESTconfig.yml
+echo "qiime2_version: '2017.11'" >> ${myOutPath}_2017.11_internal/TESTconfig.yml
+echo "reference_db:" >> ${myOutPath}_2017.11_internal/TESTconfig.yml
+echo "- '/DCEG/CGF/Bioinformatics/Production/Bari/refDatabases/scikit_0.19.1_q2_2017.11/gg-13-8-99-nb-classifier.qza'" >> ${myOutPath}_2017.11_internal/TESTconfig.yml
+echo "- '/DCEG/CGF/Bioinformatics/Production/Bari/refDatabases/scikit_0.19.1_q2_2017.11/silva-119-99-nb-classifier.qza'" >> ${myOutPath}_2017.11_internal/TESTconfig.yml
 
-# 2019.1
-echo "qiime2_version: '2019.1'" >> ${myOutPath}_2019.1/TESTconfig.yml
-echo "reference_db:" >> ${myOutPath}_2019.1/TESTconfig.yml
-echo "- '/DCEG/CGF/Bioinformatics/Production/Bari/refDatabases/scikit_0.20.2_q2_2019.1/gg-13-8-99-nb-classifier.qza'" >> ${myOutPath}_2019.1/TESTconfig.yml
-echo "- '/DCEG/CGF/Bioinformatics/Production/Bari/refDatabases/scikit_0.20.2_q2_2019.1/silva-132-99-nb-classifier.qza'" >> ${myOutPath}_2019.1/TESTconfig.yml
+# 2019.1_internal
+echo "metadata_manifest: '${myExecPath}/tests/input/smaller_manifest.txt'" >> ${myOutPath}_2019.1_internal/TESTconfig.yml
+echo "data_source: 'internal'" >> ${myOutPath}_2019.1_internal/TESTconfig.yml
+echo "qiime2_version: '2019.1'" >> ${myOutPath}_2019.1_internal/TESTconfig.yml
+echo "reference_db:" >> ${myOutPath}_2019.1_internal/TESTconfig.yml
+echo "- '/DCEG/CGF/Bioinformatics/Production/Bari/refDatabases/scikit_0.20.2_q2_2019.1/gg-13-8-99-nb-classifier.qza'" >> ${myOutPath}_2019.1_internal/TESTconfig.yml
+echo "- '/DCEG/CGF/Bioinformatics/Production/Bari/refDatabases/scikit_0.20.2_q2_2019.1/silva-132-99-nb-classifier.qza'" >> ${myOutPath}_2019.1_internal/TESTconfig.yml
+
+# 2017.11_external
+echo "metadata_manifest: '${myExecPath}/tests/input/smaller_manifest_external_data.txt'" >> ${myOutPath}_2017.11_external/TESTconfig.yml
+echo "data_source: 'external'" >> ${myOutPath}_2017.11_external/TESTconfig.yml
+echo "qiime2_version: '2017.11'" >> ${myOutPath}_2017.11_external/TESTconfig.yml
+echo "reference_db:" >> ${myOutPath}_2017.11_external/TESTconfig.yml
+echo "- '/DCEG/CGF/Bioinformatics/Production/Bari/refDatabases/scikit_0.19.1_q2_2017.11/gg-13-8-99-nb-classifier.qza'" >> ${myOutPath}_2017.11_external/TESTconfig.yml
+echo "- '/DCEG/CGF/Bioinformatics/Production/Bari/refDatabases/scikit_0.19.1_q2_2017.11/silva-119-99-nb-classifier.qza'" >> ${myOutPath}_2017.11_external/TESTconfig.yml
+
+# 2019.1_external
+echo "metadata_manifest: '${myExecPath}/tests/input/smaller_manifest_external_data.txt'" >> ${myOutPath}_2019.1_external/TESTconfig.yml
+echo "data_source: 'external'" >> ${myOutPath}_2019.1_external/TESTconfig.yml
+echo "qiime2_version: '2019.1'" >> ${myOutPath}_2019.1_external/TESTconfig.yml
+echo "reference_db:" >> ${myOutPath}_2019.1_external/TESTconfig.yml
+echo "- '/DCEG/CGF/Bioinformatics/Production/Bari/refDatabases/scikit_0.20.2_q2_2019.1/gg-13-8-99-nb-classifier.qza'" >> ${myOutPath}_2019.1_external/TESTconfig.yml
+echo "- '/DCEG/CGF/Bioinformatics/Production/Bari/refDatabases/scikit_0.20.2_q2_2019.1/silva-132-99-nb-classifier.qza'" >> ${myOutPath}_2019.1_external/TESTconfig.yml
+
 
 module load sge perl/5.18.0 miniconda/3 python3/3.6.3
 unset module

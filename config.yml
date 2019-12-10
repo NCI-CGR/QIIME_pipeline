@@ -9,16 +9,23 @@
 metadata_manifest: '/DCEG/CGF/Bioinformatics/Production/Bari/QIIME_test/NP0084-MB4_10_14_19_metadata_ext.txt'
 
 ## Directories
-out_dir: '/DCEG/CGF/Bioinformatics/Production/Bari/QIIME_test/2019'
+out_dir: '/DCEG/CGF/Bioinformatics/Production/Bari/QIIME_test/2019/'
 exec_dir: '/DCEG/CGF/Bioinformatics/Production/Bari/QIIME_pipeline/'
 fastq_abs_path: '/DCEG/CGF/Sequencing/Illumina/MiSeq/PostRun_Analysis/Data/'
 temp_dir: '/scratch/ballewbj/test/'
 
-# Run mode
-# standard (for CGR full run)
-# external data - no symlinks, same entry, manual manifest generation - define manifest reqs
-# report only - if we want more than the default report that's generated
-  # report configs
+## Run type
+data_source: 'internal'  # 'external' or 'internal' (to CGR)
+  # for external data, require an additional metadata columns called "fq1" and "fq2" with full path and file names for R1 and R2 fastqs (do they need to be zipped?)
+# run_mode: ''
+  # 'qc' (generate QC report; no taxonomic classification or alpha/beta diversity analysis)
+  # 'standard' (for CGR full run - includes qc and downstream analysis)
+  # 'primary_analysis' (for adding metadata on to existing analysis - is it better to allow this or to re-run from start?).
+    # must manually define a variable for 'rule merge_feature_tables: input/tables'
+    # be thoughtful about how to handle directory construction - new outdir?  prepend subdirectories with datestamp?  with user defined string?
+  # 'secondary_analysis' (to run taxonomic classification and alpha/beta only, e.g. if you want to change sampling depth threshold)
+    # must manually define inputs
+    # be thoughtful about how to handle directory construction - new outdir?  prepend subdirectories with datestamp?  with user defined string?
 
 ## QIIME version
 qiime2_version: '2019.1'  # 2017.11 or 2019.1
