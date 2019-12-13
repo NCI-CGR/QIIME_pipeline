@@ -181,23 +181,23 @@ if denoise_method in ['dada2', 'DADA2'] and not Q2_2017:
         input:
             expand(out_dir + 'fastqs/' + '{sample}_R1.fastq.gz', sample=sampleDict.keys()),
             expand(out_dir + 'fastqs/' + '{sample}_R2.fastq.gz', sample=sampleDict.keys()),
-            expand(out_dir + 'import_and_demultiplex/{runID}_' + demux_param + '.qzv',runID=RUN_IDS),
-            out_dir + 'denoising/feature_tables/merged_filtered_' + demux_param + '.qzv',
-            out_dir + 'denoising/sequence_tables/merged_' + demux_param + '.qzv',
+            expand(out_dir + 'import_and_demultiplex/{runID}.qzv',runID=RUN_IDS),
+            out_dir + 'denoising/feature_tables/merged_filtered.qzv',
+            out_dir + 'denoising/sequence_tables/merged.qzv',
             out_dir + 'diversity_core_metrics/rareifed_table.qza',
             out_dir + 'diversity_core_metrics/alpha_diversity_metadata.qzv',
             out_dir + 'diversity_core_metrics/rarefaction.qzv',
             expand(out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
             expand(out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
-            expand(out_dir + 'denoising/stats/{runID}_' + demux_param + '.qzv', runID=RUN_IDS)  # has to be a more elegant way to do this.
+            expand(out_dir + 'denoising/stats/{runID}.qzv', runID=RUN_IDS)  # has to be a more elegant way to do this.
 else:
     rule all:
         input:
             expand(out_dir + 'fastqs/' + '{sample}_R1.fastq.gz', sample=sampleDict.keys()),
             expand(out_dir + 'fastqs/' + '{sample}_R2.fastq.gz', sample=sampleDict.keys()),
-            expand(out_dir + 'import_and_demultiplex/{runID}_' + demux_param + '.qzv',runID=RUN_IDS),
-            out_dir + 'denoising/feature_tables/merged_filtered_' + demux_param + '.qzv',
-            out_dir + 'denoising/sequence_tables/merged_' + demux_param + '.qzv',
+            expand(out_dir + 'import_and_demultiplex/{runID}.qzv',runID=RUN_IDS),
+            out_dir + 'denoising/feature_tables/merged_filtered.qzv',
+            out_dir + 'denoising/sequence_tables/merged.qzv',
             out_dir + 'diversity_core_metrics/rareifed_table.qza',
             out_dir + 'diversity_core_metrics/alpha_diversity_metadata.qzv',
             out_dir + 'diversity_core_metrics/rarefaction.qzv',
@@ -310,7 +310,7 @@ rule import_fastq_and_demultiplex:
     input:
         out_dir + 'manifests/{runID}_Q2_manifest.txt'
     output:
-        out_dir + 'import_and_demultiplex/{runID}_' + demux_param + '.qza'
+        out_dir + 'import_and_demultiplex/{runID}.qza'
     params:
         in_type = input_type,
         phred = phred_score,
@@ -333,9 +333,9 @@ rule import_and_demultiplex_visualization:
     Viewable at www.view.qiime2.org
     """
     input:
-        out_dir + 'import_and_demultiplex/{runID}_' + demux_param + '.qza'
+        out_dir + 'import_and_demultiplex/{runID}.qza'
     output:
-        out_dir + 'import_and_demultiplex/{runID}_' + demux_param + '.qzv'
+        out_dir + 'import_and_demultiplex/{runID}.qzv'
     benchmark:
         out_dir + 'run_times/import_and_demultiplex_visualization/{runID}.tsv'
     shell:
@@ -357,10 +357,10 @@ if denoise_method in ['dada2', 'DADA2']:
             this pipeline, external use may require trimming.
             """
             input:
-                qza = out_dir + 'import_and_demultiplex/{runID}_' + demux_param + '.qza'
+                qza = out_dir + 'import_and_demultiplex/{runID}.qza'
             output:
-                tab = out_dir + 'denoising/feature_tables/{runID}_' + demux_param + '.qza',
-                seq = out_dir + 'denoising/sequence_tables/{runID}_' + demux_param + '.qza'
+                tab = out_dir + 'denoising/feature_tables/{runID}.qza',
+                seq = out_dir + 'denoising/sequence_tables/{runID}.qza'
             params:
                 trim_l_f = trim_left_f,
                 trim_l_r = trim_left_r,
@@ -389,11 +389,11 @@ if denoise_method in ['dada2', 'DADA2']:
             See notes above.
             """
             input:
-                qza = out_dir + 'import_and_demultiplex/{runID}_' + demux_param + '.qza'
+                qza = out_dir + 'import_and_demultiplex/{runID}.qza'
             output:
-                tab = out_dir + 'denoising/feature_tables/{runID}_' + demux_param + '.qza',
-                seq = out_dir + 'denoising/sequence_tables/{runID}_' + demux_param + '.qza',
-                stats = out_dir + 'denoising/stats/{runID}_' + demux_param + '.qza'
+                tab = out_dir + 'denoising/feature_tables/{runID}.qza',
+                seq = out_dir + 'denoising/sequence_tables/{runID}.qza',
+                stats = out_dir + 'denoising/stats/{runID}.qza'
             params:
                 trim_l_f = trim_left_f,
                 trim_l_r = trim_left_r,
@@ -422,9 +422,9 @@ if denoise_method in ['dada2', 'DADA2']:
             https://docs.qiime2.org/2017.10/plugins/available/metadata/tabulate/
             """
             input:
-                out_dir + 'denoising/stats/{runID}_' + demux_param + '.qza'
+                out_dir + 'denoising/stats/{runID}.qza'
             output:
-                out_dir + 'denoising/stats/{runID}_' + demux_param + '.qzv'
+                out_dir + 'denoising/stats/{runID}.qzv'
             benchmark:
                 out_dir + 'run_times/dada2_stats_visualization/{runID}.tsv'
             shell:
@@ -453,12 +453,11 @@ rule merge_feature_tables:
     NOTE: limited scalability due to cli character limit.
     """
     input:
-        tables = expand(out_dir + 'denoising/feature_tables/{runID}_' + demux_param + '.qza', runID=RUN_IDS),
+        tables = expand(out_dir + 'denoising/feature_tables/{runID}.qza', runID=RUN_IDS),
         q2_man = out_dir + 'manifests/manifest_qiime2.tsv'
     output:
-        out_dir + 'denoising/feature_tables/merged_' + demux_param + '.qza'
+        out_dir + 'denoising/feature_tables/merged.qza'
     params:
-        demux_param = demux_param,
         tab_dir = out_dir + 'denoising/feature_tables/',
         tp = 'feature',
         e = exec_dir
@@ -481,12 +480,11 @@ rule merge_sequence_tables:
     NOTE: limited scalability due to cli character limit.
     """
     input:
-        tables = expand(out_dir + 'denoising/sequence_tables/{runID}_' + demux_param + '.qza', runID=RUN_IDS),
+        tables = expand(out_dir + 'denoising/sequence_tables/{runID}.qza', runID=RUN_IDS),
         q2_man = out_dir + 'manifests/manifest_qiime2.tsv'
     output:
-        out_dir + 'denoising/sequence_tables/merged_' + demux_param + '.qza'
+        out_dir + 'denoising/sequence_tables/merged.qza'
     params:
-        demux_param = demux_param,
         tab_dir = out_dir + 'denoising/sequence_tables/',
         tp = 'sequence',
         e = exec_dir
@@ -509,9 +507,9 @@ rule remove_zero_read_samples:
     NOTE: This is necessary for downstream PhyloSeq manipulation.
     """
     input:
-        out_dir + 'denoising/feature_tables/merged_' + demux_param + '.qza'
+        out_dir + 'denoising/feature_tables/merged.qza'
     output:
-        out_dir + 'denoising/feature_tables/merged_filtered_' + demux_param + '.qza'
+        out_dir + 'denoising/feature_tables/merged_filtered.qza'
     params:
         f = filt_min
     benchmark:
@@ -529,10 +527,10 @@ rule feature_table_visualization:
     summary statistics.
     """
     input:
-        qza = out_dir + 'denoising/feature_tables/merged_filtered_' + demux_param + '.qza',
+        qza = out_dir + 'denoising/feature_tables/merged_filtered.qza',
         q2_man = out_dir + 'manifests/manifest_qiime2.tsv'
     output:
-        out_dir + 'denoising/feature_tables/merged_filtered_' + demux_param + '.qzv'
+        out_dir + 'denoising/feature_tables/merged_filtered.qzv'
     benchmark:
         out_dir + 'run_times/feature_table_visualization/feature_table_visualization.tsv'
     shell:
@@ -547,9 +545,9 @@ rule sequence_table_visualization:
     BLAST each sequence against the NCBI nt database.
     """
     input:
-        out_dir + 'denoising/sequence_tables/merged_' + demux_param + '.qza'
+        out_dir + 'denoising/sequence_tables/merged.qza'
     output:
-        out_dir + 'denoising/sequence_tables/merged_' + demux_param + '.qzv'
+        out_dir + 'denoising/sequence_tables/merged.qzv'
     benchmark:
         out_dir + 'run_times/sequence_table_visualization/sequence_table_visualization.tsv'
     shell:
@@ -563,7 +561,7 @@ if Q2_2017:
         Perform de novo multiple sequence alignment using MAFFT.
         """
         input:
-            out_dir + 'denoising/sequence_tables/merged_' + demux_param + '.qza'
+            out_dir + 'denoising/sequence_tables/merged.qza'
         output:
             out_dir + 'phylogenetics/msa.qza'
         benchmark:
@@ -629,7 +627,7 @@ if not Q2_2017:
         and then root at its midpoint.
         """
         input:
-            out_dir + 'denoising/sequence_tables/merged_' + demux_param + '.qza'
+            out_dir + 'denoising/sequence_tables/merged.qza'
         output:
             msa = out_dir + 'phylogenetics/msa.qza',
             masked_msa = out_dir + 'phylogenetics/masked_msa.qza',
@@ -673,7 +671,7 @@ rule alpha_beta_diversity:
     """
     input:
         rooted_tree = out_dir + 'phylogenetics/rooted_tree.qza',
-        tab_filt = out_dir + 'denoising/feature_tables/merged_filtered_' + demux_param + '.qza',
+        tab_filt = out_dir + 'denoising/feature_tables/merged_filtered.qza',
         q2_man = out_dir + 'manifests/manifest_qiime2.tsv'
     output:
         rare = out_dir + 'diversity_core_metrics/rareifed_table.qza',
@@ -755,7 +753,7 @@ rule alpha_rarefaction:
      TODO: --p-steps INTEGER RANGE         [default: 10]
     """
     input:
-        tab_filt = out_dir + 'denoising/feature_tables/merged_filtered_' + demux_param + '.qza',
+        tab_filt = out_dir + 'denoising/feature_tables/merged_filtered.qza',
         rooted = out_dir + 'phylogenetics/rooted_tree.qza',
         q2_man = out_dir + 'manifests/manifest_qiime2.tsv'
     output:
@@ -795,7 +793,7 @@ rule taxonomic_classification:
     reference database before choosing the top N hits, not the first N hits.
     """
     input:
-        tab_filt = out_dir + 'denoising/sequence_tables/merged_' + demux_param + '.qza',
+        tab_filt = out_dir + 'denoising/sequence_tables/merged.qza',
         ref = get_ref_full_path
     output:
         out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qza'
@@ -840,7 +838,7 @@ rule taxonomic_class_plots:
     SS: may want to change name of rule so that "class" since class =/ taxonomic "class"
     """
     input:
-        tab_filt = out_dir + 'denoising/feature_tables/merged_filtered_' + demux_param + '.qza',
+        tab_filt = out_dir + 'denoising/feature_tables/merged_filtered.qza',
         tax = out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qza',
         mani = out_dir + 'manifests/manifest_qiime2.tsv'
     output:
