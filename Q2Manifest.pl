@@ -100,7 +100,7 @@ while( my $row = <$in> ) {  # operate on input manifest line-by-line instead of 
         warn "WARNING: Rows starting with the pound sign (#) will be ignored.\n" if( $sample_id =~ /^#/ );
         foreach( @line ) {
             # QIIME req: Missing data must be represented by a blank field, not NA, nan, etc.
-            die "ERROR: Missing data must be represented as a blank field, not \"$_\".\n" if( ! check_metadata_missing( $_ ));
+            warn "WARNING: Missing data must be represented as a blank field, not \"$_\".\n" if( ! check_metadata_missing( $_ ));
             # QIIME req: (From Sam) Numeric fields <=15 chars
             die "ERROR: \"$_\" too long.  Numeric metadata fields must have 15 or fewer characters.\n" if( ! check_metadata_len( $_ ));
         }
