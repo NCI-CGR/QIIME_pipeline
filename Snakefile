@@ -46,10 +46,10 @@ configfile: conf
 # import variables from the config file
 # TODO: write some error checking for the config file
 cgr_data = True if config['data_source'] == 'internal' else False
+fastq_abs_path = config['fastq_abs_path'].rstrip('/') + '/' if cgr_data else ''
 meta_man_fullpath = config['metadata_manifest']
 out_dir = config['out_dir'].rstrip('/') + '/'
 exec_dir = config['exec_dir'].rstrip('/') + '/'
-fastq_abs_path = config['fastq_abs_path'].rstrip('/') + '/'
 qiime2_version = config['qiime2_version']
 Q2_2017 = True if qiime2_version == '2017.11' else False
 demux_param = config['demux_param']
@@ -83,8 +83,6 @@ path to the fastq files (see get_orig_r*_fastq functions).
 Note that run ID and project ID are currently being pulled from
 the manifest based on column order.  If column order is subject to
 change, we may want to pull based on column header.
-
-TODO: add error check if no fq1/fq2 on external data
 
 Use pandas?
 """
