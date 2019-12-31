@@ -371,6 +371,7 @@ if denoise_method in ['dada2', 'DADA2']:
             threads: 8
             run:
                 shell('qiime dada2 denoise-paired \
+                    --verbose \
                     --p-n-threads {threads} \
                     --i-demultiplexed-seqs {input.qza} \
                     --o-table {output.tab} \
@@ -404,6 +405,7 @@ if denoise_method in ['dada2', 'DADA2']:
             threads: 8
             run:
                 shell('qiime dada2 denoise-paired \
+                    --verbose \
                     --p-n-threads {threads} \
                     --i-demultiplexed-seqs {input.qza} \
                     --o-table {output.tab} \
