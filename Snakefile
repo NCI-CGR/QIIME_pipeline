@@ -88,6 +88,7 @@ Use pandas?
 """
 sampleDict = {}
 RUN_IDS = []
+runID = ''
 with open(meta_man_fullpath) as f:
     header = f.readline().rstrip().split('\t') 
     try:
@@ -159,6 +160,19 @@ def get_external_r2_fq(wildcards):
     (runID, projID, fq1, fq2) = sampleDict[wildcards.sample]
     return fq2
 
+
+def get_internal_runID(wildcards):
+    """
+    """
+    (runID, projID) = sampleDict[wildcards.sample]
+    return runID
+
+
+def get_external_runID(wildcards):
+    """
+    """
+    (runID, projID, fq1, fq2) = sampleDict[wildcards.sample]
+    return runID
 
 refDict = {}
 for i in REF_DB:
@@ -253,11 +267,14 @@ rule create_per_sample_Q2_manifest:
         man = out_dir + 'manifests/manifest_qiime2.tsv'
     output:
         temp(out_dir + 'manifests/{sample}_Q2_manifest.txt')
+    params:
+        runID = get_internal_runID if cgr_data else get_external_runID
     benchmark:
         out_dir + 'run_times/create_per_sample_Q2_manifest/{sample}.tsv'
     shell:
-        'echo "{wildcards.sample},{input.fq1},forward" > {output};'
-        'echo "{wildcards.sample},{input.fq2},reverse" >> {output}'
+        'echo "{wildcards.sample},{input.fq1},forward,{params.runID}" > {output};' 
+        'echo "{wildcards.sample},{input.fq2},reverse,{params.runID}" >> {output}'
+
 
 rule combine_Q2_manifest_by_runID:
     """Combine Q2-specific manifests by run ID
@@ -274,7 +291,7 @@ rule combine_Q2_manifest_by_runID:
     benchmark:
         out_dir + 'run_times/combine_Q2_manifest_by_runID/{runID}.tsv'
     shell:
-        'cat {input} | awk \'BEGIN{{FS=OFS="/"}}NR==1{{print "sample-id,absolute-filepath,direction"}}$9=="{wildcards.runID}"{{print $0}}\' > {output}'
+        'cat {input} | awk \'BEGIN{{FS=OFS=","; print "sample-id,absolute-filepath,direction"}}$4=="{wildcards.runID}"{{print $1,$2,$3}}\' > {output}'
 
 rule create_symlinks:
     """Symlink the original fastqs in an area that PIs can access
