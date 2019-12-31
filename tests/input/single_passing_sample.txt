@@ -1,0 +1,3 @@
+#SampleID	External-ID	Sample-Type	Source-Material	Source-PCR-Plate	Run-ID	Project-ID	Reciept	Sample_Cat	SubjectID	Sample_Aliquot	Ext_Company	Ext_Kit	Ext_Robot	Homo_Method	Homo-Holder	Homo-Holder2	AFA Setting1	AFA Setting2	Extraction Batch	Residual or Original	Row	Column
+NTC-PC04924-H-12	NTC	NTC		PC04924_H_12	180112_M01354_0104_000000000-BFN3F	NP0084-MB4	0	NTC	NTC	0												
+SC249407	Stool_39	Stool	Qiagen	PC04924_B_05	180112_M01354_0104_000000000-BFN3F	NP0084-MB4	sFEMB-001-R-005	Study	IE_Stool	39	Qiagen	MagAttract PowerMag PowerSoil	KingFisher	TissueLyzer	Plate	PowerSoil			1	Original	B	1
