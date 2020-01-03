@@ -105,7 +105,7 @@ with open(meta_man_fullpath) as f:
     for line in f:
         l = line.rstrip().split('\t')
         if l[0] in sampleDict.keys():
-            sys.exit('ERROR: Duplicate sample IDs detected in' + meta_man_fullpath)
+            sys.exit('ERROR: Duplicate sample IDs detected in ' + meta_man_fullpath)
         if cgr_data is True:
             sampleDict[l[0]] = (l[runID], l[projID])  # SampleID, Run-ID, Project-ID
         else:
