@@ -3,7 +3,7 @@
 set -euo pipefail
 
 DATE=$(date +"%Y%m%d%H%M")
-myExecPath="../"
+myExecPath="${PWD}/.."
 myOutPath="${PWD}/out_${DATE}"
 myTempPath="/scratch/microbiome/${DATE}"
 

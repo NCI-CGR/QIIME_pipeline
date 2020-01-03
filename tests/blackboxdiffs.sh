@@ -1,6 +1,7 @@
 #!/bin/bash
 
 stamp=$1
+myExecPath="${PWD}/.."
 obsBasePath="${PWD}/out_${stamp}"
 expPath="${PWD}/expected_output"
 
@@ -18,17 +19,17 @@ MODES=("2017.11_internal" "2019.1_internal" "2017.11_external" "2019.1_external"
 
 check_manifests() {    
     local manifest_flag=0
-    for j in "${expPath}/${1}/"*
+    for j in "${expPath}/manifests/${1}/"*
     do
         k="${j##*/}"
-        if ! diff -q "${expPath}/${1}/${k}" "${obsPath}/manifests/${k}" &>/dev/null; then
+        if ! diff -q "${expPath}/manifests/${1}/${k}" "${obsPath}/manifests/${k}" &>/dev/null; then
             manifest_flag=1
         fi
     done
     if [ "$manifest_flag" == 0 ]; then
         echo "PASS: All manifest files are as expected" | tee -a "${obsPath}/diff_tests.txt"
     else
-        echo "FAIL: Manifest file ${obsPath}/manifests/${k} does not match expected output ${expPath}/${1}/${k}" | tee -a "${obsPath}/diff_tests.txt"
+        echo "FAIL: Manifest file ${obsPath}/manifests/${k} does not match expected output ${expPath}/manifests/${1}/${k}" | tee -a "${obsPath}/diff_tests.txt"
     fi
 }
 
@@ -44,7 +45,7 @@ do
         if grep -q "No features remain after denoising. Try adjusting your truncation and trim parameter settings." "${obsPath}/logs/snakejob.dada2_denoise"*; then
             echo "PASS: Rule dada2_denoise failed as expected when all samples have low read counts" | tee -a "${obsPath}/diff_tests.txt"
         else
-            echo "ERROR: Rule dada2_denoise did not fail as expected when all samples have low read counts" | tee -a "${obsPath}/diff_tests.txt"
+            echo "FAIL: Rule dada2_denoise did not fail as expected when all samples have low read counts" | tee -a "${obsPath}/diff_tests.txt"
         fi
     elif [ "$i" == "2019.1_internal_one_passing_sample" ]; then
         check_manifests "internal_one_passing_sample"
@@ -53,25 +54,25 @@ do
         if grep -q "(core dumped)" "${obsPath}/logs/snakejob.alpha_beta_diversity"*; then
             echo "PASS: Rule alpha_beta_diversity failed as expected when there is only one passing sample" | tee -a "${obsPath}/diff_tests.txt"
         else
-            echo "ERROR: Rule alpha_beta_diversity did not fail as expected when there is only one passing sample" | tee -a "${obsPath}/diff_tests.txt"
+            echo "FAIL: Rule alpha_beta_diversity did not fail as expected when there is only one passing sample" | tee -a "${obsPath}/diff_tests.txt"
         fi
     elif [ "$i" == "external_config_no_fq1" ]; then
-        if grep -q "ERROR: Manifest file /DCEG/CGF/Bioinformatics/Production/Microbiome/QIIME_pipeline/tests/input/test_12_samples_external_data_no_fq1.txt must contain headers Run-ID, Project-ID, fq1, and fq2" "${obsPath}/logs/Q2"*".out"; then
+        if grep -q "ERROR: Manifest file ${myExecPath}/tests/input/test_12_samples_external_data_no_fq1.txt must contain headers Run-ID, Project-ID, fq1, and fq2" "${obsPath}/logs/Q2"*".out"; then
             echo "PASS: Expected fq1 header error confirmed." | tee -a "${obsPath}/diff_tests.txt"
         else
-            echo "ERROR: Expected fq1 header error not found." | tee -a "${obsPath}/diff_tests.txt"
+            echo "FAIL: Expected fq1 header error not found." | tee -a "${obsPath}/diff_tests.txt"
         fi
     elif [ "$i" == "config_no_Run-ID" ]; then
-        if grep -q "ERROR: Manifest file /DCEG/CGF/Bioinformatics/Production/Microbiome/QIIME_pipeline/tests/input/test_12_samples_no_Run-ID.txt must contain headers Run-ID and Project-ID" "${obsPath}/logs/Q2"*".out"; then
+        if grep -q "ERROR: Manifest file ${myExecPath}/tests/input/test_12_samples_no_Run-ID.txt must contain headers Run-ID and Project-ID" "${obsPath}/logs/Q2"*".out"; then
             echo "PASS: Expected Run-ID header error confirmed." | tee -a "${obsPath}/diff_tests.txt"
         else
-            echo "ERROR: Expected Run-ID header error not found." | tee -a "${obsPath}/diff_tests.txt"
+            echo "FAIL: Expected Run-ID header error not found." | tee -a "${obsPath}/diff_tests.txt"
         fi
     elif [ "$i" == "config_dup_IDs" ]; then
-        if grep -q "ERROR: Duplicate sample IDs detected in/DCEG/CGF/Bioinformatics/Production/Microbiome/QIIME_pipeline/tests/input/test_12_samples_dup_IDs.txt" "${obsPath}/logs/Q2"*".out"; then
+        if grep -q "ERROR: Duplicate sample IDs detected in ${myExecPath}/tests/input/test_12_samples_dup_IDs.txt" "${obsPath}/logs/Q2"*".out"; then
             echo "PASS: Expected duplicate sample ID error confirmed." | tee -a "${obsPath}/diff_tests.txt"
         else
-            echo "ERROR: Expected duplicate sample ID error not found." | tee -a "${obsPath}/diff_tests.txt"
+            echo "FAIL: Expected duplicate sample ID error not found." | tee -a "${obsPath}/diff_tests.txt"
         fi
     elif [ "$i" == "2017.11_internal" ]; then
         check_manifests "internal"
