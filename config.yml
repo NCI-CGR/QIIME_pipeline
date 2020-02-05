@@ -4,6 +4,7 @@
 #     S. Sevilla Chill
 #     W. Zhou
 #     B. Ballew
+#     Y. Wan
 
 ## Manifest
 metadata_manifest: '/DCEG/CGF/Bioinformatics/Production/Bari/QIIME_test/NP0084-MB4_10_14_19_metadata_ext.txt'
@@ -37,6 +38,7 @@ dada2_denoise:
   trim_left_reverse: 0
   truncate_length_forward: 0
   truncate_length_reverse: 0
+  p_min_fold_parent_over_abundance: 2.0
 phred_score: 33
 demux_param: 'paired_end_demux'
 input_type: 'SampleData[PairedEndSequencesWithQuality]'
