@@ -69,7 +69,7 @@ for i in "${MODES[@]}"; do
             printf "FAIL: Expected Run-ID header error not found.\n\n" >> "${obsPath}/diff_tests.txt"
         fi
     elif [ "$i" == "config_dup_IDs" ]; then
-        if grep -q "ERROR: Duplicate sample IDs detected in${myExecPath}/tests/input/test_12_samples_dup_IDs.txt" "${obsPath}/logs/Q2"*".out"; then
+        if grep -q "ERROR: Duplicate sample IDs detected in" "${obsPath}/logs/Q2"*".out"; then
             printf "PASS: Expected duplicate sample ID error confirmed.\n\n" >> "${obsPath}/diff_tests.txt"
         else
             printf "FAIL: Expected duplicate sample ID error not found.\n\n" >> "${obsPath}/diff_tests.txt"
@@ -95,7 +95,9 @@ for i in "${MODES[@]}"; do
                 g=$(sed "s|${expPath}|${obsPath}|" <(echo "${f}"))
                 dos2unix -q "${f}" "${g}"
                 # matrices output by qiime have columns in random order.  sort by row and column as follows.
-                if [[ "${f}" == *diversity_core_metrics/*  ]]; then
+                if [[ "${f}" == *.fasta ]]; then
+                    cmd="cmp -s <(sort "${f}") <(sort "${g}") && echo \"PASS: files are identical\" || echo \"FAIL: files not identical\""
+                elif [[ "${f}" == *diversity_core_metrics/*  ]]; then
                     if [[ "${f}" == *.csv ]]; then
                         cmd="python3 array_compare.py <(grep -v \"^#\" "${f}" | tr \",\" \"\\t\" | sort_with_headers | transpose | sort_with_headers | transpose | tail -n +2 | cut -f2-) <(grep -v \"^#\" "${g}" | tr \",\" \"\\t\" | sort_with_headers | transpose | sort_with_headers | transpose | tail -n +2 | cut -f2-)"
                     else
