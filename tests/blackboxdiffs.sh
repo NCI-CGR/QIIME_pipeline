@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# CGR QIIME2 pipeline for microbiome analysis.
+# 
+# AUTHORS:
+#     B. Ballew
+
 stamp=$1
 myExecPath="${PWD}/.."
 obsBasePath="${PWD}/out_${stamp}"

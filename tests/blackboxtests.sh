@@ -1,11 +1,19 @@
 #!/bin/bash
 
+# CGR QIIME2 pipeline for microbiome analysis.
+# 
+# AUTHORS:
+#     B. Ballew
+
 set -euo pipefail
 
 DATE=$(date +"%Y%m%d%H%M")
 myExecPath="${PWD}/.."
 myOutPath="${PWD}/out_${DATE}"
 myTempPath="/scratch/microbiome/${DATE}"
+myDBPath="/DCEG/CGF/Bioinformatics/Production/Bari/refDatabases"
+myFqPath="/DCEG/CGF/Sequencing/Illumina/MiSeq/PostRun_Analysis/Data/"  # for testing of internal CGR runs
+# NOTE: edit cluster submission strings as needed depending on environment
 
 MODES=("2017.11_internal" "2019.1_internal" "2017.11_external" "2019.1_external" "2019.1_internal_all_fail_low_reads" "2019.1_internal_one_passing_sample" "external_config_no_fq1" "config_no_Run-ID" "config_dup_IDs")
 
@@ -24,7 +32,7 @@ do
     # generate a test config:
     echo "out_dir: '${outPath}'" >> ${outPath}/TESTconfig.yml
     echo "exec_dir: '${myExecPath}'" >> ${outPath}/TESTconfig.yml
-    echo "fastq_abs_path: '/DCEG/CGF/Sequencing/Illumina/MiSeq/PostRun_Analysis/Data/'" >> ${outPath}/TESTconfig.yml
+    echo "fastq_abs_path: '${myFqPath}'" >> ${outPath}/TESTconfig.yml
     echo "temp_dir: '${tempPath}'" >> ${outPath}/TESTconfig.yml
     echo "denoise_method: 'dada2'" >> ${outPath}/TESTconfig.yml
     echo "dada2_denoise:" >> ${outPath}/TESTconfig.yml
@@ -46,8 +54,8 @@ do
     echo "data_source: 'internal'" >> ${outPath}/TESTconfig.yml
     echo "qiime2_version: '2017.11'" >> ${outPath}/TESTconfig.yml
     echo "reference_db:" >> ${outPath}/TESTconfig.yml
-    echo "- '/DCEG/CGF/Bioinformatics/Production/Bari/refDatabases/scikit_0.19.1_q2_2017.11/gg-13-8-99-nb-classifier.qza'" >> ${outPath}/TESTconfig.yml
-    echo "- '/DCEG/CGF/Bioinformatics/Production/Bari/refDatabases/scikit_0.19.1_q2_2017.11/silva-119-99-nb-classifier.qza'" >> ${outPath}/TESTconfig.yml
+    echo "- '${myDBPath}/scikit_0.19.1_q2_2017.11/gg-13-8-99-nb-classifier.qza'" >> ${outPath}/TESTconfig.yml
+    echo "- '${myDBPath}/scikit_0.19.1_q2_2017.11/silva-119-99-nb-classifier.qza'" >> ${outPath}/TESTconfig.yml
 
 done
 

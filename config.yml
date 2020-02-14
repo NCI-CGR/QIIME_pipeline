@@ -6,26 +6,17 @@
 #     B. Ballew
 
 ## Manifest
-metadata_manifest: '/DCEG/CGF/Bioinformatics/Production/Bari/QIIME_test/NP0084-MB4_10_14_19_metadata_ext.txt'
+metadata_manifest: '/path/to/manifest.txt'
 
 ## Directories
-out_dir: '/DCEG/CGF/Bioinformatics/Production/Bari/QIIME_test/2019/'
-exec_dir: '/DCEG/CGF/Bioinformatics/Production/Bari/QIIME_pipeline/'
-fastq_abs_path: '/DCEG/CGF/Sequencing/Illumina/MiSeq/PostRun_Analysis/Data/'
-temp_dir: '/scratch/ballewbj/test/'
+out_dir: '/path/to/project/directory/'
+exec_dir: '/path/to/QIIME_pipeline/'
+fastq_abs_path: '/path/to/fastqs/'  # internal runs only
+temp_dir: '/path/to/scratch/'
 
 ## Run type
 data_source: 'internal'  # 'external' or 'internal' (to CGR)
   # for external data, require an additional metadata columns called "fq1" and "fq2" with full path and file names for R1 and R2 fastqs (do they need to be zipped?)
-# run_mode: ''
-  # 'qc' (generate QC report; no taxonomic classification or alpha/beta diversity analysis)
-  # 'standard' (for CGR full run - includes qc and downstream analysis)
-  # 'primary_analysis' (for adding metadata on to existing analysis - is it better to allow this or to re-run from start?).
-    # must manually define a variable for 'rule merge_feature_tables: input/tables'
-    # be thoughtful about how to handle directory construction - new outdir?  prepend subdirectories with datestamp?  with user defined string?
-  # 'secondary_analysis' (to run taxonomic classification and alpha/beta only, e.g. if you want to change sampling depth threshold)
-    # must manually define inputs
-    # be thoughtful about how to handle directory construction - new outdir?  prepend subdirectories with datestamp?  with user defined string?
 
 ## QIIME version
 qiime2_version: '2019.1'  # 2017.11 or 2019.1
@@ -45,10 +36,12 @@ sampling_depth: 10000
 max_depth: 54000
 classify_method: 'classify-sklearn'
 reference_db:  # change based on qiime version
-- '/DCEG/CGF/Bioinformatics/Production/Bari/refDatabases/scikit_0.20.2_q2_2019.1/gg-13-8-99-nb-classifier.qza'
-- '/DCEG/CGF/Bioinformatics/Production/Bari/refDatabases/scikit_0.20.2_q2_2019.1/silva-132-99-nb-classifier.qza'
+- '/path/to/refDatabases/eg/scikit_0.20.2_q2_2019.1/gg-13-8-99-nb-classifier.qza'
+- '/path/to/refDatabases/eg/scikit_0.20.2_q2_2019.1/silva-132-99-nb-classifier.qza'
 
 ## Cluster submission parameters
-cluster_mode: 'qsub -q long.q -V -j y -S /bin/bash -o /DCEG/CGF/Bioinformatics/Production/Bari/QIIME_test/2019/logs/ -pe by_node {threads}'  # options are 'qsub ...', 'local', 'dryrun', 'unlock'
+cluster_mode: 'qsub ...'  # options are 'qsub/sbatch/etc ...', 'local', 'dryrun', 'unlock'
+  # SGE example:    qsub -q myqueue.q -V -j y -S /bin/bash -o /path/to/project/directory/logs/ -pe by_node {threads}
+  # slurm example:  sbatch --mem=64g --time=24:00:00 --output=/path/to/project/directory/logs/slurm-%j.out --cpus-per-task={threads}
 num_jobs: 10
 latency: 60
