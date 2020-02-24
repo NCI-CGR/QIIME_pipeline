@@ -204,12 +204,7 @@ if denoise_method in ['dada2', 'DADA2'] and not Q2_2017:
             expand(out_dir + 'denoising/stats/{runID}.qzv', runID=RUN_IDS),  # has to be a more elegant way to do this.
             out_dir + 'output_tsv/feature-table.from_biom.txt',
             out_dir + 'output_tsv/dna-sequences.fasta',
-            out_dir + 'output_tsv/taxonomy_gg/taxonomy.tsv',
-            out_dir + 'output_tsv/taxonomy_silva/taxonomy.tsv',
-            out_dir + 'output_tsv/taxonomy_gg/level-7.csv',
-            out_dir + 'output_tsv/taxonomy_silva/level-7.csv',
-#            expand(out_dir + 'output_tsv/taxonomy' + '_{ref}/taxonomy.tsv', ref=refDict.keys()),
-#            expand(out_dir + 'output_tsv/taxonomy' + '_{ref}/level-7.csv', ref=refDict.keys())
+            directory(expand(out_dir + "output_tsv/taxonomy" + '_{ref}', ref=refDict.keys()))
 else:
     rule all:
         input:
@@ -225,12 +220,7 @@ else:
             expand(out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
             out_dir + 'output_tsv/feature-table.from_biom.txt',
             out_dir + 'output_tsv/dna-sequences.fasta',
-            out_dir + 'output_tsv/taxonomy_gg/taxonomy.tsv',
-            out_dir + 'output_tsv/taxonomy_silva/taxonomy.tsv',
-            out_dir + 'output_tsv/taxonomy_gg/level-7.csv',
-            out_dir + 'output_tsv/taxonomy_silva/level-7.csv',
-#            expand(out_dir + 'output_tsv/taxonomy' + '_{ref}/taxonomy.tsv', ref=refDict.keys()),
-#            expand(out_dir + 'output_tsv/taxonomy' + '_{ref}/level-7.csv', ref=refDict.keys())
+            directory(expand(out_dir + "output_tsv/taxonomy" + '_{ref}', ref=refDict.keys()))
 
 # if report only = no
     # include: Snakefile_q2
@@ -908,38 +898,16 @@ rule convert_taxonomy_to_tsv:
     """ Convert taxonomy classifcation .qza to .tsv 
         Convert taxonomy bar plot qzv to .csv for all 7 levels
         using params to set up wildcard dir does not work 
-    
+    """
     input:
         taxonomy_qza = out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qza',
         taxonomy_bar_plots = out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}.qzv'
     output:
-        taxonomy_tsv = out_dir + 'output_tsv/taxonomy' + '_{ref}/taxonomy.tsv',
-        taxonomy_csv = out_dir + 'output_tsv/taxonomy' + '_{ref}/level-7.csv'
-    params:
-        out = expand(out_dir + "output_tsv/taxonomy" + '_{ref}', ref=refDict.keys())
+        directory(out_dir + 'output_tsv/taxonomy' + '_{ref}') 
     shell:
-        'qiime tools export --input-path {input.taxonomy_qza} --output-path {params.out}; \
-        qiime tools export --input-path {input.taxonomy_bar_plots} --output-path {params.out}'
-    """
-    ## below works
-    input:
-        taxonomy_gg_qza = out_dir + 'taxonomic_classification/' + classify_method + '_gg-13-8-99-nb-classifier.qza',
-        taxonomy_silva_qza = out_dir + 'taxonomic_classification/' + classify_method + '_silva-132-99-nb-classifier.qza',
-        taxonomy_gg_barplot = out_dir + 'taxonomic_classification/' + 'barplots_' + classify_method + '_gg-13-8-99-nb-classifier.qzv',
-        taxonomy_silva_barplot = out_dir + 'taxonomic_classification/' + 'barplots_' + classify_method + '_silva-132-99-nb-classifier.qzv'
-    output:
-        taxonomy_gg_tsv =  out_dir + 'output_tsv/taxonomy_gg/taxonomy.tsv',
-        taxonomy_silva_tsv = out_dir + 'output_tsv/taxonomy_silva/taxonomy.tsv',
-        taxonomy_gg_csv = out_dir + 'output_tsv/taxonomy_gg/level-7.csv',
-        taxonomy_silva_csv = out_dir + 'output_tsv/taxonomy_silva/level-7.csv'
-    params:
-        out_gg = out_dir + "output_tsv/taxonomy_gg",
-        out_silva = out_dir + "output_tsv/taxonomy_silva"
-    shell:
-        'qiime tools export --input-path {input.taxonomy_gg_qza} --output-path {params.out_gg}; \
-        qiime tools export --input-path {input.taxonomy_silva_qza} --output-path {params.out_silva}; \
-        qiime tools export --input-path {input.taxonomy_gg_barplot} --output-path {params.out_gg}; \
-        qiime tools export --input-path {input.taxonomy_silva_barplot} --output-path {params.out_silva}' 
+        'qiime tools export --input-path {input.taxonomy_qza} --output-path {output}; \
+        qiime tools export --input-path {input.taxonomy_bar_plots} --output-path {output}'
+
  
 
     
