@@ -6,6 +6,7 @@ AUTHORS:
     S. Sevilla Chill
     W. Zhou
     B. Ballew
+    Y. Wan
 
 This pipeline uses the QIIME2 suite to classify sequence data,
 calculate relative abundance, and (eventually) perform alpha- and beta-
@@ -201,6 +202,7 @@ if denoise_method in ['dada2', 'DADA2'] and not Q2_2017:
             out_dir + 'diversity_core_metrics/rarefaction.qzv',
             expand(out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
             expand(out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
+            expand(out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}_bacteria_only.qzv', ref=refDict.keys()),
             expand(out_dir + 'denoising/stats/{runID}.qzv', runID=RUN_IDS)  # has to be a more elegant way to do this.
 else:
     rule all:
@@ -214,7 +216,8 @@ else:
             out_dir + 'diversity_core_metrics/alpha_diversity_metadata.qzv',
             out_dir + 'diversity_core_metrics/rarefaction.qzv',
             expand(out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
-            expand(out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys())
+            expand(out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
+            expand(out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}_bacteria_only.qzv', ref=refDict.keys()),
 
 # if report only = no
     # include: Snakefile_q2
@@ -868,3 +871,76 @@ rule taxonomic_class_plots:
             --i-taxonomy {input.tax} \
             --m-metadata-file {input.mani} \
             --o-visualization {output}'
+
+rule remove_non_bacterial_taxa_feature_table:
+    """Remove taxa with non bacteria sequences and bacteria with unannotated phyla
+
+    Recommended by Greg Caporaso
+    Number of samples will be also dropped because of taxa drops.
+    NOTE: This is necessary for downstream unweighted unifrac weird cluster issue.
+    """
+    input:
+        tab_filt = out_dir + 'denoising/feature_tables/merged_filtered.qza',
+        tax = out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qza'
+    output:
+        out_dir + 'denoising/feature_tables/merged_filtered_{ref}_bacteria_only.qza'
+    benchmark:
+        out_dir + 'run_times/remove_non_bacterial_taxa_feature_table/{ref}.tsv'
+    shell:
+        'qiime taxa filter-table \
+            --i-table {input.tab_filt} \
+            --i-taxonomy {input.tax} \
+            --p-include "D_0__Bacteria;D_1" \
+            --o-filtered-table {output}'
+
+rule remove_non_bacterial_taxa_sequence_table:
+    """Remove taxa with non bacteria sequences and bacteria with unannotated phyla 
+
+    Recommended by Greg Caporaso
+    Number of samples will be also dropped because of taxa drops.
+    NOTE: This is necessary for downstream unweighted unifrac weird cluster issue.
+    """
+    input:
+        bacterial_features = out_dir + 'denoising/feature_tables/merged_filtered_{ref}_bacteria_only.qza',
+        seq_table = out_dir + 'denoising/sequence_tables/merged.qza'
+    output:
+        out_dir + 'denoising/sequence_tables/merged_{ref}_bacteria_only.qza'
+    benchmark:
+        out_dir + 'run_times/remove_non_bacterial_taxa_sequence_table/{ref}.tsv'
+    shell:
+        'qiime feature-table filter-seqs \
+            --i-data {input.seq_table} \
+            --i-table {input.bacterial_features} \
+            --o-filtered-data {output}'
+
+rule non_bacterial_taxonomy_analysis:
+    input:
+        features = out_dir + 'denoising/feature_tables/merged_filtered_{ref}_bacteria_only.qza',
+        seqs = out_dir + 'denoising/sequence_tables/merged_{ref}_bacteria_only.qza',
+        ref = get_ref_full_path,
+        manifest = out_dir + 'manifests/manifest_qiime2.tsv'
+    output:
+        qza = out_dir + 'taxonomic_classification/' + classify_method + '_{ref}_bacteria_only.qza',
+        qzv = out_dir + 'taxonomic_classification/' + classify_method + '_{ref}_bacteria_only.qzv',
+        plots = out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}_bacteria_only.qzv'
+    params:
+        c_method = classify_method
+    benchmark:
+        out_dir + 'run_times/non_bacterial_taxonomy_analysis/{ref}.tsv'
+    threads: 8
+    run:
+        if classify_method == 'classify-sklearn':
+            shell('qiime feature-classifier {params.c_method} \
+                --p-n-jobs {threads} \
+                --i-classifier {input.ref} \
+                --i-reads {input.seqs} \
+                --o-classification {output.qza}')
+        shell('qiime metadata tabulate \
+            --m-input-file {output.qza} \
+            --o-visualization {output.qzv}')
+        shell('qiime taxa barplot \
+            --i-table {input.features} \
+            --i-taxonomy {output.qza} \
+            --m-metadata-file {input.manifest} \
+            --o-visualization {output.plots}')
+
