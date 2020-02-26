@@ -197,12 +197,12 @@ if denoise_method in ['dada2', 'DADA2'] and not Q2_2017:
             expand(out_dir + 'import_and_demultiplex/{runID}.qzv',runID=RUN_IDS),
             out_dir + 'denoising/feature_tables/merged_filtered.qzv',
             out_dir + 'denoising/sequence_tables/merged.qzv',
-            out_dir + 'diversity_core_metrics/rareifed_table.qza',
-            out_dir + 'diversity_core_metrics/alpha_diversity_metadata.qzv',
-            out_dir + 'diversity_core_metrics/rarefaction.qzv',
+            # expand(out_dir + 'diversity_core_metrics/{ref}/rarefied_table.qza', ref=refDict.keys()),
+            expand(out_dir + 'diversity_core_metrics/{ref}/alpha_diversity_metadata.qzv', ref=refDict.keys()),
+            expand(out_dir + 'diversity_core_metrics/{ref}/rarefaction.qzv', ref=refDict.keys()),
             expand(out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
             expand(out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
-            expand(out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}_bacteria_only.qzv', ref=refDict.keys()),
+            expand(out_dir + 'taxonomic_classification/bacteria_only/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
             expand(out_dir + 'denoising/stats/{runID}.qzv', runID=RUN_IDS)  # has to be a more elegant way to do this.
 else:
     rule all:
@@ -212,12 +212,12 @@ else:
             expand(out_dir + 'import_and_demultiplex/{runID}.qzv',runID=RUN_IDS),
             out_dir + 'denoising/feature_tables/merged_filtered.qzv',
             out_dir + 'denoising/sequence_tables/merged.qzv',
-            out_dir + 'diversity_core_metrics/rareifed_table.qza',
-            out_dir + 'diversity_core_metrics/alpha_diversity_metadata.qzv',
-            out_dir + 'diversity_core_metrics/rarefaction.qzv',
+            # expand(out_dir + 'diversity_core_metrics/{ref}/rarefied_table.qza', ref=refDict.keys()),
+            expand(out_dir + 'diversity_core_metrics/{ref}/alpha_diversity_metadata.qzv', ref=refDict.keys()),
+            expand(out_dir + 'diversity_core_metrics/{ref}/rarefaction.qzv', ref=refDict.keys()),
             expand(out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
             expand(out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
-            expand(out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}_bacteria_only.qzv', ref=refDict.keys()),
+            expand(out_dir + 'taxonomic_classification/bacteria_only/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
 
 # if report only = no
     # include: Snakefile_q2
@@ -575,221 +575,6 @@ rule sequence_table_visualization:
             --i-data {input} \
             --o-visualization {output}'
 
-if Q2_2017:
-    rule build_multiple_seq_alignment:
-        """Sequence alignment
-        Perform de novo multiple sequence alignment using MAFFT.
-        """
-        input:
-            out_dir + 'denoising/sequence_tables/merged.qza'
-        output:
-            out_dir + 'phylogenetics/msa.qza'
-        benchmark:
-            out_dir + 'run_times/build_multiple_seq_alignment/build_multiple_seq_alignment.tsv'
-        shell:
-            'qiime alignment mafft \
-                --i-sequences {input} \
-                --o-alignment {output}'
-
-    rule mask_multiple_seq_alignment:
-        """Filtering alignments
-        Filter unconserved and highly gapped columns from an alignment.
-        Default min_conservation was chosen to reproduce the mask presented in Lane (1991)
-        """
-        input:
-            out_dir + 'phylogenetics/msa.qza'
-        output:
-            out_dir + 'phylogenetics/masked_msa.qza'
-        benchmark:
-            out_dir + 'run_times/mask_multiple_seq_alignment/mask_multiple_seq_alignment.tsv'
-        shell:
-            'qiime alignment mask \
-                --i-alignment {input} \
-                --o-masked-alignment {output}'
-
-    rule unrooted_tree:
-        """ Construct a phylogenetic tree with FastTree.
-        Apply FastTree to generate a phylogenetic tree from the masked
-        alignment.
-        """
-        input:
-            out_dir + 'phylogenetics/masked_msa.qza'
-        output:
-            out_dir + 'phylogenetics/unrooted_tree.qza'
-        benchmark:
-            out_dir + 'run_times/unrooted_tree/unrooted_tree.tsv'
-        shell:
-            'qiime phylogeny fasttree \
-                --i-alignment {input} \
-                --o-tree {output}'
-
-    rule rooted_tree:
-        """Midpoint root an unrooted phylogenetic tree.
-        Perform midpoint rooting to place the root of the tree at the midpoint
-        of the longest tip-to-tip distance in the unrooted tree
-        """
-        input:
-            out_dir + 'phylogenetics/unrooted_tree.qza'
-        output:
-            out_dir + 'phylogenetics/rooted_tree.qza'
-        benchmark:
-            out_dir + 'run_times/rooted_tree/rooted_tree.tsv'
-        shell:
-            'qiime phylogeny midpoint-root \
-                --i-tree {input} \
-                --o-rooted-tree {output}'
-
-if not Q2_2017:
-    rule phylogenetic_tree:
-        """Sequence alignment, phylogentic tree assignment, rooting at midpoint
-        Starts by creating a sequence alignment using MAFFT, remove any phylogenetically
-        uninformative or ambiguously aligned reads, infer a phylogenetic tree
-        and then root at its midpoint.
-        """
-        input:
-            out_dir + 'denoising/sequence_tables/merged.qza'
-        output:
-            msa = out_dir + 'phylogenetics/msa.qza',
-            masked_msa = out_dir + 'phylogenetics/masked_msa.qza',
-            unrooted_tree = out_dir + 'phylogenetics/unrooted_tree.qza',
-            rooted_tree = out_dir + 'phylogenetics/rooted_tree.qza'
-        benchmark:
-            out_dir + 'run_times/phylogenetic_tree/phylogenetic_tree.tsv'
-        shell:
-            'qiime phylogeny align-to-tree-mafft-fasttree \
-                --i-sequences {input} \
-                --o-alignment {output.msa} \
-                --o-masked-alignment {output.masked_msa} \
-                --o-tree {output.unrooted_tree} \
-                --o-rooted-tree {output.rooted_tree}'
-
-# possible site of entry if you want to change sampling depth threshold!
-rule alpha_beta_diversity:
-    """Performs alpha and beta diversity analysis.
-    This includes:
-    - Vector of Faith PD values by sample
-    - Vector of Observed OTUs values by sample
-    - Vector of Shannon diversity values by sample
-    - Vector of Pielou's evenness values by sample
-    - Matrices of unweighted and weighted UniFrac distances, Jaccard distances,
-        and Bray-Curtis distances between pairs of samples.
-    - PCoA matrix computed from unweighted and weighted UniFrac distances, Jaccard distances,
-        and Bray-Curtis distances between samples.
-    - Emperor plot of the PCoA matrix computed from unweighted and weighted UniFrac, Jaccard,
-        and Bray-Curtis.
-
-    NOTE: For this step you can use the --output-dir parameter instead of writing
-    out all of the outputs BUT QIIME2 wants to create this directory itself and
-    won't overwrite the directory if it already exits. This leads to an error since
-    Snakemake will make the dir first, and Q2 errors
-
-    https://docs.qiime2.org/2017.11/plugins/available/diversity/core-metrics-phylogenetic/
-
-    Unifrac attempt with one sample causes this step to core dump:
-    https://forum.qiime2.org/t/core-metrics-phylogenetic-crashed-free-invalid-next-size/8408/6
-    # TODO: write a check and handle gracefully
-    """
-    input:
-        rooted_tree = out_dir + 'phylogenetics/rooted_tree.qza',
-        tab_filt = out_dir + 'denoising/feature_tables/merged_filtered.qza',
-        q2_man = out_dir + 'manifests/manifest_qiime2.tsv'
-    output:
-        rare = out_dir + 'diversity_core_metrics/rareifed_table.qza',
-        faith = out_dir + 'diversity_core_metrics/faith.qza',
-        obs = out_dir + 'diversity_core_metrics/observed.qza',
-        shan = out_dir + 'diversity_core_metrics/shannon.qza',
-        even = out_dir + 'diversity_core_metrics/evenness.qza',
-        unw_dist = out_dir + 'diversity_core_metrics/unweighted_dist.qza',
-        unw_pcoa = out_dir + 'diversity_core_metrics/unweighted_pcoa.qza',
-        unw_emp = out_dir + 'diversity_core_metrics/unweighted_emperor.qzv',
-        w_dist = out_dir + 'diversity_core_metrics/weighted_dist.qza',
-        w_pcoa = out_dir + 'diversity_core_metrics/weighted_pcoa.qza',
-        w_emp = out_dir + 'diversity_core_metrics/weighted_emperor.qzv',
-        jac_dist = out_dir + 'diversity_core_metrics/jaccard_dist.qza',
-        jac_pcoa = out_dir + 'diversity_core_metrics/jaccard_pcoa.qza',
-        jac_emp = out_dir + 'diversity_core_metrics/jaccard_emperor.qzv',
-        bc_dist = out_dir + 'diversity_core_metrics/bray-curtis_dist.qza',
-        bc_pcoa = out_dir + 'diversity_core_metrics/bray-curtis_pcoa.qza',
-        bc_emp = out_dir + 'diversity_core_metrics/bray-curtis_emperor.qzv'
-    params:
-        samp_depth = sampling_depth
-    benchmark:
-        out_dir + 'run_times/alpha_beta_diversity/alpha_beta_diversity.tsv'
-    shell:
-        'qiime diversity core-metrics-phylogenetic \
-            --i-phylogeny {input.rooted_tree} \
-            --i-table {input.tab_filt} \
-            --p-sampling-depth {params.samp_depth} \
-            --m-metadata-file {input.q2_man} \
-            --o-rarefied-table {output.rare} \
-            --o-faith-pd-vector {output.faith} \
-            --o-observed-otus-vector {output.obs} \
-            --o-shannon-vector {output.shan} \
-            --o-evenness-vector {output.even} \
-            --o-unweighted-unifrac-distance-matrix {output.unw_dist} \
-            --o-unweighted-unifrac-pcoa-results {output.unw_pcoa} \
-            --o-unweighted-unifrac-emperor {output.unw_emp} \
-            --o-weighted-unifrac-distance-matrix {output.w_dist} \
-            --o-weighted-unifrac-pcoa-results {output.w_pcoa} \
-            --o-weighted-unifrac-emperor {output.w_emp} \
-            --o-jaccard-distance-matrix {output.jac_dist} \
-            --o-jaccard-pcoa-results {output.jac_pcoa} \
-            --o-jaccard-emperor {output.jac_emp} \
-            --o-bray-curtis-distance-matrix {output.bc_dist} \
-            --o-bray-curtis-pcoa-results {output.bc_pcoa} \
-            --o-bray-curtis-emperor {output.bc_emp}'
-
-rule alpha_diversity_visualization:
-    """Metadata visualization wtih alpha diversity metrics
-    This generates a tabular view of the metadata in a human viewable format merged with select alpha diversity
-    metrics, created in alpha_beta_diversity.
-    """
-    input:
-        obs = out_dir + 'diversity_core_metrics/observed.qza',
-        shan = out_dir + 'diversity_core_metrics/shannon.qza',
-        even = out_dir + 'diversity_core_metrics/evenness.qza',
-        faith = out_dir + 'diversity_core_metrics/faith.qza'
-    output:
-        out_dir + 'diversity_core_metrics/alpha_diversity_metadata.qzv'
-    benchmark:
-        out_dir + 'run_times/alpha_diversity_visualization/alpha_diversity_visualization.tsv'
-    shell:
-        'qiime metadata tabulate \
-            --m-input-file {input.obs} \
-            --m-input-file {input.shan} \
-            --m-input-file {input.even} \
-            --m-input-file {input.faith} \
-            --o-visualization {output}'
-
-rule alpha_rarefaction:
-    """ Generates interactive rarefaction curves.
-     Computes rarefactions based on values between `min_depth` and `max_depth`.
-     The number of intermediate depths to compute is controlled by the `steps` parameter,
-     with n `iterations` being computed at each rarefaction depth. Samples can be grouped
-     based on distinct values within a metadata column.
-
-     SS: May want to include steps into our parameters - it is the same for both 2017 and 2019
-
-     TODO: --p-steps INTEGER RANGE         [default: 10]
-    """
-    input:
-        tab_filt = out_dir + 'denoising/feature_tables/merged_filtered.qza',
-        rooted = out_dir + 'phylogenetics/rooted_tree.qza',
-        q2_man = out_dir + 'manifests/manifest_qiime2.tsv'
-    output:
-        out_dir + 'diversity_core_metrics/rarefaction.qzv'
-    params:
-        m_depth = max_depth
-    benchmark:
-        out_dir + 'run_times/alpha_rarefaction/alpha_rarefaction.tsv'
-    shell:
-        'qiime diversity alpha-rarefaction \
-            --i-table {input.tab_filt} \
-            --i-phylogeny {input.rooted} \
-            --p-max-depth {params.m_depth} \
-            --m-metadata-file {input.q2_man} \
-            --o-visualization {output}'
-
 rule taxonomic_classification:
     """Classify reads by taxon using a fitted classifier
 
@@ -873,7 +658,7 @@ rule taxonomic_class_plots:
             --o-visualization {output}'
 
 rule remove_non_bacterial_taxa_feature_table:
-    """Remove taxa with non bacteria sequences and bacteria with unannotated phyla
+    """Remove taxa with non bacterial sequences and bacteria with unannotated phyla
 
     Recommended by Greg Caporaso
     Number of samples will be also dropped because of taxa drops.
@@ -883,7 +668,7 @@ rule remove_non_bacterial_taxa_feature_table:
         tab_filt = out_dir + 'denoising/feature_tables/merged_filtered.qza',
         tax = out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qza'
     output:
-        out_dir + 'denoising/feature_tables/merged_filtered_{ref}_bacteria_only.qza'
+        out_dir + 'bacteria_only/feature_tables/merged_filtered_{ref}.qza'
     benchmark:
         out_dir + 'run_times/remove_non_bacterial_taxa_feature_table/{ref}.tsv'
     shell:
@@ -894,17 +679,17 @@ rule remove_non_bacterial_taxa_feature_table:
             --o-filtered-table {output}'
 
 rule remove_non_bacterial_taxa_sequence_table:
-    """Remove taxa with non bacteria sequences and bacteria with unannotated phyla 
+    """Remove taxa with non bacterial sequences and bacteria with unannotated phyla 
 
     Recommended by Greg Caporaso
     Number of samples will be also dropped because of taxa drops.
     NOTE: This is necessary for downstream unweighted unifrac weird cluster issue.
     """
     input:
-        bacterial_features = out_dir + 'denoising/feature_tables/merged_filtered_{ref}_bacteria_only.qza',
+        bacterial_features = out_dir + 'bacteria_only/feature_tables/merged_filtered_{ref}.qza',
         seq_table = out_dir + 'denoising/sequence_tables/merged.qza'
     output:
-        out_dir + 'denoising/sequence_tables/merged_{ref}_bacteria_only.qza'
+        out_dir + 'bacteria_only/sequence_tables/merged_{ref}.qza'
     benchmark:
         out_dir + 'run_times/remove_non_bacterial_taxa_sequence_table/{ref}.tsv'
     shell:
@@ -915,14 +700,14 @@ rule remove_non_bacterial_taxa_sequence_table:
 
 rule non_bacterial_taxonomy_analysis:
     input:
-        features = out_dir + 'denoising/feature_tables/merged_filtered_{ref}_bacteria_only.qza',
-        seqs = out_dir + 'denoising/sequence_tables/merged_{ref}_bacteria_only.qza',
+        features = out_dir + 'bacteria_only/feature_tables/merged_filtered_{ref}.qza',
+        seqs = out_dir + 'bacteria_only/sequence_tables/merged_{ref}.qza',
         ref = get_ref_full_path,
         manifest = out_dir + 'manifests/manifest_qiime2.tsv'
     output:
-        qza = out_dir + 'taxonomic_classification/' + classify_method + '_{ref}_bacteria_only.qza',
-        qzv = out_dir + 'taxonomic_classification/' + classify_method + '_{ref}_bacteria_only.qzv',
-        plots = out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}_bacteria_only.qzv'
+        qza = out_dir + 'taxonomic_classification/bacteria_only/' + classify_method + '_{ref}.qza',
+        qzv = out_dir + 'taxonomic_classification/bacteria_only/' + classify_method + '_{ref}.qzv',
+        plots = out_dir + 'taxonomic_classification/bacteria_only/barplots_' + classify_method + '_{ref}.qzv'
     params:
         c_method = classify_method
     benchmark:
@@ -944,3 +729,217 @@ rule non_bacterial_taxonomy_analysis:
             --m-metadata-file {input.manifest} \
             --o-visualization {output.plots}')
 
+if Q2_2017:
+    rule build_multiple_seq_alignment:
+        """Sequence alignment
+        Perform de novo multiple sequence alignment using MAFFT.
+        """
+        input:
+            out_dir + 'bacteria_only/sequence_tables/merged_{ref}.qza'
+        output:
+            out_dir + 'phylogenetics/{ref}/msa.qza'
+        benchmark:
+            out_dir + 'run_times/build_multiple_seq_alignment/build_multiple_seq_alignment_{ref}.tsv'
+        shell:
+            'qiime alignment mafft \
+                --i-sequences {input} \
+                --o-alignment {output}'
+
+    rule mask_multiple_seq_alignment:
+        """Filtering alignments
+        Filter unconserved and highly gapped columns from an alignment.
+        Default min_conservation was chosen to reproduce the mask presented in Lane (1991)
+        """
+        input:
+            out_dir + 'phylogenetics/{ref}/msa.qza'
+        output:
+            out_dir + 'phylogenetics/{ref}/masked_msa.qza'
+        benchmark:
+            out_dir + 'run_times/mask_multiple_seq_alignment/mask_multiple_seq_alignment_{ref}.tsv'
+        shell:
+            'qiime alignment mask \
+                --i-alignment {input} \
+                --o-masked-alignment {output}'
+
+    rule unrooted_tree:
+        """ Construct a phylogenetic tree with FastTree.
+        Apply FastTree to generate a phylogenetic tree from the masked
+        alignment.
+        """
+        input:
+            out_dir + 'phylogenetics/{ref}/masked_msa.qza'
+        output:
+            out_dir + 'phylogenetics/{ref}/unrooted_tree.qza'
+        benchmark:
+            out_dir + 'run_times/unrooted_tree/unrooted_tree_{ref}.tsv'
+        shell:
+            'qiime phylogeny fasttree \
+                --i-alignment {input} \
+                --o-tree {output}'
+
+    rule rooted_tree:
+        """Midpoint root an unrooted phylogenetic tree.
+        Perform midpoint rooting to place the root of the tree at the midpoint
+        of the longest tip-to-tip distance in the unrooted tree
+        """
+        input:
+            out_dir + 'phylogenetics/{ref}/unrooted_tree.qza'
+        output:
+            out_dir + 'phylogenetics/{ref}/rooted_tree.qza'
+        benchmark:
+            out_dir + 'run_times/rooted_tree/rooted_tree_{ref}.tsv'
+        shell:
+            'qiime phylogeny midpoint-root \
+                --i-tree {input} \
+                --o-rooted-tree {output}'
+
+if not Q2_2017:
+    rule phylogenetic_tree:
+        """Sequence alignment, phylogentic tree assignment, rooting at midpoint
+        Starts by creating a sequence alignment using MAFFT, remove any phylogenetically
+        uninformative or ambiguously aligned reads, infer a phylogenetic tree
+        and then root at its midpoint.
+        """
+        input:
+            out_dir + 'bacteria_only/sequence_tables/merged_{ref}.qza'
+        output:
+            msa = out_dir + 'phylogenetics/{ref}/msa.qza',
+            masked_msa = out_dir + 'phylogenetics/{ref}/masked_msa.qza',
+            unrooted_tree = out_dir + 'phylogenetics/{ref}/unrooted_tree.qza',
+            rooted_tree = out_dir + 'phylogenetics/{ref}/rooted_tree.qza'
+        benchmark:
+            out_dir + 'run_times/phylogenetic_tree/phylogenetic_tree_{ref}.tsv'
+        shell:
+            'qiime phylogeny align-to-tree-mafft-fasttree \
+                --i-sequences {input} \
+                --o-alignment {output.msa} \
+                --o-masked-alignment {output.masked_msa} \
+                --o-tree {output.unrooted_tree} \
+                --o-rooted-tree {output.rooted_tree}'
+
+# possible site of entry if you want to change sampling depth threshold!
+rule alpha_beta_diversity:
+    """Performs alpha and beta diversity analysis.
+    This includes:
+    - Vector of Faith PD values by sample
+    - Vector of Observed OTUs values by sample
+    - Vector of Shannon diversity values by sample
+    - Vector of Pielou's evenness values by sample
+    - Matrices of unweighted and weighted UniFrac distances, Jaccard distances,
+        and Bray-Curtis distances between pairs of samples.
+    - PCoA matrix computed from unweighted and weighted UniFrac distances, Jaccard distances,
+        and Bray-Curtis distances between samples.
+    - Emperor plot of the PCoA matrix computed from unweighted and weighted UniFrac, Jaccard,
+        and Bray-Curtis.
+
+    NOTE: For this step you can use the --output-dir parameter instead of writing
+    out all of the outputs BUT QIIME2 wants to create this directory itself and
+    won't overwrite the directory if it already exits. This leads to an error since
+    Snakemake will make the dir first, and Q2 errors
+
+    https://docs.qiime2.org/2017.11/plugins/available/diversity/core-metrics-phylogenetic/
+
+    Unifrac attempt with one sample causes this step to core dump:
+    https://forum.qiime2.org/t/core-metrics-phylogenetic-crashed-free-invalid-next-size/8408/6
+    # TODO: write a check and handle gracefully
+    """
+    input:
+        rooted_tree = out_dir + 'phylogenetics/{ref}/rooted_tree.qza',
+        tab_filt = out_dir + 'bacteria_only/feature_tables/merged_filtered_{ref}.qza',
+        q2_man = out_dir + 'manifests/manifest_qiime2.tsv'
+    output:
+        rare = out_dir + 'diversity_core_metrics/{ref}/rarefied_table.qza',
+        faith = out_dir + 'diversity_core_metrics/{ref}/faith.qza',
+        obs = out_dir + 'diversity_core_metrics/{ref}/observed.qza',
+        shan = out_dir + 'diversity_core_metrics/{ref}/shannon.qza',
+        even = out_dir + 'diversity_core_metrics/{ref}/evenness.qza',
+        unw_dist = out_dir + 'diversity_core_metrics/{ref}/unweighted_dist.qza',
+        unw_pcoa = out_dir + 'diversity_core_metrics/{ref}/unweighted_pcoa.qza',
+        unw_emp = out_dir + 'diversity_core_metrics/{ref}/unweighted_emperor.qzv',
+        w_dist = out_dir + 'diversity_core_metrics/{ref}/weighted_dist.qza',
+        w_pcoa = out_dir + 'diversity_core_metrics/{ref}/weighted_pcoa.qza',
+        w_emp = out_dir + 'diversity_core_metrics/{ref}/weighted_emperor.qzv',
+        jac_dist = out_dir + 'diversity_core_metrics/{ref}/jaccard_dist.qza',
+        jac_pcoa = out_dir + 'diversity_core_metrics/{ref}/jaccard_pcoa.qza',
+        jac_emp = out_dir + 'diversity_core_metrics/{ref}/jaccard_emperor.qzv',
+        bc_dist = out_dir + 'diversity_core_metrics/{ref}/bray-curtis_dist.qza',
+        bc_pcoa = out_dir + 'diversity_core_metrics/{ref}/bray-curtis_pcoa.qza',
+        bc_emp = out_dir + 'diversity_core_metrics/{ref}/bray-curtis_emperor.qzv'
+    params:
+        samp_depth = sampling_depth
+    benchmark:
+        out_dir + 'run_times/alpha_beta_diversity/alpha_beta_diversity_{ref}.tsv'
+    shell:
+        'qiime diversity core-metrics-phylogenetic \
+            --i-phylogeny {input.rooted_tree} \
+            --i-table {input.tab_filt} \
+            --p-sampling-depth {params.samp_depth} \
+            --m-metadata-file {input.q2_man} \
+            --o-rarefied-table {output.rare} \
+            --o-faith-pd-vector {output.faith} \
+            --o-observed-otus-vector {output.obs} \
+            --o-shannon-vector {output.shan} \
+            --o-evenness-vector {output.even} \
+            --o-unweighted-unifrac-distance-matrix {output.unw_dist} \
+            --o-unweighted-unifrac-pcoa-results {output.unw_pcoa} \
+            --o-unweighted-unifrac-emperor {output.unw_emp} \
+            --o-weighted-unifrac-distance-matrix {output.w_dist} \
+            --o-weighted-unifrac-pcoa-results {output.w_pcoa} \
+            --o-weighted-unifrac-emperor {output.w_emp} \
+            --o-jaccard-distance-matrix {output.jac_dist} \
+            --o-jaccard-pcoa-results {output.jac_pcoa} \
+            --o-jaccard-emperor {output.jac_emp} \
+            --o-bray-curtis-distance-matrix {output.bc_dist} \
+            --o-bray-curtis-pcoa-results {output.bc_pcoa} \
+            --o-bray-curtis-emperor {output.bc_emp}'
+
+rule alpha_diversity_visualization:
+    """Metadata visualization wtih alpha diversity metrics
+    This generates a tabular view of the metadata in a human viewable format merged with select alpha diversity
+    metrics, created in alpha_beta_diversity.
+    """
+    input:
+        obs = out_dir + 'diversity_core_metrics/{ref}/observed.qza',
+        shan = out_dir + 'diversity_core_metrics/{ref}/shannon.qza',
+        even = out_dir + 'diversity_core_metrics/{ref}/evenness.qza',
+        faith = out_dir + 'diversity_core_metrics/{ref}/faith.qza'
+    output:
+        out_dir + 'diversity_core_metrics/{ref}/alpha_diversity_metadata.qzv'
+    benchmark:
+        out_dir + 'run_times/alpha_diversity_visualization/alpha_diversity_visualization_{ref}.tsv'
+    shell:
+        'qiime metadata tabulate \
+            --m-input-file {input.obs} \
+            --m-input-file {input.shan} \
+            --m-input-file {input.even} \
+            --m-input-file {input.faith} \
+            --o-visualization {output}'
+
+rule alpha_rarefaction:
+    """ Generates interactive rarefaction curves.
+     Computes rarefactions based on values between `min_depth` and `max_depth`.
+     The number of intermediate depths to compute is controlled by the `steps` parameter,
+     with n `iterations` being computed at each rarefaction depth. Samples can be grouped
+     based on distinct values within a metadata column.
+
+     SS: May want to include steps into our parameters - it is the same for both 2017 and 2019
+
+     TODO: --p-steps INTEGER RANGE         [default: 10]
+    """
+    input:
+        tab_filt = out_dir + 'bacteria_only/feature_tables/merged_filtered_{ref}.qza',
+        rooted = out_dir + 'phylogenetics/{ref}/rooted_tree.qza',
+        q2_man = out_dir + 'manifests/manifest_qiime2.tsv'
+    output:
+        out_dir + 'diversity_core_metrics/{ref}/rarefaction.qzv'
+    params:
+        m_depth = max_depth
+    benchmark:
+        out_dir + 'run_times/alpha_rarefaction/alpha_rarefaction_{ref}.tsv'
+    shell:
+        'qiime diversity alpha-rarefaction \
+            --i-table {input.tab_filt} \
+            --i-phylogeny {input.rooted} \
+            --p-max-depth {params.m_depth} \
+            --m-metadata-file {input.q2_man} \
+            --o-visualization {output}'
