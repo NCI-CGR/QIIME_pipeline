@@ -663,6 +663,9 @@ rule remove_non_bacterial_taxa_feature_table:
     Recommended by Greg Caporaso
     Number of samples will be also dropped because of taxa drops.
     NOTE: This is necessary for downstream unweighted unifrac weird cluster issue.
+
+    The included parameters (D_1__ and p__) below should cover phylum annotations
+    in green genes and silva databases.
     """
     input:
         tab_filt = out_dir + 'denoising/feature_tables/merged_filtered.qza',
@@ -675,8 +678,9 @@ rule remove_non_bacterial_taxa_feature_table:
         'qiime taxa filter-table \
             --i-table {input.tab_filt} \
             --i-taxonomy {input.tax} \
-            --p-include "D_0__Bacteria;D_1" \
+            --p-include "p__,D_1__" \
             --o-filtered-table {output}'
+            # "D_0__Bacteria;D_1" \
 
 rule remove_non_bacterial_taxa_sequence_table:
     """Remove taxa with non bacterial sequences and bacteria with unannotated phyla 
