@@ -197,7 +197,6 @@ if denoise_method in ['dada2', 'DADA2'] and not Q2_2017:
             expand(out_dir + 'import_and_demultiplex/{runID}.qzv',runID=RUN_IDS),
             out_dir + 'denoising/feature_tables/merged_filtered.qzv',
             out_dir + 'denoising/sequence_tables/merged.qzv',
-            # expand(out_dir + 'diversity_core_metrics/{ref}/rarefied_table.qza', ref=refDict.keys()),
             expand(out_dir + 'diversity_core_metrics/{ref}/alpha_diversity_metadata.qzv', ref=refDict.keys()),
             expand(out_dir + 'diversity_core_metrics/{ref}/rarefaction.qzv', ref=refDict.keys()),
             expand(out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
@@ -212,7 +211,6 @@ else:
             expand(out_dir + 'import_and_demultiplex/{runID}.qzv',runID=RUN_IDS),
             out_dir + 'denoising/feature_tables/merged_filtered.qzv',
             out_dir + 'denoising/sequence_tables/merged.qzv',
-            # expand(out_dir + 'diversity_core_metrics/{ref}/rarefied_table.qza', ref=refDict.keys()),
             expand(out_dir + 'diversity_core_metrics/{ref}/alpha_diversity_metadata.qzv', ref=refDict.keys()),
             expand(out_dir + 'diversity_core_metrics/{ref}/rarefaction.qzv', ref=refDict.keys()),
             expand(out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
@@ -666,6 +664,18 @@ rule remove_non_bacterial_taxa_feature_table:
 
     The included parameters (D_1__ and p__) below should cover phylum annotations
     in green genes and silva databases.
+
+    Notes on the difference between k__Bacteria;p__ and k__Bacteria;__ in greengenes:
+        From https://forum.qiime2.org/t/follow-up-on-unique-taxonomy-strings-that-seem-to-be-shared/1961/2?u=nicholas_bokulich
+    "The distinction is that the first row (ending in __;__) cannot be confidently
+    classified beyond family level (probably because a close match does not exist in
+    the reference database). So sequences receiving that classification can be any
+    taxon in f__Geodermatophilaceae. The second row (ending in g__;s__) DOES have a
+    close match in the reference database and hence is confidently classified at
+    species level — unfortunately, that close match does not have genus or species-
+    level annotations. This does not in any way imply that these two different
+    taxonomic affiliations are related beyond the family level, so it would probably
+    be inappropriate (or at least presumptuous) to collapse these at species level."
     """
     input:
         tab_filt = out_dir + 'denoising/feature_tables/merged_filtered.qza',
@@ -678,7 +688,8 @@ rule remove_non_bacterial_taxa_feature_table:
         'qiime taxa filter-table \
             --i-table {input.tab_filt} \
             --i-taxonomy {input.tax} \
-            --p-include "p__,D_1__" \
+            --p-include "p__,D_1__,D_0__Bacteria,k__Bacteria" \
+            --p-exclude "k__Bacteria;__" \
             --o-filtered-table {output}'
             # "D_0__Bacteria;D_1" \
 
@@ -733,17 +744,18 @@ rule non_bacterial_taxonomy_analysis:
             --m-metadata-file {input.manifest} \
             --o-visualization {output.plots}')
 
+# note that phylogenetics are done with original taxa, including non-bacterial and phylum-unclassified taxa
 if Q2_2017:
     rule build_multiple_seq_alignment:
         """Sequence alignment
         Perform de novo multiple sequence alignment using MAFFT.
         """
         input:
-            out_dir + 'bacteria_only/sequence_tables/merged_{ref}.qza'
+            out_dir + 'denoising/sequence_tables/merged.qza'
         output:
-            out_dir + 'phylogenetics/{ref}/msa.qza'
+            out_dir + 'phylogenetics/msa.qza'
         benchmark:
-            out_dir + 'run_times/build_multiple_seq_alignment/build_multiple_seq_alignment_{ref}.tsv'
+            out_dir + 'run_times/build_multiple_seq_alignment/build_multiple_seq_alignment.tsv'
         shell:
             'qiime alignment mafft \
                 --i-sequences {input} \
@@ -755,11 +767,11 @@ if Q2_2017:
         Default min_conservation was chosen to reproduce the mask presented in Lane (1991)
         """
         input:
-            out_dir + 'phylogenetics/{ref}/msa.qza'
+            out_dir + 'phylogenetics/msa.qza'
         output:
-            out_dir + 'phylogenetics/{ref}/masked_msa.qza'
+            out_dir + 'phylogenetics/masked_msa.qza'
         benchmark:
-            out_dir + 'run_times/mask_multiple_seq_alignment/mask_multiple_seq_alignment_{ref}.tsv'
+            out_dir + 'run_times/mask_multiple_seq_alignment/mask_multiple_seq_alignment.tsv'
         shell:
             'qiime alignment mask \
                 --i-alignment {input} \
@@ -771,11 +783,11 @@ if Q2_2017:
         alignment.
         """
         input:
-            out_dir + 'phylogenetics/{ref}/masked_msa.qza'
+            out_dir + 'phylogenetics/masked_msa.qza'
         output:
-            out_dir + 'phylogenetics/{ref}/unrooted_tree.qza'
+            out_dir + 'phylogenetics/unrooted_tree.qza'
         benchmark:
-            out_dir + 'run_times/unrooted_tree/unrooted_tree_{ref}.tsv'
+            out_dir + 'run_times/unrooted_tree/unrooted_tree.tsv'
         shell:
             'qiime phylogeny fasttree \
                 --i-alignment {input} \
@@ -787,11 +799,11 @@ if Q2_2017:
         of the longest tip-to-tip distance in the unrooted tree
         """
         input:
-            out_dir + 'phylogenetics/{ref}/unrooted_tree.qza'
+            out_dir + 'phylogenetics/unrooted_tree.qza'
         output:
-            out_dir + 'phylogenetics/{ref}/rooted_tree.qza'
+            out_dir + 'phylogenetics/rooted_tree.qza'
         benchmark:
-            out_dir + 'run_times/rooted_tree/rooted_tree_{ref}.tsv'
+            out_dir + 'run_times/rooted_tree/rooted_tree.tsv'
         shell:
             'qiime phylogeny midpoint-root \
                 --i-tree {input} \
@@ -805,14 +817,14 @@ if not Q2_2017:
         and then root at its midpoint.
         """
         input:
-            out_dir + 'bacteria_only/sequence_tables/merged_{ref}.qza'
+            out_dir + 'denoising/sequence_tables/merged.qza'
         output:
-            msa = out_dir + 'phylogenetics/{ref}/msa.qza',
-            masked_msa = out_dir + 'phylogenetics/{ref}/masked_msa.qza',
-            unrooted_tree = out_dir + 'phylogenetics/{ref}/unrooted_tree.qza',
-            rooted_tree = out_dir + 'phylogenetics/{ref}/rooted_tree.qza'
+            msa = out_dir + 'phylogenetics/msa.qza',
+            masked_msa = out_dir + 'phylogenetics/masked_msa.qza',
+            unrooted_tree = out_dir + 'phylogenetics/unrooted_tree.qza',
+            rooted_tree = out_dir + 'phylogenetics/rooted_tree.qza'
         benchmark:
-            out_dir + 'run_times/phylogenetic_tree/phylogenetic_tree_{ref}.tsv'
+            out_dir + 'run_times/phylogenetic_tree/phylogenetic_tree.tsv'
         shell:
             'qiime phylogeny align-to-tree-mafft-fasttree \
                 --i-sequences {input} \
@@ -821,6 +833,7 @@ if not Q2_2017:
                 --o-tree {output.unrooted_tree} \
                 --o-rooted-tree {output.rooted_tree}'
 
+# note that alpha and beta diversity are done with filtered taxa, excluding non-bacterial and phylum-unclassified taxa
 # possible site of entry if you want to change sampling depth threshold!
 rule alpha_beta_diversity:
     """Performs alpha and beta diversity analysis.
@@ -848,7 +861,7 @@ rule alpha_beta_diversity:
     # TODO: write a check and handle gracefully
     """
     input:
-        rooted_tree = out_dir + 'phylogenetics/{ref}/rooted_tree.qza',
+        rooted_tree = out_dir + 'phylogenetics/rooted_tree.qza',
         tab_filt = out_dir + 'bacteria_only/feature_tables/merged_filtered_{ref}.qza',
         q2_man = out_dir + 'manifests/manifest_qiime2.tsv'
     output:
@@ -932,7 +945,7 @@ rule alpha_rarefaction:
     """
     input:
         tab_filt = out_dir + 'bacteria_only/feature_tables/merged_filtered_{ref}.qza',
-        rooted = out_dir + 'phylogenetics/{ref}/rooted_tree.qza',
+        rooted = out_dir + 'phylogenetics/rooted_tree.qza',
         q2_man = out_dir + 'manifests/manifest_qiime2.tsv'
     output:
         out_dir + 'diversity_core_metrics/{ref}/rarefaction.qzv'
