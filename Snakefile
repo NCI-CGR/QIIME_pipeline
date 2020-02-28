@@ -56,7 +56,10 @@ Q2_2017 = True if qiime2_version == '2017.11' else False
 demux_param = config['demux_param']
 input_type = config['input_type']
 phred_score = config['phred_score']
-filt_min = config['filt_param']
+min_num_features_per_sample = config['min_num_features_per_sample']
+min_num_reads_per_sample = config['min_num_reads_per_sample']
+min_num_reads_per_feature = config['min_num_reads_per_feature']
+min_num_samples_per_feature = config['min_num_samples_per_feature']
 sampling_depth = config['sampling_depth']
 max_depth = config['max_depth']
 classify_method = config['classify_method']
@@ -195,7 +198,7 @@ if denoise_method in ['dada2', 'DADA2'] and not Q2_2017:
             expand(out_dir + 'fastqs/' + '{sample}_R1.fastq.gz', sample=sampleDict.keys()),
             expand(out_dir + 'fastqs/' + '{sample}_R2.fastq.gz', sample=sampleDict.keys()),
             expand(out_dir + 'import_and_demultiplex/{runID}.qzv',runID=RUN_IDS),
-            out_dir + 'denoising/feature_tables/merged_filtered.qzv',
+            out_dir + 'denoising/feature_tables/merged.qzv',
             out_dir + 'denoising/sequence_tables/merged.qzv',
             expand(out_dir + 'diversity_core_metrics/{ref}/alpha_diversity_metadata.qzv', ref=refDict.keys()),
             expand(out_dir + 'diversity_core_metrics/{ref}/rarefaction.qzv', ref=refDict.keys()),
@@ -209,7 +212,7 @@ else:
             expand(out_dir + 'fastqs/' + '{sample}_R1.fastq.gz', sample=sampleDict.keys()),
             expand(out_dir + 'fastqs/' + '{sample}_R2.fastq.gz', sample=sampleDict.keys()),
             expand(out_dir + 'import_and_demultiplex/{runID}.qzv',runID=RUN_IDS),
-            out_dir + 'denoising/feature_tables/merged_filtered.qzv',
+            out_dir + 'denoising/feature_tables/merged.qzv',
             out_dir + 'denoising/sequence_tables/merged.qzv',
             expand(out_dir + 'diversity_core_metrics/{ref}/alpha_diversity_metadata.qzv', ref=refDict.keys()),
             expand(out_dir + 'diversity_core_metrics/{ref}/rarefaction.qzv', ref=refDict.keys()),
@@ -517,21 +520,74 @@ rule merge_sequence_tables:
             l = '--i-data ' + ' --i-data '.join(input.tables)
             shell('qiime feature-table merge-seqs ' + l + ' --o-merged-data {output}')
 
-rule remove_zero_read_samples:
-    """ Remove samples that have zero reads
-    This will include unexpected failed study samples, and expected sequencing/extraction blanks
-    from the merged feature table.
+rule remove_samples_with_low_read_count:
+    """Remove samples that have less than min # reads
 
-    NOTE: This is necessary for downstream PhyloSeq manipulation.
+    See https://docs.qiime2.org/2019.1/tutorials/filtering/ for
+    additional explanation of this and subsequent filtering rules
     """
     input:
         out_dir + 'denoising/feature_tables/merged.qza'
     output:
-        out_dir + 'denoising/feature_tables/merged_filtered.qza'
+        out_dir + 'read_feature_and_sample_filtering/feature_tables/1_remove_samples_with_low_read_count.qza'
     params:
-        f = filt_min
+        f = min_num_reads_per_sample
     benchmark:
-        out_dir + 'run_times/remove_zero_read_samples/remove_zero_read_samples.tsv'
+        out_dir + 'run_times/remove_samples_with_low_read_count/remove_samples_with_low_read_count.tsv'
+    shell:
+        'qiime feature-table filter-samples \
+            --i-table {input} \
+            --p-min-frequency {params.f} \
+            --o-filtered-table {output}'
+
+rule remove_features_with_low_read_count:
+    """Remove features that have less than min # reads
+    """
+    input:
+        out_dir + 'read_feature_and_sample_filtering/feature_tables/1_remove_samples_with_low_read_count.qza'
+    output:
+        out_dir + 'read_feature_and_sample_filtering/feature_tables/2_remove_features_with_low_read_count.qza'
+    params:
+        f = min_num_reads_per_feature
+    benchmark:
+        out_dir + 'run_times/remove_features_with_low_read_count/remove_features_with_low_read_count.tsv'
+    shell:
+        'qiime feature-table filter-features \
+            --i-table {input} \
+            --p-min-frequency {params.f} \
+            --o-filtered-table {output}'
+
+rule remove_features_with_low_sample_count:
+    """Remove features that occur in less than min # samples
+    """
+    input:
+        out_dir + 'read_feature_and_sample_filtering/feature_tables/2_remove_features_with_low_read_count.qza'
+    output:
+        out_dir + 'read_feature_and_sample_filtering/feature_tables/3_remove_features_with_low_sample_count.qza'
+    params:
+        f = min_num_samples_per_feature
+    benchmark:
+        out_dir + 'run_times/remove_features_with_low_sample_count/remove_features_with_low_sample_count.tsv'
+    shell:
+        'qiime feature-table filter-features \
+            --i-table {input} \
+            --p-min-samples {params.f} \
+            --o-filtered-table {output}'
+
+rule remove_samples_with_low_feature_count:
+    """ Remove samples that have less than min # features
+
+    Min of at least 1 is necessary to remove 0 read samples
+    (e.g. blanks) for downstream PhyloSeq manipulation.
+    """
+    input:
+        out_dir + 'read_feature_and_sample_filtering/feature_tables/3_remove_features_with_low_sample_count.qza'
+    output:
+        out_dir + 'read_feature_and_sample_filtering/feature_tables/4_remove_samples_with_low_feature_count.qza'
+    params:
+        f = min_num_features_per_sample
+    benchmark:
+        out_dir + 'run_times/remove_samples_with_low_feature_count/remove_samples_with_low_feature_count.tsv'
     shell:
         'qiime feature-table filter-samples \
             --i-table {input} \
@@ -545,17 +601,73 @@ rule feature_table_visualization:
     summary statistics.
     """
     input:
-        qza = out_dir + 'denoising/feature_tables/merged_filtered.qza',
+        qza0 = out_dir + 'denoising/feature_tables/merged.qza',
+        qza1 = out_dir + 'read_feature_and_sample_filtering/feature_tables/1_remove_samples_with_low_read_count.qza',
+        qza2 = out_dir + 'read_feature_and_sample_filtering/feature_tables/2_remove_features_with_low_read_count.qza',
+        qza3 = out_dir + 'read_feature_and_sample_filtering/feature_tables/3_remove_features_with_low_sample_count.qza',
+        qza4 = out_dir + 'read_feature_and_sample_filtering/feature_tables/4_remove_samples_with_low_feature_count.qza',
         q2_man = out_dir + 'manifests/manifest_qiime2.tsv'
     output:
-        out_dir + 'denoising/feature_tables/merged_filtered.qzv'
+        qzv0 = out_dir + 'denoising/feature_tables/merged.qzv',
+        qzv1 = out_dir + 'read_feature_and_sample_filtering/feature_tables/1_remove_samples_with_low_read_count.qzv',
+        qzv2 = out_dir + 'read_feature_and_sample_filtering/feature_tables/2_remove_features_with_low_read_count.qzv',
+        qzv3 = out_dir + 'read_feature_and_sample_filtering/feature_tables/3_remove_features_with_low_sample_count.qzv',
+        qzv4 = out_dir + 'read_feature_and_sample_filtering/feature_tables/4_remove_samples_with_low_feature_count.qzv',
     benchmark:
         out_dir + 'run_times/feature_table_visualization/feature_table_visualization.tsv'
     shell:
         'qiime feature-table summarize \
-            --i-table {input.qza} \
-            --o-visualization {output} \
+            --i-table {input.qza0} \
+            --o-visualization {output.qzv0} \
+            --m-sample-metadata-file {input.q2_man} && \
+        qiime feature-table summarize \
+            --i-table {input.qza1} \
+            --o-visualization {output.qzv1} \
+            --m-sample-metadata-file {input.q2_man} && \
+        qiime feature-table summarize \
+            --i-table {input.qza2} \
+            --o-visualization {output.qzv2} \
+            --m-sample-metadata-file {input.q2_man} && \
+        qiime feature-table summarize \
+            --i-table {input.qza3} \
+            --o-visualization {output.qzv3} \
+            --m-sample-metadata-file {input.q2_man} && \
+        qiime feature-table summarize \
+            --i-table {input.qza4} \
+            --o-visualization {output.qzv4} \
             --m-sample-metadata-file {input.q2_man}'
+
+rule apply_filters_to_sequence_tables:
+    input:
+        feat1 = out_dir + 'read_feature_and_sample_filtering/feature_tables/1_remove_samples_with_low_read_count.qza',
+        feat2 = out_dir + 'read_feature_and_sample_filtering/feature_tables/2_remove_features_with_low_read_count.qza',
+        feat3 = out_dir + 'read_feature_and_sample_filtering/feature_tables/3_remove_features_with_low_sample_count.qza',
+        feat4 = out_dir + 'read_feature_and_sample_filtering/feature_tables/4_remove_samples_with_low_feature_count.qza',
+        seq_table = out_dir + 'denoising/sequence_tables/merged.qza'
+    output:
+        seq1 = out_dir + 'read_feature_and_sample_filtering/sequence_tables/1_remove_samples_with_low_read_count.qza',
+        seq2 = out_dir + 'read_feature_and_sample_filtering/sequence_tables/2_remove_features_with_low_read_count.qza',
+        seq3 = out_dir + 'read_feature_and_sample_filtering/sequence_tables/3_remove_features_with_low_sample_count.qza',
+        seq4 = out_dir + 'read_feature_and_sample_filtering/sequence_tables/4_remove_samples_with_low_feature_count.qza'
+    benchmark:
+        out_dir + 'run_times/apply_filters_to_sequence_tables/apply_filters_to_sequence_tables.tsv'
+    shell:
+        'qiime feature-table filter-seqs \
+            --i-data {input.seq_table} \
+            --i-table {input.feat1} \
+            --o-filtered-data {output.seq1} && \
+        qiime feature-table filter-seqs \
+            --i-data {input.seq_table} \
+            --i-table {input.feat2} \
+            --o-filtered-data {output.seq2} && \
+        qiime feature-table filter-seqs \
+            --i-data {input.seq_table} \
+            --i-table {input.feat3} \
+            --o-filtered-data {output.seq3} && \
+        qiime feature-table filter-seqs \
+            --i-data {input.seq_table} \
+            --i-table {input.feat4} \
+            --o-filtered-data {output.seq4}'
 
 rule sequence_table_visualization:
     """Generate visual and tabular summaries for sequences
@@ -596,7 +708,8 @@ rule taxonomic_classification:
     reference database before choosing the top N hits, not the first N hits.
     """
     input:
-        tab_filt = out_dir + 'denoising/sequence_tables/merged.qza',
+        tab_filt = out_dir + 'read_feature_and_sample_filtering/sequence_tables/4_remove_samples_with_low_feature_count.qza',
+        # tab_filt = out_dir + 'denoising/sequence_tables/merged.qza',
         ref = get_ref_full_path
     output:
         out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qza'
@@ -641,7 +754,8 @@ rule taxonomic_class_plots:
     SS: may want to change name of rule so that "class" since class =/ taxonomic "class"
     """
     input:
-        tab_filt = out_dir + 'denoising/feature_tables/merged_filtered.qza',
+        tab_filt = out_dir + 'read_feature_and_sample_filtering/feature_tables/4_remove_samples_with_low_feature_count.qza',
+        # tab_filt = out_dir + 'denoising/feature_tables/merged_filtered.qza',
         tax = out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qza',
         mani = out_dir + 'manifests/manifest_qiime2.tsv'
     output:
@@ -678,7 +792,8 @@ rule remove_non_bacterial_taxa_feature_table:
     be inappropriate (or at least presumptuous) to collapse these at species level."
     """
     input:
-        tab_filt = out_dir + 'denoising/feature_tables/merged_filtered.qza',
+        tab_filt = out_dir + 'read_feature_and_sample_filtering/feature_tables/4_remove_samples_with_low_feature_count.qza',
+        # tab_filt = out_dir + 'denoising/feature_tables/merged_filtered.qza',
         tax = out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qza'
     output:
         out_dir + 'bacteria_only/feature_tables/merged_filtered_{ref}.qza'
