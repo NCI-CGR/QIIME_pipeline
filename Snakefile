@@ -204,7 +204,8 @@ if denoise_method in ['dada2', 'DADA2'] and not Q2_2017:
             expand(out_dir + 'diversity_core_metrics/{ref}/rarefaction.qzv', ref=refDict.keys()),
             expand(out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
             expand(out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
-            expand(out_dir + 'taxonomic_classification/bacteria_only/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
+            expand(out_dir + 'taxonomic_classification_bacteria_only/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
+            expand(out_dir + 'bacteria_only/feature_tables/merged_{ref}.qzv', ref=refDict.keys()),
             expand(out_dir + 'denoising/stats/{runID}.qzv', runID=RUN_IDS)  # has to be a more elegant way to do this.
 else:
     rule all:
@@ -218,7 +219,8 @@ else:
             expand(out_dir + 'diversity_core_metrics/{ref}/rarefaction.qzv', ref=refDict.keys()),
             expand(out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
             expand(out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
-            expand(out_dir + 'taxonomic_classification/bacteria_only/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
+            expand(out_dir + 'taxonomic_classification_bacteria_only/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
+            expand(out_dir + 'bacteria_only/feature_tables/merged_{ref}.qzv', ref=refDict.keys())
 
 # if report only = no
     # include: Snakefile_q2
@@ -612,7 +614,7 @@ rule feature_table_visualization:
         qzv1 = out_dir + 'read_feature_and_sample_filtering/feature_tables/1_remove_samples_with_low_read_count.qzv',
         qzv2 = out_dir + 'read_feature_and_sample_filtering/feature_tables/2_remove_features_with_low_read_count.qzv',
         qzv3 = out_dir + 'read_feature_and_sample_filtering/feature_tables/3_remove_features_with_low_sample_count.qzv',
-        qzv4 = out_dir + 'read_feature_and_sample_filtering/feature_tables/4_remove_samples_with_low_feature_count.qzv',
+        qzv4 = out_dir + 'read_feature_and_sample_filtering/feature_tables/4_remove_samples_with_low_feature_count.qzv'
     benchmark:
         out_dir + 'run_times/feature_table_visualization/feature_table_visualization.tsv'
     shell:
@@ -675,15 +677,35 @@ rule sequence_table_visualization:
     BLAST each sequence against the NCBI nt database.
     """
     input:
-        out_dir + 'denoising/sequence_tables/merged.qza'
+        qza0 = out_dir + 'denoising/sequence_tables/merged.qza',
+        qza1 = out_dir + 'read_feature_and_sample_filtering/sequence_tables/1_remove_samples_with_low_read_count.qza',
+        qza2 = out_dir + 'read_feature_and_sample_filtering/sequence_tables/2_remove_features_with_low_read_count.qza',
+        qza3 = out_dir + 'read_feature_and_sample_filtering/sequence_tables/3_remove_features_with_low_sample_count.qza',
+        qza4 = out_dir + 'read_feature_and_sample_filtering/sequence_tables/4_remove_samples_with_low_feature_count.qza'
     output:
-        out_dir + 'denoising/sequence_tables/merged.qzv'
+        qzv0 = out_dir + 'denoising/sequence_tables/merged.qzv',
+        qzv1 = out_dir + 'read_feature_and_sample_filtering/sequence_tables/1_remove_samples_with_low_read_count.qzv',
+        qzv2 = out_dir + 'read_feature_and_sample_filtering/sequence_tables/2_remove_features_with_low_read_count.qzv',
+        qzv3 = out_dir + 'read_feature_and_sample_filtering/sequence_tables/3_remove_features_with_low_sample_count.qzv',
+        qzv4 = out_dir + 'read_feature_and_sample_filtering/sequence_tables/4_remove_samples_with_low_feature_count.qzv',
     benchmark:
         out_dir + 'run_times/sequence_table_visualization/sequence_table_visualization.tsv'
     shell:
         'qiime feature-table tabulate-seqs \
-            --i-data {input} \
-            --o-visualization {output}'
+            --i-data {input.qza0} \
+            --o-visualization {output.qzv0} && \
+        qiime feature-table tabulate-seqs \
+            --i-data {input.qza1} \
+            --o-visualization {output.qzv1} && \
+        qiime feature-table tabulate-seqs \
+            --i-data {input.qza2} \
+            --o-visualization {output.qzv2} && \
+        qiime feature-table tabulate-seqs \
+            --i-data {input.qza3} \
+            --o-visualization {output.qzv3} && \
+        qiime feature-table tabulate-seqs \
+            --i-data {input.qza4} \
+            --o-visualization {output.qzv4}'
 
 rule taxonomic_classification:
     """Classify reads by taxon using a fitted classifier
@@ -769,15 +791,34 @@ rule taxonomic_class_plots:
             --m-metadata-file {input.mani} \
             --o-visualization {output}'
 
-rule remove_non_bacterial_taxa_feature_table:
+rule remove_non_bacterial_taxa_feature_table_pt1:
     """Remove taxa with non bacterial sequences and bacteria with unannotated phyla
 
     Recommended by Greg Caporaso
     Number of samples will be also dropped because of taxa drops.
     NOTE: This is necessary for downstream unweighted unifrac weird cluster issue.
 
-    The included parameters (D_1__ and p__) below should cover phylum annotations
-    in green genes and silva databases.
+    The included parameters (D_0__Bacteria;D_1 and k__Bacteria;p__) below should
+    cover bacterial kindgdom with phyla annotations for green genes and silva
+    databases.
+    """
+    input:
+        tab_filt = out_dir + 'read_feature_and_sample_filtering/feature_tables/4_remove_samples_with_low_feature_count.qza',
+        # tab_filt = out_dir + 'denoising/feature_tables/merged_filtered.qza',
+        tax = out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qza'
+    output:
+        temp(out_dir + 'bacteria_only/feature_tables/pt1_merged_{ref}.qza')
+    benchmark:
+        out_dir + 'run_times/remove_non_bacterial_taxa_feature_table_pt1/{ref}.tsv'
+    shell:
+        'qiime taxa filter-table \
+            --i-table {input.tab_filt} \
+            --i-taxonomy {input.tax} \
+            --p-include "D_0__Bacteria;D_1,k__Bacteria; p__" \
+            --o-filtered-table {output}'
+
+rule remove_non_bacterial_taxa_feature_table_pt2:
+    """Remove greengenes taxa without phylum-level annotations
 
     Notes on the difference between k__Bacteria;p__ and k__Bacteria;__ in greengenes:
         From https://forum.qiime2.org/t/follow-up-on-unique-taxonomy-strings-that-seem-to-be-shared/1961/2?u=nicholas_bokulich
@@ -792,21 +833,19 @@ rule remove_non_bacterial_taxa_feature_table:
     be inappropriate (or at least presumptuous) to collapse these at species level."
     """
     input:
-        tab_filt = out_dir + 'read_feature_and_sample_filtering/feature_tables/4_remove_samples_with_low_feature_count.qza',
-        # tab_filt = out_dir + 'denoising/feature_tables/merged_filtered.qza',
+        tab_filt = out_dir + 'bacteria_only/feature_tables/pt1_merged_{ref}.qza',
         tax = out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qza'
     output:
-        out_dir + 'bacteria_only/feature_tables/merged_filtered_{ref}.qza'
+        out_dir + 'bacteria_only/feature_tables/merged_{ref}.qza'
     benchmark:
-        out_dir + 'run_times/remove_non_bacterial_taxa_feature_table/{ref}.tsv'
+        out_dir + 'run_times/remove_non_bacterial_taxa_feature_table_pt2/{ref}.tsv'
     shell:
         'qiime taxa filter-table \
             --i-table {input.tab_filt} \
             --i-taxonomy {input.tax} \
-            --p-include "p__,D_1__,D_0__Bacteria,k__Bacteria" \
-            --p-exclude "k__Bacteria;__" \
+            --p-mode exact \
+            --p-exclude "k__Bacteria; p__" \
             --o-filtered-table {output}'
-            # "D_0__Bacteria;D_1" \
 
 rule remove_non_bacterial_taxa_sequence_table:
     """Remove taxa with non bacterial sequences and bacteria with unannotated phyla 
@@ -816,7 +855,7 @@ rule remove_non_bacterial_taxa_sequence_table:
     NOTE: This is necessary for downstream unweighted unifrac weird cluster issue.
     """
     input:
-        bacterial_features = out_dir + 'bacteria_only/feature_tables/merged_filtered_{ref}.qza',
+        bacterial_features = out_dir + 'bacteria_only/feature_tables/merged_{ref}.qza',
         seq_table = out_dir + 'denoising/sequence_tables/merged.qza'
     output:
         out_dir + 'bacteria_only/sequence_tables/merged_{ref}.qza'
@@ -828,16 +867,33 @@ rule remove_non_bacterial_taxa_sequence_table:
             --i-table {input.bacterial_features} \
             --o-filtered-data {output}'
 
+rule bacteria_only_table_visualization:
+    input:
+        qza_feat = out_dir + 'bacteria_only/feature_tables/merged_{ref}.qza',
+        qza_seq = out_dir + 'bacteria_only/sequence_tables/merged_{ref}.qza',
+        q2_man = out_dir + 'manifests/manifest_qiime2.tsv'
+    output:
+        qzv_feat = out_dir + 'bacteria_only/feature_tables/merged_{ref}.qzv',
+        qzv_seq = out_dir + 'bacteria_only/sequence_tables/merged_{ref}.qzv'
+    shell:
+        'qiime feature-table summarize \
+            --i-table {input.qza_feat} \
+            --o-visualization {output.qzv_feat} \
+            --m-sample-metadata-file {input.q2_man} && \
+        qiime feature-table tabulate-seqs \
+            --i-data {input.qza_seq} \
+            --o-visualization {output.qzv_seq}'
+
 rule non_bacterial_taxonomy_analysis:
     input:
-        features = out_dir + 'bacteria_only/feature_tables/merged_filtered_{ref}.qza',
+        features = out_dir + 'bacteria_only/feature_tables/merged_{ref}.qza',
         seqs = out_dir + 'bacteria_only/sequence_tables/merged_{ref}.qza',
         ref = get_ref_full_path,
         manifest = out_dir + 'manifests/manifest_qiime2.tsv'
     output:
-        qza = out_dir + 'taxonomic_classification/bacteria_only/' + classify_method + '_{ref}.qza',
-        qzv = out_dir + 'taxonomic_classification/bacteria_only/' + classify_method + '_{ref}.qzv',
-        plots = out_dir + 'taxonomic_classification/bacteria_only/barplots_' + classify_method + '_{ref}.qzv'
+        qza = out_dir + 'taxonomic_classification_bacteria_only/' + classify_method + '_{ref}.qza',
+        qzv = out_dir + 'taxonomic_classification_bacteria_only/' + classify_method + '_{ref}.qzv',
+        plots = out_dir + 'taxonomic_classification_bacteria_only/barplots_' + classify_method + '_{ref}.qzv'
     params:
         c_method = classify_method
     benchmark:
@@ -866,7 +922,7 @@ if Q2_2017:
         Perform de novo multiple sequence alignment using MAFFT.
         """
         input:
-            out_dir + 'denoising/sequence_tables/merged.qza'
+            out_dir + 'read_feature_and_sample_filtering/sequence_tables/4_remove_samples_with_low_feature_count.qza'
         output:
             out_dir + 'phylogenetics/msa.qza'
         benchmark:
@@ -930,9 +986,13 @@ if not Q2_2017:
         Starts by creating a sequence alignment using MAFFT, remove any phylogenetically
         uninformative or ambiguously aligned reads, infer a phylogenetic tree
         and then root at its midpoint.
+
+        Note: It appears that downstream analysis (e.g. weighted unifrac) is not
+        substantially affected by using pre- or post-non-bacterial-sequence removal
+        sequence tables.
         """
         input:
-            out_dir + 'denoising/sequence_tables/merged.qza'
+            out_dir + 'read_feature_and_sample_filtering/sequence_tables/4_remove_samples_with_low_feature_count.qza'
         output:
             msa = out_dir + 'phylogenetics/msa.qza',
             masked_msa = out_dir + 'phylogenetics/masked_msa.qza',
@@ -948,7 +1008,7 @@ if not Q2_2017:
                 --o-tree {output.unrooted_tree} \
                 --o-rooted-tree {output.rooted_tree}'
 
-# note that alpha and beta diversity are done with filtered taxa, excluding non-bacterial and phylum-unclassified taxa
+# note that alpha and beta diversity are done with filtered taxa, which excludes non-bacterial and phylum-unclassified taxa
 # possible site of entry if you want to change sampling depth threshold!
 rule alpha_beta_diversity:
     """Performs alpha and beta diversity analysis.
@@ -977,7 +1037,7 @@ rule alpha_beta_diversity:
     """
     input:
         rooted_tree = out_dir + 'phylogenetics/rooted_tree.qza',
-        tab_filt = out_dir + 'bacteria_only/feature_tables/merged_filtered_{ref}.qza',
+        tab_filt = out_dir + 'bacteria_only/feature_tables/merged_{ref}.qza',
         q2_man = out_dir + 'manifests/manifest_qiime2.tsv'
     output:
         rare = out_dir + 'diversity_core_metrics/{ref}/rarefied_table.qza',
@@ -1059,7 +1119,7 @@ rule alpha_rarefaction:
      TODO: --p-steps INTEGER RANGE         [default: 10]
     """
     input:
-        tab_filt = out_dir + 'bacteria_only/feature_tables/merged_filtered_{ref}.qza',
+        tab_filt = out_dir + 'bacteria_only/feature_tables/merged_{ref}.qza',
         rooted = out_dir + 'phylogenetics/rooted_tree.qza',
         q2_man = out_dir + 'manifests/manifest_qiime2.tsv'
     output:
