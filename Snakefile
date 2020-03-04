@@ -6,6 +6,7 @@ AUTHORS:
     S. Sevilla Chill
     W. Zhou
     B. Ballew
+    Y. Wan
 
 This pipeline uses the QIIME2 suite to classify sequence data,
 calculate relative abundance, and (eventually) perform alpha- and beta-
@@ -66,6 +67,7 @@ if denoise_method in ['dada2', 'DADA2']:
     trim_left_r = config['dada2_denoise']['trim_left_reverse']
     trunc_len_f = config['dada2_denoise']['truncate_length_forward']
     trunc_len_r = config['dada2_denoise']['truncate_length_reverse']
+    p_min_fold_parent_over_abundance = config['dada2_denoise']['p_min_fold_parent_over_abundance']
 
 
 """Parse manifest to set up sample IDs and other info
@@ -380,7 +382,8 @@ if denoise_method in ['dada2', 'DADA2']:
                 trim_l_f = trim_left_f,
                 trim_l_r = trim_left_r,
                 trun_len_f = trunc_len_f,
-                trun_len_r = trunc_len_r
+                trun_len_r = trunc_len_r,
+                p_min_fold_parent_over_abundance = p_min_fold_parent_over_abundance
             benchmark:
                 out_dir + 'run_times/dada2_denoise/{runID}.tsv'
             threads: 8
@@ -394,7 +397,8 @@ if denoise_method in ['dada2', 'DADA2']:
                     --p-trim-left-f {params.trim_l_f} \
                     --p-trim-left-r {params.trim_l_r} \
                     --p-trunc-len-f {params.trun_len_f} \
-                    --p-trunc-len-r {params.trun_len_r}')
+                    --p-trunc-len-r {params.trun_len_r} \
+                    --p-min-fold-parent-over-abundance {params.p_min_fold_parent_over_abundance}')
 
     elif not Q2_2017:
         rule dada2_denoise:
@@ -414,7 +418,8 @@ if denoise_method in ['dada2', 'DADA2']:
                 trim_l_f = trim_left_f,
                 trim_l_r = trim_left_r,
                 trun_len_f = trunc_len_f,
-                trun_len_r = trunc_len_r
+                trun_len_r = trunc_len_r,
+                p_min_fold_parent_over_abundance = p_min_fold_parent_over_abundance
             benchmark:
                 out_dir + 'run_times/dada2_denoise/{runID}.tsv'
             threads: 8
@@ -429,7 +434,8 @@ if denoise_method in ['dada2', 'DADA2']:
                     --p-trim-left-f {params.trim_l_f} \
                     --p-trim-left-r {params.trim_l_r} \
                     --p-trunc-len-f {params.trun_len_f} \
-                    --p-trunc-len-r {params.trun_len_r}')
+                    --p-trunc-len-r {params.trun_len_r} \
+                    --p-min-fold-parent-over-abundance {params.p_min_fold_parent_over_abundance}')
 
         rule dada2_stats_visualization:
             """Generating visualization for DADA2 stats by flowcell.
