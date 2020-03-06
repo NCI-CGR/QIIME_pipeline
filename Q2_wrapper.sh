@@ -32,13 +32,15 @@ die() {
 
 config_file=""
 if [ $# -eq 0 ]; then
-    die "Please specify config file with full path.\n$usage"
+    die "Please specify config file with full path.
+$usage"
 else 
     config_file=$1
 fi
 
 if [ ! -f "$config_file" ]; then
-    die "Config file not found.\n$usage"
+    die "Config file not found.
+$usage"
 fi
 
 # note that this will only work for simple, single-level yaml
@@ -71,6 +73,12 @@ else
     source activate qiime2-"${qiime2_version}"
     qiime --version | head -n1
 fi
+
+# emit pipeline version
+echo ""
+echo "CGR QIIME pipeline version:"
+git -C "${exec_dir}" describe 2> /dev/null || die "Unable to determine pipeline version information."
+echo ""
 
 # export temp directory (otherwise defaults to /tmp)
 # https://forum.qiime2.org/t/tmp-directory-for-qiime-dada2-denoise-paired/6384
