@@ -204,9 +204,9 @@ if denoise_method in ['dada2', 'DADA2'] and not Q2_2017:
             expand(out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
             expand(out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
             expand(out_dir + 'denoising/stats/{runID}.qzv', runID=RUN_IDS),  # has to be a more elegant way to do this.
-            out_dir + 'output_tsv/feature-table.from_biom.txt',
-            out_dir + 'output_tsv/dna-sequences.fasta',
-            directory(expand(out_dir + "output_tsv/taxonomy" + '_{ref}', ref=refDict.keys()))
+            out_dir + 'denoising/feature_tables/feature-table.from_biom.txt',
+            # out_dir + 'denoising/sequence_tables/dna-sequences.fasta',
+            directory(expand(out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}_data_files', ref=refDict.keys()))
 else:
     rule all:
         input:
@@ -219,10 +219,10 @@ else:
             out_dir + 'diversity_core_metrics/alpha_diversity_metadata.qzv',
             out_dir + 'diversity_core_metrics/rarefaction.qzv',
             expand(out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
-            expand(out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
-            out_dir + 'output_tsv/feature-table.from_biom.txt',
-            out_dir + 'output_tsv/dna-sequences.fasta',
-            directory(expand(out_dir + "output_tsv/taxonomy" + '_{ref}', ref=refDict.keys()))
+            expand(out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys())
+            # out_dir + 'denoising/feature_tables/feature-table.from_biom.txt',  
+            # out_dir + 'denoising/sequence_tables/dna-sequences.fasta',
+            # directory(expand(out_dir + 'taxonomic_classification/taxonomy_{ref}', ref=refDict.keys()))
 
 # if report only = no
     # include: Snakefile_q2
@@ -884,36 +884,42 @@ rule taxonomic_class_plots:
 
 rule convert_feature_table_to_biom:
     """ Convert feature table to biom format well as feature data to tsv
+    Note that this feature is not provided for 2017 runs.
     """
     input:
         table_dada2_qza = out_dir + 'denoising/feature_tables/merged.qza',
         repseq_dada2_qza = out_dir + 'denoising/sequence_tables/merged.qza'
     output:
-        table_dada2_biom = out_dir + 'output_tsv/feature-table.biom',
-        table_dada2_biom_tsv = out_dir + 'output_tsv/feature-table.from_biom.txt',
-        repseq_dada2_tsv = out_dir + 'output_tsv/dna-sequences.fasta'
+        table_dada2_biom = out_dir + 'denoising/feature_tables/feature-table.biom',
+        table_dada2_biom_tsv = out_dir + 'denoising/feature_tables/feature-table.from_biom.txt',
+        repseq_dada2_tsv = out_dir + 'denoising/sequence_tables/dna-sequences.fasta'
     params:
-        out = out_dir + "output_tsv"
+        out1 = out_dir + 'denoising/feature_tables/',
+        out2 = out_dir + 'denoising/sequence_tables/'
     shell:
-        'qiime tools export --input-path {input.table_dada2_qza} --output-path {params.out}; \
+        'qiime tools export --input-path {input.table_dada2_qza} --output-path {params.out1}; \
         biom convert -i {output.table_dada2_biom} -o {output.table_dada2_biom_tsv} --to-tsv; \
-        qiime tools export --input-path {input.repseq_dada2_qza} --output-path {params.out}'
+        qiime tools export --input-path {input.repseq_dada2_qza} --output-path {params.out2}'
 
 
 rule convert_taxonomy_to_tsv:
-    """ Convert taxonomy classifcation .qza to .tsv 
-        Convert taxonomy bar plot qzv to .csv for all 7 levels
-        using params to set up wildcard dir does not work 
+    """ Convert taxonomy classifcation .qza to .tsv
+    Convert taxonomy bar plot qzv to .csv for all 7 levels
+    Note that this feature is not provided for 2017 runs.
+    Consider including all csvs in output to allow built-in error handling?
     """
     input:
         taxonomy_qza = out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qza',
         taxonomy_bar_plots = out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}.qzv'
     output:
-        directory(out_dir + 'output_tsv/taxonomy' + '_{ref}') 
+        d = directory(out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}_data_files')#,
+        # l1 = out_dir + 'taxonomic_classification/taxonomy_{ref}/level-1.csv',
+        # l2 = out_dir + 'taxonomic_classification/taxonomy_{ref}/level-2.csv',
+        # l3 = out_dir + 'taxonomic_classification/taxonomy_{ref}/level-3.csv',
+        # l4 = out_dir + 'taxonomic_classification/taxonomy_{ref}/level-4.csv',
+        # l5 = out_dir + 'taxonomic_classification/taxonomy_{ref}/level-5.csv',
+        # l6 = out_dir + 'taxonomic_classification/taxonomy_{ref}/level-6.csv',
+        # l7 = out_dir + 'taxonomic_classification/taxonomy_{ref}/level-7.csv'
     shell:
-        'qiime tools export --input-path {input.taxonomy_qza} --output-path {output}; \
-        qiime tools export --input-path {input.taxonomy_bar_plots} --output-path {output}'
-
- 
-
-    
+        'qiime tools export --input-path {input.taxonomy_qza} --output-path {output.d}; \
+        qiime tools export --input-path {input.taxonomy_bar_plots} --output-path {output.d}'

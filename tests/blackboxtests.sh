@@ -40,6 +40,7 @@ do
     echo "  trim_left_reverse: 0" >> ${outPath}/TESTconfig.yml
     echo "  truncate_length_forward: 0" >> ${outPath}/TESTconfig.yml
     echo "  truncate_length_reverse: 0" >> ${outPath}/TESTconfig.yml
+    echo "  min_fold_parent_over_abundance: 2.0" >> ${outPath}/TESTconfig.yml
     echo "phred_score: 33" >> ${outPath}/TESTconfig.yml
     echo "demux_param: 'paired_end_demux'" >> ${outPath}/TESTconfig.yml 
     echo "input_type: 'SampleData[PairedEndSequencesWithQuality]'" >> ${outPath}/TESTconfig.yml
