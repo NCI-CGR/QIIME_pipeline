@@ -44,7 +44,10 @@ do
     echo "phred_score: 33" >> ${outPath}/TESTconfig.yml
     echo "demux_param: 'paired_end_demux'" >> ${outPath}/TESTconfig.yml 
     echo "input_type: 'SampleData[PairedEndSequencesWithQuality]'" >> ${outPath}/TESTconfig.yml
-    echo "filt_param: 1" >> ${outPath}/TESTconfig.yml
+    echo "min_num_features_per_sample: 1" >> ${outPath}/TESTconfig.yml 
+    echo "min_num_reads_per_sample: 1" >> ${outPath}/TESTconfig.yml
+    echo "min_num_reads_per_feature: 1" >> ${outPath}/TESTconfig.yml
+    echo "min_num_samples_per_feature: 1" >> ${outPath}/TESTconfig.yml
     echo "sampling_depth: 10000" >> ${outPath}/TESTconfig.yml
     echo "max_depth: 54000" >> ${outPath}/TESTconfig.yml
     echo "classify_method: 'classify-sklearn'" >> ${outPath}/TESTconfig.yml
