@@ -282,16 +282,18 @@ rule combine_Q2_manifest_by_runID:
     NOTE: This step will only be scalable to a certain extent.
     Given enough samples, you will hit the cli character limit when
     using cat {input}.  If projects exceed a reasonable size, refactor
-    here.
+    here.  BUGFIX: use find and xargs
     """
     input:
         expand(out_dir + 'manifests/{sample}_Q2_manifest.txt', sample=sampleDict.keys())
     output:
         out_dir + 'manifests/{runID}_Q2_manifest.txt'
+    params:
+        o = out_dir
     benchmark:
         out_dir + 'run_times/combine_Q2_manifest_by_runID/{runID}.tsv'
     shell:
-        'cat {input} | awk \'BEGIN{{FS=OFS=","; print "sample-id,absolute-filepath,direction"}}$4=="{wildcards.runID}"{{print $1,$2,$3}}\' > {output}'
+        'find {params.o}manifests/ -name \'*_Q2_manifest.txt\' | xargs cat | awk \'BEGIN{{FS=OFS=","; print "sample-id,absolute-filepath,direction"}}$4=="{wildcards.runID}"{{print $1,$2,$3}}\' > {output}'
 
 rule create_symlinks:
     """Symlink the original fastqs in an area that PIs can access
