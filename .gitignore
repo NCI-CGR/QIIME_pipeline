@@ -1,6 +1,8 @@
 .DS_Store
 tests/out_*
+tests/expected_output/
 
+.ipynb_checkpoints
 .snakemake
 
 # History files
