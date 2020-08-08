@@ -3,6 +3,7 @@
 # CGR QIIME2 pipeline for microbiome analysis.
 # 
 # AUTHORS:
+#     Y. Wan
 #     S. Sevilla Chill
 #     W. Zhou
 #     B. Ballew
@@ -65,6 +66,9 @@ perl --version 2> /dev/null | head -n2 | tail -n1 || die "Perl not detected."
 python --version 2> /dev/null || die "Python not detected."
 printf "Snakemake: " 
 snakemake --version 2> /dev/null || die "Snakemake not detected."
+java -version 2>&1 | head -n1 || die "JDK not detected."
+printf "bbtools: "
+bbversion.sh || die "bbtools not detected."
 
 # only allow tested and confirmed versions of Q2
 if [ "$qiime2_version" != "2017.11" ] && [ "$qiime2_version" != "2019.1" ]; then

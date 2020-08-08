@@ -11,6 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Extract flat text files from denoising/feature_tables/merged.qza, denoising/sequence_tables/merged.qza, and taxonomic_classification/barplots_<...>.qzv (for 2019.1 only; not supported for 2017.11)
 - Added user-configurable options for filtering of samples, features, reads
 - Removed non-bacterial reads and bacterial reads without a phylum-level classification ("bacteria_only" directories)
+- QIITA data with non-conformant fastq headers are now automatically fixed
+- External (non-CGR) input data is now examined for unpaired reads and corrected
+
+### Changed
+- Input fastqs must be gzipped
+
+### Fixed
+- Alleviated scalabilty issue in creating QIIME2 manifests
 
 ## Types of changes noted here:
 ### Added

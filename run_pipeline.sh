@@ -3,6 +3,7 @@
 # CGR QIIME2 pipeline for microbiome analysis.
 # 
 # AUTHORS:
+#     Y. Wan
 #     S. Sevilla Chill
 #     W. Zhou
 #     B. Ballew
@@ -15,7 +16,7 @@
 
 set -euo pipefail
 
-. /etc/profile.d/modules.sh; module load sge perl/5.18.0 python3/3.6.3 miniconda/3
+. /etc/profile.d/modules.sh; module load sge perl/5.18.0 python3/3.6.3 miniconda/3 jdk/15 bbmap
 unset module
 
 # cluster:

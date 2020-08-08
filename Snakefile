@@ -30,7 +30,7 @@ TO RUN (choose one):
     directory and edit as needed, then execute that script.
 
     B. For dev/testing: Run the snakefile directly, e.g.:
-        module load perl/5.18.0 miniconda/3 python3/3.6.3  # miniconda3 has python 3.5.4 but not snakemake
+        module load perl/5.18.0 miniconda/3 python3/3.6.3 jdk/15 bbmap  # miniconda3 has python 3.5.4 but not snakemake
         source activate qiime2-2017.11  # or 2019.1
         conf=${PWD}/config.yml snakemake -s /path/to/pipeline/Snakefile
 """
@@ -156,6 +156,8 @@ def get_external_r1_fq(wildcards):
     """
     """
     (runID, projID, fq1, fq2) = sampleDict[wildcards.sample]
+    if not fq1.endswith('.gz'):
+        sys.exit('ERROR: Please use gzipped fastqs for this pipeline')
     return fq1
 
 
@@ -163,6 +165,8 @@ def get_external_r2_fq(wildcards):
     """
     """
     (runID, projID, fq1, fq2) = sampleDict[wildcards.sample]
+    if not fq2.endswith('.gz'):
+        sys.exit('ERROR: Please use gzipped fastqs for this pipeline')
     return fq2
 
 
@@ -210,7 +214,8 @@ if denoise_method in ['dada2', 'DADA2'] and not Q2_2017:
             # out_dir + 'denoising/sequence_tables/dna-sequences.fasta',
             directory(expand(out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}_data_files', ref=refDict.keys())),
             expand(out_dir + 'taxonomic_classification_bacteria_only/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
-            expand(out_dir + 'bacteria_only/feature_tables/merged_{ref}.qzv', ref=refDict.keys())
+            expand(out_dir + 'bacteria_only/feature_tables/merged_{ref}.qzv', ref=refDict.keys())#,
+            # expand(out_dir + 'fastqs/' + '{sample}_R1_paired.fastq.gz', sample=sampleDict.keys())
 else:
     rule all:
         input:
@@ -260,6 +265,86 @@ rule check_manifest:
         'dos2unix -n {input} {output};'
         'perl {params.e}Q2Manifest.pl {output}'
 
+rule create_symlinks:
+    """Symlink the original fastqs in an area that PIs can access
+
+    Not strictly necessary for external data.
+    """
+    input:
+        fq1 = get_orig_r1_fq if cgr_data else get_external_r1_fq,
+        fq2 = get_orig_r2_fq if cgr_data else get_external_r2_fq
+    output:
+        sym1 = out_dir + 'fastqs/{sample}_R1.fastq.gz',
+        sym2 = out_dir + 'fastqs/{sample}_R2.fastq.gz'
+    benchmark:
+        out_dir + 'run_times/create_symlinks/{sample}.tsv'
+    shell:
+        'ln -s {input.fq1} {output.sym1};'
+        'ln -s {input.fq2} {output.sym2}'
+
+if not cgr_data:
+    rule fix_qiita_fastq_header_r1:
+        """QIITA data has a header that breaks fq spec - this checks and corrects it.
+        If there's no space in the first :-delimited field, then the file is just renamed.
+
+        E.g.:
+        Original header: @12015.MIC2055.0003_34 M05314:89:000000000-BPV43:1:1102:14089:1660 1:N:0:1 orig_bc=TATTGAATATTG new_bc=TATTGAATATTG bc_diffs=0
+        changed to @M05314:89:000000000-BPV43:1:1102:14089:1660 1:N:0:1 orig_bc=TATTGAATATTG new_bc=TATTGAATATTG bc_diffs=0 orig_header=@12015.MIC2055.0003_34 M05314
+        """
+        input:
+            out_dir + 'fastqs/{sample}_R1.fastq.gz'
+        output:
+            temp(out_dir + 'fastqs/{sample}_R1_fixed.fastq.gz')
+        benchmark:
+            out_dir + 'run_times/fix_qiita_fastq_header_r1/{sample}.tsv'
+        shell:
+            'if [[ $(zcat {input} | head -n1 | cut -f1 -d\":\") =~ " " ]]; then \
+                zcat {input} | awk \'{{if (NR % 4 == 1) {{n=split($0, arr, " "); split(arr[2],tag,":"); printf "@%s ", arr[2]; for (i=3; i<=n; i++) printf "%s ",arr[i]; printf "orig_header=@%s %s\\n",substr(arr[1],2,length(arr[1])-1),tag[1]}} else {{print $0}}}}\' | gzip -c > {output}; \
+            else \
+                ln -s {input} {output}; \
+            fi'
+
+    rule fix_qiita_fastq_header_r2:
+        """QIITA data has a header that breaks fq spec - this checks and corrects it.
+        If there's no space in the first :-delimited field, then the file is just renamed.
+
+        E.g.:
+        Original header: @12015.MIC2055.0003_34 M05314:89:000000000-BPV43:1:1102:14089:1660 1:N:0:1 orig_bc=TATTGAATATTG new_bc=TATTGAATATTG bc_diffs=0
+        changed to @M05314:89:000000000-BPV43:1:1102:14089:1660 1:N:0:1 orig_bc=TATTGAATATTG new_bc=TATTGAATATTG bc_diffs=0 orig_header=@12015.MIC2055.0003_34 M05314
+        """
+        input:
+            out_dir + 'fastqs/{sample}_R2.fastq.gz'
+        output:
+            temp(out_dir + 'fastqs/{sample}_R2_fixed.fastq.gz')
+        benchmark:
+            out_dir + 'run_times/fix_qiita_fastq_header_r2/{sample}.tsv'
+        shell:
+            'if [[ $(zcat {input} | head -n1 | cut -f1 -d\":\") =~ " " ]]; then \
+                zcat {input} | awk \'{{if (NR % 4 == 1) {{n=split($0, arr, " "); split(arr[2],tag,":"); printf "@%s ", arr[2]; for (i=3; i<=n; i++) printf "%s ",arr[i]; printf "orig_header=@%s %s\\n",substr(arr[1],2,length(arr[1])-1),tag[1]}} else {{print $0}}}}\' | gzip -c > {output}; \
+            else \
+                ln -s {input} {output}; \
+            fi'
+
+    rule fix_unpaired_reads:
+        input:
+            fq1 = out_dir + 'fastqs/{sample}_R1_fixed.fastq.gz',
+            fq2 = out_dir + 'fastqs/{sample}_R2_fixed.fastq.gz'
+        output:
+            fq1 = out_dir + 'fastqs/{sample}_R1_paired.fastq.gz',
+            fq2 = out_dir + 'fastqs/{sample}_R2_paired.fastq.gz',
+            single = out_dir + 'fastqs/{sample}_singletons.fastq.gz'
+        params:
+            fq1 = out_dir + 'fastqs/{sample}_R1_paired.fastq',
+            fq2 = out_dir + 'fastqs/{sample}_R2_paired.fastq',
+            single = out_dir + 'fastqs/{sample}_singletons.fastq'
+        benchmark:
+            out_dir + 'run_times/fix_unpaired_reads/{sample}.tsv'
+        shell:
+            'repair.sh in1={input.fq1} in2={input.fq2} out1={params.fq1} out2={params.fq2} outs={params.single} repair;'
+            'gzip -c {params.fq1} > {output.fq1};'
+            'gzip -c {params.fq2} > {output.fq2};'
+            'gzip -c {params.single} > {output.single}'
+
 rule create_per_sample_Q2_manifest:
     """Create a QIIME2-specific manifest file per-sample
 
@@ -275,11 +360,11 @@ rule create_per_sample_Q2_manifest:
     check completes successfully.
     """
     input:
-        fq1 = get_orig_r1_fq if cgr_data else get_external_r1_fq,
-        fq2 = get_orig_r2_fq if cgr_data else get_external_r2_fq,
+        fq1 = out_dir + 'fastqs/{sample}_R1.fastq.gz' if cgr_data else out_dir + 'fastqs/{sample}_R1_paired.fastq.gz',
+        fq2 = out_dir + 'fastqs/{sample}_R2.fastq.gz' if cgr_data else out_dir + 'fastqs/{sample}_R2_paired.fastq.gz',
         man = out_dir + 'manifests/manifest_qiime2.tsv'
     output:
-        temp(out_dir + 'manifests/{sample}_Q2_manifest.txt')
+        temp(out_dir + 'manifests/{sample}_Q2_manifest_by_sample.txt')
     params:
         runID = get_internal_runID if cgr_data else get_external_runID
     benchmark:
@@ -288,40 +373,31 @@ rule create_per_sample_Q2_manifest:
         'echo "{wildcards.sample},{input.fq1},forward,{params.runID}" > {output};' 
         'echo "{wildcards.sample},{input.fq2},reverse,{params.runID}" >> {output}'
 
-
-rule combine_Q2_manifest_by_runID:
-    """Combine Q2-specific manifests by run ID
-
-    NOTE: This step will only be scalable to a certain extent.
-    Given enough samples, you will hit the cli character limit when
-    using cat {input}.  If projects exceed a reasonable size, refactor
-    here.
+rule combine_Q2_per_sample_manifests:
+    """Combine all Q2-specific per-sample manifests
     """
     input:
-        expand(out_dir + 'manifests/{sample}_Q2_manifest.txt', sample=sampleDict.keys())
+        expand(out_dir + 'manifests/{sample}_Q2_manifest_by_sample.txt', sample=sampleDict.keys())
+    output:
+        temp(out_dir + 'manifests/all.txt')
+    params:
+        out_dir + 'manifests/'
+    benchmark:
+        out_dir + 'run_times/combine_Q2_per_sample_manifests/combine_Q2_per_sample_manifests.tsv'
+    shell:
+        'find {params} -maxdepth 1 -name \'*Q2_manifest_by_sample.txt\' | xargs cat > {output}'
+
+rule combine_Q2_manifest_by_runID:
+    """Separate out Q2-specific manifests by run ID
+    """
+    input:
+        out_dir + 'manifests/all.txt'
     output:
         out_dir + 'manifests/{runID}_Q2_manifest.txt'
     benchmark:
         out_dir + 'run_times/combine_Q2_manifest_by_runID/{runID}.tsv'
     shell:
-        'cat {input} | awk \'BEGIN{{FS=OFS=","; print "sample-id,absolute-filepath,direction"}}$4=="{wildcards.runID}"{{print $1,$2,$3}}\' > {output}'
-
-rule create_symlinks:
-    """Symlink the original fastqs in an area that PIs can access
-
-    Not strictly necessary for external data.
-    """
-    input:
-        fq1 = get_orig_r1_fq if cgr_data else get_external_r1_fq,
-        fq2 = get_orig_r2_fq if cgr_data else get_external_r2_fq
-    output:
-        sym1 = out_dir + 'fastqs/' + '{sample}_R1.fastq.gz',
-        sym2 = out_dir + 'fastqs/' + '{sample}_R2.fastq.gz'
-    benchmark:
-        out_dir + 'run_times/create_symlinks/{sample}.tsv'
-    shell:
-        'ln -s {input.fq1} {output.sym1};'
-        'ln -s {input.fq2} {output.sym2}'
+        'awk \'BEGIN{{FS=OFS=","; print "sample-id,absolute-filepath,direction"}}$4=="{wildcards.runID}"{{print $1,$2,$3}}\' {input} > {output}'
 
 rule import_fastq_and_demultiplex:
     """Import into qiime2 format and demultiplex
@@ -465,8 +541,6 @@ if denoise_method in ['dada2', 'DADA2']:
                 'qiime metadata tabulate \
                     --m-input-file {input} \
                     --o-visualization {output}'
-
-
 
 # to add in metadata, start here: plus re- run perl check!  Must have the qza results for samples
 rule merge_feature_tables:
@@ -1145,88 +1219,6 @@ rule alpha_rarefaction:
             --i-phylogeny {input.rooted} \
             --p-max-depth {params.m_depth} \
             --m-metadata-file {input.q2_man} \
-            --o-visualization {output}'
-
-rule taxonomic_classification:
-    """Classify reads by taxon using a fitted classifier
-
-    Note that different classification methods have entirely different command
-    line flags, so they will each need their own invocation.
-
-    https://docs.qiime2.org/2019.4/plugins/available/feature-classifier/
-
-    sklearn:
-
-    consensus-blast: Performs BLAST+ local alignment between query and
-    reference_reads, then assigns consensus taxonomy to each query sequence
-    from among maxaccepts hits, min_consensus of which share that taxonomic
-    assignment. Note that maxaccepts selects the first N hits with >
-    perc_identity similarity to query, not the top N matches.
-
-    consensus-vsearch: Performs VSEARCH global alignment between query and
-    reference_reads, then assigns consensus taxonomy to each query sequence
-    from among maxaccepts top hits, min_consensus of which share that taxonomic
-    assignment. Unlike classify-consensus-blast, this method searches the entire
-    reference database before choosing the top N hits, not the first N hits.
-    """
-    input:
-        tab_filt = out_dir + 'denoising/sequence_tables/merged.qza',
-        ref = get_ref_full_path
-    output:
-        out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qza'
-    params:
-        c_method = classify_method
-    benchmark:
-        out_dir + 'run_times/taxonomic_classification/{ref}.tsv'
-    threads: 8
-    run:
-        if classify_method == 'classify-sklearn':
-            shell('qiime feature-classifier {params.c_method} \
-                --p-n-jobs {threads} \
-                --i-classifier {input.ref} \
-                --i-reads {input.tab_filt} \
-                --o-classification {output}')
-
-rule taxonomic_class_visualization:
-    """Metadata visualization wtih taxonomic information
-
-    This generates a tabular view of the metadata in a human viewable format merged
-    with taxonomic information created in taxonomic_classification
-
-    SS: may want to change name of rule so that "class" since class =/ taxonomic "class"
-    """
-    input:
-        out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qza'
-    output:
-        out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qzv'
-    benchmark:
-        out_dir + 'run_times/taxonomic_class_visualization/{ref}.tsv'
-    shell:
-        'qiime metadata tabulate \
-            --m-input-file {input} \
-            --o-visualization {output}'
-
-rule taxonomic_class_plots:
-    """Interactive barplot visualization of taxonomies
-
-    This allows for multi-level sorting, plot recoloring, category
-    selection/highlighting, sample relabeling, and SVG figure export.
-
-    SS: may want to change name of rule so that "class" since class =/ taxonomic "class"
-    """
-    input:
-        tab_filt = out_dir + 'denoising/feature_tables/merged_filtered.qza',
-        tax = out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qza',
-        mani = out_dir + 'manifests/manifest_qiime2.tsv'
-    output:
-        out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}.qzv'
-    benchmark:
-        out_dir + 'run_times/taxonomic_class_plots/{ref}.tsv'
-    shell:
-        'qiime taxa barplot \
-            --i-table {input.tab_filt} \
-            --i-taxonomy {input.tax} \
-            --m-metadata-file {input.mani} \
             --o-visualization {output}'
 
 rule convert_feature_table_to_biom:
