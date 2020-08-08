@@ -341,9 +341,9 @@ if not cgr_data:
             out_dir + 'run_times/fix_unpaired_reads/{sample}.tsv'
         shell:
             'repair.sh in1={input.fq1} in2={input.fq2} out1={params.fq1} out2={params.fq2} outs={params.single} repair;'
-            'gzip -c {params.fq1} > {output.fq1};'
-            'gzip -c {params.fq2} > {output.fq2};'
-            'gzip -c {params.single} > {output.single}'
+            'gzip {params.fq1};'
+            'gzip {params.fq2};'
+            'gzip {params.single}'
 
 rule create_per_sample_Q2_manifest:
     """Create a QIIME2-specific manifest file per-sample
