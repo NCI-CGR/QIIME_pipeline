@@ -62,6 +62,7 @@ conf=${PWD}/config.yml snakemake -s /path/to/pipeline/Snakefile
 ## Example output directory structure
 
 - Within parent directory `<out_dir>/` defined in config.yaml
+TODO: Needs updating!
 ```
 .
 ├── config_mock-20.yml
@@ -106,6 +107,59 @@ conf=${PWD}/config.yml snakemake -s /path/to/pipeline/Snakefile
     ├── classify-sklearn_gg-13-8-99-nb-classifier.qzv
     └── classify-sklearn_silva-132-99-nb-classifier.qza
 ```
+
+## QC report
+
+### Input requirements
+
+The manifest requirements for the report are the same as for the pipeline itself; however, including the following in your manifest will result in a more informative QC report:
+- To be detected as blanks, water blanks and no-template control sample IDs must contain the string "water" or "ntc" in the "#SampleID" column; this is not case sensitive.
+- "Source PCR Plate" column: header is case insensitive, can have spaces or not.  For the report, only the first characters preceding an underscore in this column will be preserved; this strips CGR's well ID from the string. 
+- "Sample Type" column: header is case insensitive, can have spaces or not.  Populate with any string values that define useful categories, e.g. water, NTC_control, blank, study sample, qc, etc. 
+- "External ID" column: header is case insensitive, can have spaces or not.  This column is used at CGR to map IDs of received samples to the LIMS-generated IDs we use internally.  For technical replicates, the sample ID will be unique (as required by QIIME), but the external ID can be the same to link the samples for comparison in the report.
+- Note that the report assumes that the sequencer ID is the second underscore-delimited field in the run ID; this may not be meaningful if your run ID does not conform.
+
+
+### Running the report
+
+For CGR production runs, after the pipeline completes, generate a QC report using the Jupyter notebook in the `report/` directory.  
+- Open the notebook (see below for details) and change the `proj_dir` variable in section 1.1
+- Run the complete notebook
+- Save the report as html with the code hidden (see below for details)
+
+
+### Running jupyter notebooks at CGR
+
+To run jupyter notebooks on the CGR HPC, login to the cluster, navigate to the notebook, then run the following.  You can set the port to anything above 8000.
+
+```
+module load python3
+jupyter notebook --no-browser --port=8080
+
+```
+
+Then, on your local machine, run the following to open up an ssh tunnel:
+
+```
+ssh -N -L 8080:localhost:8080 <username@cluster.domain>
+```
+
+Finally, open your browser to the URL given by the `jupyter notebook` command above (`https://localhost:8080/?token=<token>`).
+
+
+### To save the report
+
+- Clone the following repo: `https://github.com/ihuston/jupyter-hide-code-html`
+- Run in terminal: `jupyter nbconvert --to html --template jupyter-hide-code-html/clean_output.tpl path/to/CGR_16S_Microbiome_QC_Report.ipynb`
+- Name the above file `NP###_pipeline_run_folder_QC_report.html` and place it in the directory with the pipeline output
+
+
+### For development
+
+Jupyter notebooks are stored as JSON with metadata, which can result in very messy diffs/merge requests in version control.  Please do the following to create a clean python script version of the notebook to be used in diffs.
+- After making and testing changes, Kernel > Restart & Clear Output
+- Run in terminal: `jupyter nbconvert --to script CGR_16S_Microbiome_QC_Report.ipynb`
+- Add and commit both CGR_16S_Microbiome_QC_Report.ipynb AND CGR_16S_Microbiome_QC_Report.py
 
 ------------------------------------------------------------------------------------
 
