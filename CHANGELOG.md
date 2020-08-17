@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Alleviated scalabilty issue in creating QIIME2 manifests
+- Remove trailing spaces from taxonomic classification QZAs (SILVA occasional trailing spaces cause errors)
 
 ## [2.1.0] - 2020-06-15
 ### Added

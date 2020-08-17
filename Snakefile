@@ -209,13 +209,11 @@ if denoise_method in ['dada2', 'DADA2'] and not Q2_2017:
             expand(out_dir + 'diversity_core_metrics/{ref}/rarefaction.qzv', ref=refDict.keys()),
             expand(out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
             expand(out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
-            expand(out_dir + 'denoising/stats/{runID}.qzv', runID=RUN_IDS),  # has to be a more elegant way to do this.
+            expand(out_dir + 'denoising/stats/{runID}.qzv', runID=RUN_IDS),
             out_dir + 'denoising/feature_tables/feature-table.from_biom.txt',
-            # out_dir + 'denoising/sequence_tables/dna-sequences.fasta',
             directory(expand(out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}_data_files', ref=refDict.keys())),
             expand(out_dir + 'taxonomic_classification_bacteria_only/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
             expand(out_dir + 'bacteria_only/feature_tables/merged_{ref}.qzv', ref=refDict.keys())#,
-            # expand(out_dir + 'fastqs/' + '{sample}_R1_paired.fastq.gz', sample=sampleDict.keys())
 else:
     rule all:
         input:
@@ -228,16 +226,8 @@ else:
             expand(out_dir + 'diversity_core_metrics/{ref}/rarefaction.qzv', ref=refDict.keys()),
             expand(out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
             expand(out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
-            # out_dir + 'denoising/feature_tables/feature-table.from_biom.txt',  
-            # out_dir + 'denoising/sequence_tables/dna-sequences.fasta',
-            # directory(expand(out_dir + 'taxonomic_classification/taxonomy_{ref}', ref=refDict.keys()))
             expand(out_dir + 'taxonomic_classification_bacteria_only/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
             expand(out_dir + 'bacteria_only/feature_tables/merged_{ref}.qzv', ref=refDict.keys())
-
-# if report only = no
-    # include: Snakefile_q2
-
-# include: Snakefile_report
 
 # TODO: think about adding check for minimum reads count per sample per flow cell (need more than 1 sample per flow cell passing min threshold for tab/rep seq creation) - either see if we can include via LIMS in the manifest, or use samtools(?)
 
@@ -815,11 +805,10 @@ rule taxonomic_classification:
     reference database before choosing the top N hits, not the first N hits.
     """
     input:
-        tab_filt = out_dir + 'read_feature_and_sample_filtering/sequence_tables/4_remove_samples_with_low_feature_count.qza',
-        # tab_filt = out_dir + 'denoising/sequence_tables/merged.qza',
+        seqs = out_dir + 'read_feature_and_sample_filtering/sequence_tables/4_remove_samples_with_low_feature_count.qza',
         ref = get_ref_full_path
     output:
-        out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qza'
+        temp(out_dir + 'taxonomic_classification/' + classify_method + '_{ref}_orig.qza')
     params:
         c_method = classify_method
     benchmark:
@@ -830,8 +819,64 @@ rule taxonomic_classification:
             shell('qiime feature-classifier {params.c_method} \
                 --p-n-jobs {threads} \
                 --i-classifier {input.ref} \
-                --i-reads {input.tab_filt} \
+                --i-reads {input.seqs} \
                 --o-classification {output}')
+
+rule bacterial_taxonomic_classification:
+    """Classify reads by taxon using a fitted classifier
+
+    Note that different classification methods have entirely different command
+    line flags, so they will each need their own invocation.
+
+    https://docs.qiime2.org/2019.4/plugins/available/feature-classifier/
+
+    sklearn:
+
+    consensus-blast: Performs BLAST+ local alignment between query and
+    reference_reads, then assigns consensus taxonomy to each query sequence
+    from among maxaccepts hits, min_consensus of which share that taxonomic
+    assignment. Note that maxaccepts selects the first N hits with >
+    perc_identity similarity to query, not the top N matches.
+
+    consensus-vsearch: Performs VSEARCH global alignment between query and
+    reference_reads, then assigns consensus taxonomy to each query sequence
+    from among maxaccepts top hits, min_consensus of which share that taxonomic
+    assignment. Unlike classify-consensus-blast, this method searches the entire
+    reference database before choosing the top N hits, not the first N hits.
+    """
+    input:
+        seqs = out_dir + 'bacteria_only/sequence_tables/merged_{ref}.qza',
+        ref = get_ref_full_path
+    output:
+        temp(out_dir + 'taxonomic_classification_bacteria_only/' + classify_method + '_{ref}_orig.qza')
+    params:
+        c_method = classify_method
+    benchmark:
+        out_dir + 'run_times/bacterial_taxonomic_classification/{ref}.tsv'
+    threads: 8
+    run:
+        if classify_method == 'classify-sklearn':
+            shell('qiime feature-classifier {params.c_method} \
+                --p-n-jobs {threads} \
+                --i-classifier {input.ref} \
+                --i-reads {input.seqs} \
+                --o-classification {output}')
+
+rule fix_trailing_spaces:
+    input:
+        out_dir + '{tax_dir}/' + classify_method + '_{ref}_orig.qza'
+    output:
+        o1 = temp(out_dir + '{tax_dir}/{ref}/taxonomy.tsv'),
+        o2 = temp(out_dir + '{tax_dir}/{ref}/taxonomy_fixed.tsv'),
+        o3 = out_dir + '{tax_dir}/' + classify_method + '_{ref}.qza'
+    params:
+        out_dir + '{tax_dir}/{ref}'
+    benchmark:
+        out_dir + 'run_times/fix_trailing_spaces/{tax_dir}_{ref}.tsv'
+    shell:
+        "qiime tools export --input-path {input} --output-path {params} && \
+        sed 's/ \t/\t/' {output.o1} > {output.o2} && \
+        qiime tools import --type 'FeatureData[Taxonomy]' --input-path {output.o2} --output-path {output.o3}"
 
 rule taxonomic_class_visualization:
     """Metadata visualization wtih taxonomic information
@@ -842,11 +887,11 @@ rule taxonomic_class_visualization:
     SS: may want to change name of rule so that "class" since class =/ taxonomic "class"
     """
     input:
-        out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qza'
+        out_dir + '{tax_dir}/' + classify_method + '_{ref}.qza'
     output:
-        out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qzv'
+        out_dir + '{tax_dir}/' + classify_method + '_{ref}.qzv'
     benchmark:
-        out_dir + 'run_times/taxonomic_class_visualization/{ref}.tsv'
+        out_dir + 'run_times/taxonomic_class_visualization/{tax_dir}_{ref}.tsv'
     shell:
         'qiime metadata tabulate \
             --m-input-file {input} \
@@ -861,19 +906,41 @@ rule taxonomic_class_plots:
     SS: may want to change name of rule so that "class" since class =/ taxonomic "class"
     """
     input:
-        tab_filt = out_dir + 'read_feature_and_sample_filtering/feature_tables/4_remove_samples_with_low_feature_count.qza',
-        # tab_filt = out_dir + 'denoising/feature_tables/merged_filtered.qza',
+        seqs = out_dir + 'read_feature_and_sample_filtering/feature_tables/4_remove_samples_with_low_feature_count.qza',
         tax = out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qza',
-        mani = out_dir + 'manifests/manifest_qiime2.tsv'
+        manifest = out_dir + 'manifests/manifest_qiime2.tsv'
     output:
         out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}.qzv'
     benchmark:
         out_dir + 'run_times/taxonomic_class_plots/{ref}.tsv'
     shell:
         'qiime taxa barplot \
-            --i-table {input.tab_filt} \
+            --i-table {input.seqs} \
             --i-taxonomy {input.tax} \
-            --m-metadata-file {input.mani} \
+            --m-metadata-file {input.manifest} \
+            --o-visualization {output}'
+
+rule bacterial_taxonomic_class_plots:
+    """Interactive barplot visualization of taxonomies
+
+    This allows for multi-level sorting, plot recoloring, category
+    selection/highlighting, sample relabeling, and SVG figure export.
+
+    SS: may want to change name of rule so that "class" since class =/ taxonomic "class"
+    """
+    input:
+        seqs = out_dir + 'bacteria_only/feature_tables/merged_{ref}.qza',
+        tax = out_dir + 'taxonomic_classification_bacteria_only/' + classify_method + '_{ref}.qza',
+        manifest = out_dir + 'manifests/manifest_qiime2.tsv'
+    output:
+        out_dir + 'taxonomic_classification_bacteria_only/barplots_' + classify_method + '_{ref}.qzv'
+    benchmark:
+        out_dir + 'run_times/bacterial_taxonomic_class_plots/{ref}.tsv'
+    shell:
+        'qiime taxa barplot \
+            --i-table {input.seqs} \
+            --i-taxonomy {input.tax} \
+            --m-metadata-file {input.manifest} \
             --o-visualization {output}'
 
 rule remove_non_bacterial_taxa_feature_table_pt1:
@@ -969,36 +1036,6 @@ rule bacteria_only_table_visualization:
             --i-data {input.qza_seq} \
             --o-visualization {output.qzv_seq}'
 
-rule non_bacterial_taxonomy_analysis:
-    input:
-        features = out_dir + 'bacteria_only/feature_tables/merged_{ref}.qza',
-        seqs = out_dir + 'bacteria_only/sequence_tables/merged_{ref}.qza',
-        ref = get_ref_full_path,
-        manifest = out_dir + 'manifests/manifest_qiime2.tsv'
-    output:
-        qza = out_dir + 'taxonomic_classification_bacteria_only/' + classify_method + '_{ref}.qza',
-        qzv = out_dir + 'taxonomic_classification_bacteria_only/' + classify_method + '_{ref}.qzv',
-        plots = out_dir + 'taxonomic_classification_bacteria_only/barplots_' + classify_method + '_{ref}.qzv'
-    params:
-        c_method = classify_method
-    benchmark:
-        out_dir + 'run_times/non_bacterial_taxonomy_analysis/{ref}.tsv'
-    threads: 8
-    run:
-        if classify_method == 'classify-sklearn':
-            shell('qiime feature-classifier {params.c_method} \
-                --p-n-jobs {threads} \
-                --i-classifier {input.ref} \
-                --i-reads {input.seqs} \
-                --o-classification {output.qza}')
-        shell('qiime metadata tabulate \
-            --m-input-file {output.qza} \
-            --o-visualization {output.qzv}')
-        shell('qiime taxa barplot \
-            --i-table {input.features} \
-            --i-taxonomy {output.qza} \
-            --m-metadata-file {input.manifest} \
-            --o-visualization {output.plots}')
 
 # note that phylogenetics are done with original taxa, including non-bacterial and phylum-unclassified taxa
 if Q2_2017:
