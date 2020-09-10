@@ -728,23 +728,15 @@ rule apply_filters_to_sequence_tables:
         seq4 = out_dir + 'read_feature_and_sample_filtering/sequence_tables/4_remove_samples_with_low_feature_count.qza'
     benchmark:
         out_dir + 'run_times/apply_filters_to_sequence_tables/apply_filters_to_sequence_tables.tsv'
-    shell:
-        'qiime feature-table filter-seqs \
-            --i-data {input.seq_table} \
-            --i-table {input.feat1} \
-            --o-filtered-data {output.seq1} && \
-        qiime feature-table filter-seqs \
-            --i-data {input.seq_table} \
-            --i-table {input.feat2} \
-            --o-filtered-data {output.seq2} && \
-        qiime feature-table filter-seqs \
-            --i-data {input.seq_table} \
-            --i-table {input.feat3} \
-            --o-filtered-data {output.seq3} && \
-        qiime feature-table filter-seqs \
-            --i-data {input.seq_table} \
-            --i-table {input.feat4} \
-            --o-filtered-data {output.seq4}'
+    run:
+        if Q2_2017:
+            l = "--m-metadata-file"
+        else:
+            l = "--i-table"
+        shell('qiime feature-table filter-seqs --i-data {input.seq_table} ' + l + ' {input.feat1} --o-filtered-data {output.seq1} && \
+                qiime feature-table filter-seqs --i-data {input.seq_table} ' + l + ' {input.feat2} --o-filtered-data {output.seq2} && \
+                qiime feature-table filter-seqs --i-data {input.seq_table} ' + l + ' {input.feat3} --o-filtered-data {output.seq3} && \
+                qiime feature-table filter-seqs --i-data {input.seq_table} ' + l + ' {input.feat4} --o-filtered-data {output.seq4}')
 
 rule sequence_table_visualization:
     """Generate visual and tabular summaries for sequences
