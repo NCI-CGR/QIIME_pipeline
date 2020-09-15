@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Input fastqs must be gzipped
+- Changed project directory structure to conform to Snakemake recommendations
+- Moved 2017.11-specific rules to sub-workflow
+
+### Removed
+- Removed conditional DADA2 selection framework (no plans for alterinatives in the near future)
 
 ### Fixed
 - Alleviated scalabilty issue in creating QIIME2 manifests

@@ -1,0 +1,100 @@
+rule dada2_denoise:
+    """ Generates feature tables and feature sequences
+    This method denoises paired-end sequences, dereplicates them, and filters chimeras.
+    Each feature in the table is represented by one sequence (joined paired-end).
+
+    NOTE: QIIME 2017.11 does not require that both the table and sequences are generated
+    in one step, however, QIIME 2019 does require they are generated together.
+
+    NOTE: Although CGR does not require trimming at this step, as it is done upstream of
+    this pipeline, external use may require trimming.
+    """
+    input:
+        qza = out_dir + 'import_and_demultiplex/{runID}.qza'
+    output:
+        features = out_dir + 'denoising/feature_tables/{runID}.qza',
+        seqs = out_dir + 'denoising/sequence_tables/{runID}.qza'
+    params:
+        trim_l_f = trim_left_f,
+        trim_l_r = trim_left_r,
+        trun_len_f = trunc_len_f,
+        trun_len_r = trunc_len_r,
+        min_fold = min_fold
+    benchmark:
+        out_dir + 'run_times/dada2_denoise/{runID}.tsv'
+    threads: 8
+    run:
+        shell('qiime dada2 denoise-paired \
+            --verbose \
+            --p-n-threads {threads} \
+            --i-demultiplexed-seqs {input.qza} \
+            --o-table {output.tab} \
+            --o-representative-sequences {output.seq} \
+            --p-trim-left-f {params.trim_l_f} \
+            --p-trim-left-r {params.trim_l_r} \
+            --p-trunc-len-f {params.trun_len_f} \
+            --p-trunc-len-r {params.trun_len_r} \
+            --p-min-fold-parent-over-abundance {params.min_fold}')
+
+rule build_multiple_seq_alignment:
+    """Sequence alignment
+    Perform de novo multiple sequence alignment using MAFFT.
+    """
+    input:
+        out_dir + 'denoising/sequence_tables/merged.qza'
+    output:
+        out_dir + 'phylogenetics/msa.qza'
+    benchmark:
+        out_dir + 'run_times/build_multiple_seq_alignment/build_multiple_seq_alignment.tsv'
+    shell:
+        'qiime alignment mafft \
+            --i-sequences {input} \
+            --o-alignment {output}'
+
+rule mask_multiple_seq_alignment:
+    """Filtering alignments
+    Filter unconserved and highly gapped columns from an alignment.
+    Default min_conservation was chosen to reproduce the mask presented in Lane (1991)
+    """
+    input:
+        out_dir + 'phylogenetics/msa.qza'
+    output:
+        out_dir + 'phylogenetics/masked_msa.qza'
+    benchmark:
+        out_dir + 'run_times/mask_multiple_seq_alignment/mask_multiple_seq_alignment.tsv'
+    shell:
+        'qiime alignment mask \
+            --i-alignment {input} \
+            --o-masked-alignment {output}'
+
+rule unrooted_tree:
+    """ Construct a phylogenetic tree with FastTree.
+    Apply FastTree to generate a phylogenetic tree from the masked
+    alignment.
+    """
+    input:
+        out_dir + 'phylogenetics/masked_msa.qza'
+    output:
+        out_dir + 'phylogenetics/unrooted_tree.qza'
+    benchmark:
+        out_dir + 'run_times/unrooted_tree/unrooted_tree.tsv'
+    shell:
+        'qiime phylogeny fasttree \
+            --i-alignment {input} \
+            --o-tree {output}'
+
+rule rooted_tree:
+    """Midpoint root an unrooted phylogenetic tree.
+    Perform midpoint rooting to place the root of the tree at the midpoint
+    of the longest tip-to-tip distance in the unrooted tree
+    """
+    input:
+        out_dir + 'phylogenetics/unrooted_tree.qza'
+    output:
+        out_dir + 'phylogenetics/rooted_tree.qza'
+    benchmark:
+        out_dir + 'run_times/rooted_tree/rooted_tree.tsv'
+    shell:
+        'qiime phylogeny midpoint-root \
+            --i-tree {input} \
+            --o-rooted-tree {output}'

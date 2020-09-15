@@ -64,11 +64,13 @@ sampling_depth = config['sampling_depth']
 max_depth = config['max_depth']
 classify_method = config['classify_method']
 REF_DB = config['reference_db']
-trim_left_f = config['dada2_denoise']['trim_left_forward']
-trim_left_r = config['dada2_denoise']['trim_left_reverse']
-trunc_len_f = config['dada2_denoise']['truncate_length_forward']
-trunc_len_r = config['dada2_denoise']['truncate_length_reverse']
-min_fold = config['dada2_denoise']['min_fold_parent_over_abundance']
+denoise_method = config['denoise_method']
+if denoise_method in ['dada2', 'DADA2']:
+    trim_left_f = config['dada2_denoise']['trim_left_forward']
+    trim_left_r = config['dada2_denoise']['trim_left_reverse']
+    trunc_len_f = config['dada2_denoise']['truncate_length_forward']
+    trunc_len_r = config['dada2_denoise']['truncate_length_reverse']
+    min_fold = config['dada2_denoise']['min_fold_parent_over_abundance']
 
 
 """Parse manifest to set up sample IDs and other info
@@ -228,9 +230,6 @@ else:
 
 # TODO: think about adding check for minimum reads count per sample per flow cell (need more than 1 sample per flow cell passing min threshold for tab/rep seq creation) - either see if we can include via LIMS in the manifest, or use samtools(?)
 
-if Q2_2017:
-    include: "workflow/rules/Snakefile_2017.11"
-
 rule check_manifest:
     """Check manifest for detailed character/format Q2 reqs
 
@@ -252,7 +251,7 @@ rule check_manifest:
         out_dir + 'run_times/check_manifest/check_manifest.tsv'
     shell:
         'dos2unix -n {input} {output};'
-        'perl {params.e}workflow/scripts/Q2Manifest.pl {output}'
+        'perl {params.e}Q2Manifest.pl {output}'
 
 rule create_symlinks:
     """Symlink the original fastqs in an area that PIs can access
@@ -524,7 +523,7 @@ rule merge_feature_tables:
         if len(RUN_IDS) == 1:
             shell('cp {input.tables} {output}')
         elif Q2_2017:
-            shell('bash {params.e}workflow/scripts/q2_2017_table_merge.sh {params.tp} {output} {input.tables}')
+            shell('bash {params.e}q2_2017_table_merge.sh {params.tp} {output} {input.tables}')
         else:
             l = '--i-tables ' + ' --i-tables '.join(input.tables)
             shell('qiime feature-table merge ' + l + ' --o-merged-table {output}')
@@ -551,7 +550,7 @@ rule merge_sequence_tables:
         if len(RUN_IDS) == 1:
             shell('cp {input.tables} {output}')
         elif Q2_2017:
-            shell('bash {params.e}workflow/scripts/q2_2017_table_merge.sh {params.tp} {output} {input.tables}')
+            shell('bash {params.e}q2_2017_table_merge.sh {params.tp} {output} {input.tables}')
         else:
             l = '--i-data ' + ' --i-data '.join(input.tables)
             shell('qiime feature-table merge-seqs ' + l + ' --o-merged-data {output}')
@@ -1003,7 +1002,9 @@ if not Q2_2017:
                 --i-data {input.seqs} \
                 --o-visualization {output.seqs}'
 
-    # note that phylogenetics are done with original taxa, including non-bacterial and phylum-unclassified taxa
+
+# note that phylogenetics are done with original taxa, including non-bacterial and phylum-unclassified taxa
+if not Q2_2017:
     rule phylogenetic_tree:
         """Sequence alignment, phylogentic tree assignment, rooting at midpoint
         Starts by creating a sequence alignment using MAFFT, remove any phylogenetically

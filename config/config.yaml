@@ -23,7 +23,6 @@ data_source: 'internal'  # 'external' or 'internal' (to CGR)
 qiime2_version: '2019.1'  # 2017.11 or 2019.1
 
 ## Analysis parameters
-denoise_method: 'dada2' # not yet implemented
 dada2_denoise:
   trim_left_forward: 0
   trim_left_reverse: 0
