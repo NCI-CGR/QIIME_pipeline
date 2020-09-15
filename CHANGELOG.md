@@ -9,8 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Exposed the "min fold parent over abundance" parameter for DADA2 denoising within QIIME.  The default value is 1, so set to 1 if you need pipeline output analyzed in the same way as before this change.  Increasing this value will decrease the stringency of chimera removal.
 - Q2_wrapper.sh will now emit the "commit-ish" description of the pipeline version being run (e.g. v2.0 for tagged releases, or v2.0-5-g26a4da8 for unreleased versions). 
 - Extract flat text files from denoising/feature_tables/merged.qza, denoising/sequence_tables/merged.qza, and taxonomic_classification/barplots_<...>.qzv (for 2019.1 only; not supported for 2017.11)
-- Added user-configurable options for filtering of samples, features, reads
-- Removed non-bacterial reads and bacterial reads without a phylum-level classification ("bacteria_only" directories)
+- Added user-configurable options for filtering of samples, features, reads (for 2019.1 only; not supported for 2017.11)
+- Filtered non-bacterial reads and bacterial reads without a phylum-level classification ("bacteria_only" directories) (for 2019.1 only; not supported for 2017.11)
 - QIITA data with non-conformant fastq headers are now automatically fixed
 - External (non-CGR) input data is now examined for unpaired reads and corrected
 
@@ -19,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Alleviated scalabilty issue in creating QIIME2 manifests
-- Remove trailing spaces from taxonomic classification QZAs (SILVA occasional trailing spaces cause errors)
+- Remove trailing spaces from taxonomic classification QZAs (SILVA occasional trailing spaces cause errors.  For 2019.1 only; not supported for 2017.11)
 
 ## [2.1.0] - 2020-06-15
 ### Added

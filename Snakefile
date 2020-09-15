@@ -226,8 +226,8 @@ else:
             expand(out_dir + 'diversity_core_metrics/{ref}/rarefaction.qzv', ref=refDict.keys()),
             expand(out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
             expand(out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
-            expand(out_dir + 'taxonomic_classification_bacteria_only/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
-            expand(out_dir + 'bacteria_only/feature_tables/merged_{ref}.qzv', ref=refDict.keys())
+            expand(out_dir + 'taxonomic_classification_bacteria_only/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys())#,
+            # expand(out_dir + 'bacteria_only/feature_tables/merged_{ref}.qzv', ref=refDict.keys())
 
 # TODO: think about adding check for minimum reads count per sample per flow cell (need more than 1 sample per flow cell passing min threshold for tab/rep seq creation) - either see if we can include via LIMS in the manifest, or use samtools(?)
 
@@ -849,7 +849,7 @@ rule bacterial_taxonomic_classification:
     reference database before choosing the top N hits, not the first N hits.
     """
     input:
-        seqs = out_dir + 'bacteria_only/sequence_tables/merged_{ref}.qza',
+        seqs = out_dir + 'denoising/sequence_tables/merged.qza' if Q2_2017 else out_dir + 'bacteria_only/sequence_tables/merged_{ref}.qza',
         ref = get_ref_full_path
     output:
         temp(out_dir + 'taxonomic_classification_bacteria_only/' + classify_method + '_{ref}_orig.qza')
@@ -879,7 +879,7 @@ rule fix_trailing_spaces:  ####### 2017.11 - Error: no such option: --input-path
         out_dir + 'run_times/fix_trailing_spaces/{tax_dir}_{ref}.tsv'
     run:
         if Q2_2017:
-            shell("mv {input} {output.o3}")
+            shell("mv {input} {output.o3} && touch {output.o1} {output.o2}")
         else:
             shell("qiime tools export --input-path {input} --output-path {params} && \
                 sed 's/ \t/\t/' {output.o1} > {output.o2} && \
@@ -1006,42 +1006,43 @@ rule remove_non_bacterial_taxa_feature_table_pt2:
             --p-exclude "k__Bacteria; p__" \
             --o-filtered-table {output}'
 
-rule remove_non_bacterial_taxa_sequence_table:
-    """Remove taxa with non bacterial sequences and bacteria with unannotated phyla 
+if not Q2_2017:
+    rule remove_non_bacterial_taxa_sequence_table:
+        """Remove taxa with non bacterial sequences and bacteria with unannotated phyla 
 
-    Recommended by Greg Caporaso
-    Number of samples will be also dropped because of taxa drops.
-    NOTE: This is necessary for downstream unweighted unifrac weird cluster issue.
-    """
-    input:
-        bacterial_features = out_dir + 'bacteria_only/feature_tables/merged_{ref}.qza',
-        seq_table = out_dir + 'denoising/sequence_tables/merged.qza'
-    output:
-        out_dir + 'bacteria_only/sequence_tables/merged_{ref}.qza'
-    benchmark:
-        out_dir + 'run_times/remove_non_bacterial_taxa_sequence_table/{ref}.tsv'
-    shell:
-        'qiime feature-table filter-seqs \
-            --i-data {input.seq_table} \
-            --i-table {input.bacterial_features} \
-            --o-filtered-data {output}'
+        Recommended by Greg Caporaso
+        Number of samples will be also dropped because of taxa drops.
+        NOTE: This is necessary for downstream unweighted unifrac weird cluster issue.
+        """
+        input:
+            bacterial_features = out_dir + 'bacteria_only/feature_tables/merged_{ref}.qza',
+            seq_table = out_dir + 'denoising/sequence_tables/merged.qza'
+        output:
+            out_dir + 'bacteria_only/sequence_tables/merged_{ref}.qza'
+        benchmark:
+            out_dir + 'run_times/remove_non_bacterial_taxa_sequence_table/{ref}.tsv'
+        shell:
+            'qiime feature-table filter-seqs \
+                --i-data {input.seq_table} \
+                --i-table {input.bacterial_features} \
+                --o-filtered-data {output}'
 
-rule bacteria_only_table_visualization:
-    input:
-        qza_feat = out_dir + 'bacteria_only/feature_tables/merged_{ref}.qza',
-        qza_seq = out_dir + 'bacteria_only/sequence_tables/merged_{ref}.qza',
-        q2_man = out_dir + 'manifests/manifest_qiime2.tsv'
-    output:
-        qzv_feat = out_dir + 'bacteria_only/feature_tables/merged_{ref}.qzv',
-        qzv_seq = out_dir + 'bacteria_only/sequence_tables/merged_{ref}.qzv'
-    shell:
-        'qiime feature-table summarize \
-            --i-table {input.qza_feat} \
-            --o-visualization {output.qzv_feat} \
-            --m-sample-metadata-file {input.q2_man} && \
-        qiime feature-table tabulate-seqs \
-            --i-data {input.qza_seq} \
-            --o-visualization {output.qzv_seq}'
+    rule bacteria_only_table_visualization:
+        input:
+            qza_feat = out_dir + 'bacteria_only/feature_tables/merged_{ref}.qza',
+            qza_seq = out_dir + 'bacteria_only/sequence_tables/merged_{ref}.qza',
+            q2_man = out_dir + 'manifests/manifest_qiime2.tsv'
+        output:
+            qzv_feat = out_dir + 'bacteria_only/feature_tables/merged_{ref}.qzv',
+            qzv_seq = out_dir + 'bacteria_only/sequence_tables/merged_{ref}.qzv'
+        shell:
+            'qiime feature-table summarize \
+                --i-table {input.qza_feat} \
+                --o-visualization {output.qzv_feat} \
+                --m-sample-metadata-file {input.q2_man} && \
+            qiime feature-table tabulate-seqs \
+                --i-data {input.qza_seq} \
+                --o-visualization {output.qzv_seq}'
 
 
 # note that phylogenetics are done with original taxa, including non-bacterial and phylum-unclassified taxa
