@@ -226,8 +226,7 @@ else:
             expand(out_dir + 'diversity_core_metrics/{ref}/rarefaction.qzv', ref=refDict.keys()),
             expand(out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
             expand(out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
-            expand(out_dir + 'taxonomic_classification_bacteria_only/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys())#,
-            # expand(out_dir + 'bacteria_only/feature_tables/merged_{ref}.qzv', ref=refDict.keys())
+            expand(out_dir + 'taxonomic_classification_bacteria_only/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys())
 
 # TODO: think about adding check for minimum reads count per sample per flow cell (need more than 1 sample per flow cell passing min threshold for tab/rep seq creation) - either see if we can include via LIMS in the manifest, or use samtools(?)
 
@@ -251,7 +250,6 @@ rule check_manifest:
     benchmark:
         out_dir + 'run_times/check_manifest/check_manifest.tsv'
     shell:
-        # 'source /etc/profile.d/modules.sh; module load perl/5.18.0;'
         'dos2unix -n {input} {output};'
         'perl {params.e}Q2Manifest.pl {output}'
 
@@ -352,7 +350,7 @@ rule create_per_sample_Q2_manifest:
     input:
         fq1 = out_dir + 'fastqs/{sample}_R1.fastq.gz' if cgr_data else out_dir + 'fastqs/{sample}_R1_paired.fastq.gz',
         fq2 = out_dir + 'fastqs/{sample}_R2.fastq.gz' if cgr_data else out_dir + 'fastqs/{sample}_R2_paired.fastq.gz',
-        man = out_dir + 'manifests/manifest_qiime2.tsv'
+        manifest = out_dir + 'manifests/manifest_qiime2.tsv'
     output:
         temp(out_dir + 'manifests/{sample}_Q2_manifest_by_sample.txt')
     params:
@@ -453,8 +451,8 @@ if denoise_method in ['dada2', 'DADA2']:
             input:
                 qza = out_dir + 'import_and_demultiplex/{runID}.qza'
             output:
-                tab = out_dir + 'denoising/feature_tables/{runID}.qza',
-                seq = out_dir + 'denoising/sequence_tables/{runID}.qza'
+                features = out_dir + 'denoising/feature_tables/{runID}.qza',
+                seqs = out_dir + 'denoising/sequence_tables/{runID}.qza'
             params:
                 trim_l_f = trim_left_f,
                 trim_l_r = trim_left_r,
@@ -488,8 +486,8 @@ if denoise_method in ['dada2', 'DADA2']:
             input:
                 qza = out_dir + 'import_and_demultiplex/{runID}.qza'
             output:
-                tab = out_dir + 'denoising/feature_tables/{runID}.qza',
-                seq = out_dir + 'denoising/sequence_tables/{runID}.qza',
+                features = out_dir + 'denoising/feature_tables/{runID}.qza',
+                seqs = out_dir + 'denoising/sequence_tables/{runID}.qza',
                 stats = out_dir + 'denoising/stats/{runID}.qza'
             params:
                 trim_l_f = trim_left_f,
@@ -551,12 +549,12 @@ rule merge_feature_tables:
     NOTE: limited scalability due to cli character limit.
     """
     input:
-        tables = expand(out_dir + 'denoising/feature_tables/{runID}.qza', runID=RUN_IDS),
-        q2_man = out_dir + 'manifests/manifest_qiime2.tsv'
+        feature_tables = expand(out_dir + 'denoising/feature_tables/{runID}.qza', runID=RUN_IDS),
+        q2_manifest = out_dir + 'manifests/manifest_qiime2.tsv'
     output:
         out_dir + 'denoising/feature_tables/merged.qza'
     params:
-        tab_dir = out_dir + 'denoising/feature_tables/',
+        feature_table_dir = out_dir + 'denoising/feature_tables/',
         tp = 'feature',
         e = exec_dir
     benchmark:
@@ -579,11 +577,11 @@ rule merge_sequence_tables:
     """
     input:
         tables = expand(out_dir + 'denoising/sequence_tables/{runID}.qza', runID=RUN_IDS),
-        q2_man = out_dir + 'manifests/manifest_qiime2.tsv'
+        q2_manifest = out_dir + 'manifests/manifest_qiime2.tsv'
     output:
         out_dir + 'denoising/sequence_tables/merged.qza'
     params:
-        tab_dir = out_dir + 'denoising/sequence_tables/',
+        seq_table_dir = out_dir + 'denoising/sequence_tables/',
         tp = 'sequence',
         e = exec_dir
     benchmark:
@@ -683,7 +681,7 @@ if not Q2_2017:
             qza2 = out_dir + 'read_feature_and_sample_filtering/feature_tables/2_remove_features_with_low_read_count.qza',
             qza3 = out_dir + 'read_feature_and_sample_filtering/feature_tables/3_remove_features_with_low_sample_count.qza',
             qza4 = out_dir + 'read_feature_and_sample_filtering/feature_tables/4_remove_samples_with_low_feature_count.qza',
-            q2_man = out_dir + 'manifests/manifest_qiime2.tsv'
+            q2_manifest = out_dir + 'manifests/manifest_qiime2.tsv'
         output:
             qzv1 = out_dir + 'read_feature_and_sample_filtering/feature_tables/1_remove_samples_with_low_read_count.qzv',
             qzv2 = out_dir + 'read_feature_and_sample_filtering/feature_tables/2_remove_features_with_low_read_count.qzv',
@@ -775,7 +773,7 @@ rule sequence_table_visualization:
 rule feature_table_visualization:
     input:
         qza = out_dir + 'denoising/feature_tables/merged.qza',
-        q2_man = out_dir + 'manifests/manifest_qiime2.tsv'
+        q2_manifest = out_dir + 'manifests/manifest_qiime2.tsv'
     output:
         out_dir + 'denoising/feature_tables/merged.qzv'
     benchmark:
@@ -992,7 +990,7 @@ rule remove_non_bacterial_taxa_feature_table_pt2:
     be inappropriate (or at least presumptuous) to collapse these at species level."
     """
     input:
-        tab_filt = out_dir + 'bacteria_only/feature_tables/pt1_merged_{ref}.qza',
+        features = out_dir + 'bacteria_only/feature_tables/pt1_merged_{ref}.qza',
         tax = out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qza'
     output:
         out_dir + 'bacteria_only/feature_tables/merged_{ref}.qza'
@@ -1000,7 +998,7 @@ rule remove_non_bacterial_taxa_feature_table_pt2:
         out_dir + 'run_times/remove_non_bacterial_taxa_feature_table_pt2/{ref}.tsv'
     shell:
         'qiime taxa filter-table \
-            --i-table {input.tab_filt} \
+            --i-table {input.features} \
             --i-taxonomy {input.tax} \
             --p-mode exact \
             --p-exclude "k__Bacteria; p__" \
@@ -1016,7 +1014,7 @@ if not Q2_2017:
         """
         input:
             bacterial_features = out_dir + 'bacteria_only/feature_tables/merged_{ref}.qza',
-            seq_table = out_dir + 'denoising/sequence_tables/merged.qza'
+            seqs = out_dir + 'denoising/sequence_tables/merged.qza'
         output:
             out_dir + 'bacteria_only/sequence_tables/merged_{ref}.qza'
         benchmark:
@@ -1029,20 +1027,20 @@ if not Q2_2017:
 
     rule bacteria_only_table_visualization:
         input:
-            qza_feat = out_dir + 'bacteria_only/feature_tables/merged_{ref}.qza',
-            qza_seq = out_dir + 'bacteria_only/sequence_tables/merged_{ref}.qza',
-            q2_man = out_dir + 'manifests/manifest_qiime2.tsv'
+            features = out_dir + 'bacteria_only/feature_tables/merged_{ref}.qza',
+            seqs = out_dir + 'bacteria_only/sequence_tables/merged_{ref}.qza',
+            q2_manifest = out_dir + 'manifests/manifest_qiime2.tsv'
         output:
-            qzv_feat = out_dir + 'bacteria_only/feature_tables/merged_{ref}.qzv',
-            qzv_seq = out_dir + 'bacteria_only/sequence_tables/merged_{ref}.qzv'
+            features = out_dir + 'bacteria_only/feature_tables/merged_{ref}.qzv',
+            seqs = out_dir + 'bacteria_only/sequence_tables/merged_{ref}.qzv'
         shell:
             'qiime feature-table summarize \
-                --i-table {input.qza_feat} \
-                --o-visualization {output.qzv_feat} \
+                --i-table {input.features} \
+                --o-visualization {output.features} \
                 --m-sample-metadata-file {input.q2_man} && \
             qiime feature-table tabulate-seqs \
-                --i-data {input.qza_seq} \
-                --o-visualization {output.qzv_seq}'
+                --i-data {input.seqs} \
+                --o-visualization {output.seqs}'
 
 
 # note that phylogenetics are done with original taxa, including non-bacterial and phylum-unclassified taxa
@@ -1167,8 +1165,8 @@ rule alpha_beta_diversity:
     """
     input:
         rooted_tree = out_dir + 'phylogenetics/rooted_tree.qza',
-        tab_filt = out_dir + 'bacteria_only/feature_tables/merged_{ref}.qza',
-        q2_man = out_dir + 'manifests/manifest_qiime2.tsv'
+        features = out_dir + 'bacteria_only/feature_tables/merged_{ref}.qza',
+        q2_manifest = out_dir + 'manifests/manifest_qiime2.tsv'
     output:
         rare = out_dir + 'diversity_core_metrics/{ref}/rarefied_table.qza',
         faith = out_dir + 'diversity_core_metrics/{ref}/faith.qza',
@@ -1194,7 +1192,7 @@ rule alpha_beta_diversity:
     shell:
         'qiime diversity core-metrics-phylogenetic \
             --i-phylogeny {input.rooted_tree} \
-            --i-table {input.tab_filt} \
+            --i-table {input.features} \
             --p-sampling-depth {params.samp_depth} \
             --m-metadata-file {input.q2_man} \
             --o-rarefied-table {output.rare} \
@@ -1249,9 +1247,9 @@ rule alpha_rarefaction:
      TODO: --p-steps INTEGER RANGE         [default: 10]
     """
     input:
-        tab_filt = out_dir + 'bacteria_only/feature_tables/merged_{ref}.qza',
+        features = out_dir + 'bacteria_only/feature_tables/merged_{ref}.qza',
         rooted = out_dir + 'phylogenetics/rooted_tree.qza',
-        q2_man = out_dir + 'manifests/manifest_qiime2.tsv'
+        q2_manifest = out_dir + 'manifests/manifest_qiime2.tsv'
     output:
         out_dir + 'diversity_core_metrics/{ref}/rarefaction.qzv'
     params:
@@ -1260,7 +1258,7 @@ rule alpha_rarefaction:
         out_dir + 'run_times/alpha_rarefaction/alpha_rarefaction_{ref}.tsv'
     shell:
         'qiime diversity alpha-rarefaction \
-            --i-table {input.tab_filt} \
+            --i-table {input.features} \
             --i-phylogeny {input.rooted} \
             --p-max-depth {params.m_depth} \
             --m-metadata-file {input.q2_man} \
@@ -1296,14 +1294,7 @@ rule convert_taxonomy_to_tsv:
         taxonomy_qza = out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qza',
         taxonomy_bar_plots = out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}.qzv'
     output:
-        d = directory(out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}_data_files')#,
-        # l1 = out_dir + 'taxonomic_classification/taxonomy_{ref}/level-1.csv',
-        # l2 = out_dir + 'taxonomic_classification/taxonomy_{ref}/level-2.csv',
-        # l3 = out_dir + 'taxonomic_classification/taxonomy_{ref}/level-3.csv',
-        # l4 = out_dir + 'taxonomic_classification/taxonomy_{ref}/level-4.csv',
-        # l5 = out_dir + 'taxonomic_classification/taxonomy_{ref}/level-5.csv',
-        # l6 = out_dir + 'taxonomic_classification/taxonomy_{ref}/level-6.csv',
-        # l7 = out_dir + 'taxonomic_classification/taxonomy_{ref}/level-7.csv'
+        d = directory(out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}_data_files')
     shell:
         'qiime tools export --input-path {input.taxonomy_qza} --output-path {output.d}; \
         qiime tools export --input-path {input.taxonomy_bar_plots} --output-path {output.d}'
