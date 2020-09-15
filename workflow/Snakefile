@@ -64,13 +64,11 @@ sampling_depth = config['sampling_depth']
 max_depth = config['max_depth']
 classify_method = config['classify_method']
 REF_DB = config['reference_db']
-denoise_method = config['denoise_method']
-if denoise_method in ['dada2', 'DADA2']:
-    trim_left_f = config['dada2_denoise']['trim_left_forward']
-    trim_left_r = config['dada2_denoise']['trim_left_reverse']
-    trunc_len_f = config['dada2_denoise']['truncate_length_forward']
-    trunc_len_r = config['dada2_denoise']['truncate_length_reverse']
-    min_fold = config['dada2_denoise']['min_fold_parent_over_abundance']
+trim_left_f = config['dada2_denoise']['trim_left_forward']
+trim_left_r = config['dada2_denoise']['trim_left_reverse']
+trunc_len_f = config['dada2_denoise']['truncate_length_forward']
+trunc_len_r = config['dada2_denoise']['truncate_length_reverse']
+min_fold = config['dada2_denoise']['min_fold_parent_over_abundance']
 
 
 """Parse manifest to set up sample IDs and other info
@@ -197,7 +195,7 @@ def get_ref_full_path(wildcards):
     return refFullPath
 
 
-if denoise_method in ['dada2', 'DADA2'] and not Q2_2017:
+if not Q2_2017:
     rule all:
         input:
             expand(out_dir + 'fastqs/' + '{sample}_R1.fastq.gz', sample=sampleDict.keys()),
@@ -230,6 +228,9 @@ else:
 
 # TODO: think about adding check for minimum reads count per sample per flow cell (need more than 1 sample per flow cell passing min threshold for tab/rep seq creation) - either see if we can include via LIMS in the manifest, or use samtools(?)
 
+if Q2_2017:
+    include: "rules/Snakefile_2017.11"
+
 rule check_manifest:
     """Check manifest for detailed character/format Q2 reqs
 
@@ -251,7 +252,7 @@ rule check_manifest:
         out_dir + 'run_times/check_manifest/check_manifest.tsv'
     shell:
         'dos2unix -n {input} {output};'
-        'perl {params.e}Q2Manifest.pl {output}'
+        'perl {params.e}workflow/scripts/Q2Manifest.pl {output}'
 
 rule create_symlinks:
     """Symlink the original fastqs in an area that PIs can access
@@ -435,100 +436,60 @@ rule import_and_demultiplex_visualization:
             --i-data {input} \
             --o-visualization {output}'
 
-if denoise_method in ['dada2', 'DADA2']:
-    if Q2_2017:
-        rule dada2_denoise:
-            """ Generates feature tables and feature sequences
-            This method denoises paired-end sequences, dereplicates them, and filters chimeras.
-            Each feature in the table is represented by one sequence (joined paired-end).
+if not Q2_2017:
+    rule dada2_denoise:
+        """ Generates feature tables and feature sequences
+        This method denoises paired-end sequences, dereplicates them, and filters chimeras.
+        Each feature in the table is represented by one sequence (joined paired-end).
 
-            NOTE: QIIME 2017.11 does not require that both the table and sequences are generated
-            in one step, however, QIIME 2019 does require they are generated together.
+        See notes above.
+        """
+        input:
+            qza = out_dir + 'import_and_demultiplex/{runID}.qza'
+        output:
+            features = out_dir + 'denoising/feature_tables/{runID}.qza',
+            seqs = out_dir + 'denoising/sequence_tables/{runID}.qza',
+            stats = out_dir + 'denoising/stats/{runID}.qza'
+        params:
+            trim_l_f = trim_left_f,
+            trim_l_r = trim_left_r,
+            trun_len_f = trunc_len_f,
+            trun_len_r = trunc_len_r,
+            min_fold = min_fold
+        benchmark:
+            out_dir + 'run_times/dada2_denoise/{runID}.tsv'
+        threads: 8
+        run:
+            shell('qiime dada2 denoise-paired \
+                --verbose \
+                --p-n-threads {threads} \
+                --i-demultiplexed-seqs {input.qza} \
+                --o-table {output.tab} \
+                --o-representative-sequences {output.seq} \
+                --o-denoising-stats {output.stats} \
+                --p-trim-left-f {params.trim_l_f} \
+                --p-trim-left-r {params.trim_l_r} \
+                --p-trunc-len-f {params.trun_len_f} \
+                --p-trunc-len-r {params.trun_len_r} \
+                --p-min-fold-parent-over-abundance {params.min_fold}')
 
-            NOTE: Although CGR does not require trimming at this step, as it is done upstream of
-            this pipeline, external use may require trimming.
-            """
-            input:
-                qza = out_dir + 'import_and_demultiplex/{runID}.qza'
-            output:
-                features = out_dir + 'denoising/feature_tables/{runID}.qza',
-                seqs = out_dir + 'denoising/sequence_tables/{runID}.qza'
-            params:
-                trim_l_f = trim_left_f,
-                trim_l_r = trim_left_r,
-                trun_len_f = trunc_len_f,
-                trun_len_r = trunc_len_r,
-                min_fold = min_fold
-            benchmark:
-                out_dir + 'run_times/dada2_denoise/{runID}.tsv'
-            threads: 8
-            run:
-                shell('qiime dada2 denoise-paired \
-                    --verbose \
-                    --p-n-threads {threads} \
-                    --i-demultiplexed-seqs {input.qza} \
-                    --o-table {output.tab} \
-                    --o-representative-sequences {output.seq} \
-                    --p-trim-left-f {params.trim_l_f} \
-                    --p-trim-left-r {params.trim_l_r} \
-                    --p-trunc-len-f {params.trun_len_f} \
-                    --p-trunc-len-r {params.trun_len_r} \
-                    --p-min-fold-parent-over-abundance {params.min_fold}')
+    rule dada2_stats_visualization:
+        """Generating visualization for DADA2 stats by flowcell.
 
-    elif not Q2_2017:
-        rule dada2_denoise:
-            """ Generates feature tables and feature sequences
-            This method denoises paired-end sequences, dereplicates them, and filters chimeras.
-            Each feature in the table is represented by one sequence (joined paired-end).
+        SS: This can actually be used for both both 2017 and 2019 (currently only under 2019)
 
-            See notes above.
-            """
-            input:
-                qza = out_dir + 'import_and_demultiplex/{runID}.qza'
-            output:
-                features = out_dir + 'denoising/feature_tables/{runID}.qza',
-                seqs = out_dir + 'denoising/sequence_tables/{runID}.qza',
-                stats = out_dir + 'denoising/stats/{runID}.qza'
-            params:
-                trim_l_f = trim_left_f,
-                trim_l_r = trim_left_r,
-                trun_len_f = trunc_len_f,
-                trun_len_r = trunc_len_r,
-                min_fold = min_fold
-            benchmark:
-                out_dir + 'run_times/dada2_denoise/{runID}.tsv'
-            threads: 8
-            run:
-                shell('qiime dada2 denoise-paired \
-                    --verbose \
-                    --p-n-threads {threads} \
-                    --i-demultiplexed-seqs {input.qza} \
-                    --o-table {output.tab} \
-                    --o-representative-sequences {output.seq} \
-                    --o-denoising-stats {output.stats} \
-                    --p-trim-left-f {params.trim_l_f} \
-                    --p-trim-left-r {params.trim_l_r} \
-                    --p-trunc-len-f {params.trun_len_f} \
-                    --p-trunc-len-r {params.trun_len_r} \
-                    --p-min-fold-parent-over-abundance {params.min_fold}')
-
-        rule dada2_stats_visualization:
-            """Generating visualization for DADA2 stats by flowcell.
-
-            SS: This can actually be used for both both 2017 and 2019 (currently only under 2019)
-
-            https://docs.qiime2.org/2017.10/plugins/available/metadata/tabulate/
-            """
-            input:
-                out_dir + 'denoising/stats/{runID}.qza'
-            output:
-                out_dir + 'denoising/stats/{runID}.qzv'
-            benchmark:
-                out_dir + 'run_times/dada2_stats_visualization/{runID}.tsv'
-            shell:
-                'qiime metadata tabulate \
-                    --m-input-file {input} \
-                    --o-visualization {output}'
+        https://docs.qiime2.org/2017.10/plugins/available/metadata/tabulate/
+        """
+        input:
+            out_dir + 'denoising/stats/{runID}.qza'
+        output:
+            out_dir + 'denoising/stats/{runID}.qzv'
+        benchmark:
+            out_dir + 'run_times/dada2_stats_visualization/{runID}.tsv'
+        shell:
+            'qiime metadata tabulate \
+                --m-input-file {input} \
+                --o-visualization {output}'
 
 # to add in metadata, start here: plus re- run perl check!  Must have the qza results for samples
 rule merge_feature_tables:
@@ -563,7 +524,7 @@ rule merge_feature_tables:
         if len(RUN_IDS) == 1:
             shell('cp {input.tables} {output}')
         elif Q2_2017:
-            shell('bash {params.e}q2_2017_table_merge.sh {params.tp} {output} {input.tables}')
+            shell('bash {params.e}workflow/scripts/q2_2017_table_merge.sh {params.tp} {output} {input.tables}')
         else:
             l = '--i-tables ' + ' --i-tables '.join(input.tables)
             shell('qiime feature-table merge ' + l + ' --o-merged-table {output}')
@@ -590,7 +551,7 @@ rule merge_sequence_tables:
         if len(RUN_IDS) == 1:
             shell('cp {input.tables} {output}')
         elif Q2_2017:
-            shell('bash {params.e}q2_2017_table_merge.sh {params.tp} {output} {input.tables}')
+            shell('bash {params.e}workflow/scripts/q2_2017_table_merge.sh {params.tp} {output} {input.tables}')
         else:
             l = '--i-data ' + ' --i-data '.join(input.tables)
             shell('qiime feature-table merge-seqs ' + l + ' --o-merged-data {output}')
@@ -1042,73 +1003,7 @@ if not Q2_2017:
                 --i-data {input.seqs} \
                 --o-visualization {output.seqs}'
 
-
-# note that phylogenetics are done with original taxa, including non-bacterial and phylum-unclassified taxa
-if Q2_2017:
-    rule build_multiple_seq_alignment:
-        """Sequence alignment
-        Perform de novo multiple sequence alignment using MAFFT.
-        """
-        input:
-            out_dir + 'denoising/sequence_tables/merged.qza'
-        output:
-            out_dir + 'phylogenetics/msa.qza'
-        benchmark:
-            out_dir + 'run_times/build_multiple_seq_alignment/build_multiple_seq_alignment.tsv'
-        shell:
-            'qiime alignment mafft \
-                --i-sequences {input} \
-                --o-alignment {output}'
-
-    rule mask_multiple_seq_alignment:
-        """Filtering alignments
-        Filter unconserved and highly gapped columns from an alignment.
-        Default min_conservation was chosen to reproduce the mask presented in Lane (1991)
-        """
-        input:
-            out_dir + 'phylogenetics/msa.qza'
-        output:
-            out_dir + 'phylogenetics/masked_msa.qza'
-        benchmark:
-            out_dir + 'run_times/mask_multiple_seq_alignment/mask_multiple_seq_alignment.tsv'
-        shell:
-            'qiime alignment mask \
-                --i-alignment {input} \
-                --o-masked-alignment {output}'
-
-    rule unrooted_tree:
-        """ Construct a phylogenetic tree with FastTree.
-        Apply FastTree to generate a phylogenetic tree from the masked
-        alignment.
-        """
-        input:
-            out_dir + 'phylogenetics/masked_msa.qza'
-        output:
-            out_dir + 'phylogenetics/unrooted_tree.qza'
-        benchmark:
-            out_dir + 'run_times/unrooted_tree/unrooted_tree.tsv'
-        shell:
-            'qiime phylogeny fasttree \
-                --i-alignment {input} \
-                --o-tree {output}'
-
-    rule rooted_tree:
-        """Midpoint root an unrooted phylogenetic tree.
-        Perform midpoint rooting to place the root of the tree at the midpoint
-        of the longest tip-to-tip distance in the unrooted tree
-        """
-        input:
-            out_dir + 'phylogenetics/unrooted_tree.qza'
-        output:
-            out_dir + 'phylogenetics/rooted_tree.qza'
-        benchmark:
-            out_dir + 'run_times/rooted_tree/rooted_tree.tsv'
-        shell:
-            'qiime phylogeny midpoint-root \
-                --i-tree {input} \
-                --o-rooted-tree {output}'
-
-if not Q2_2017:
+    # note that phylogenetics are done with original taxa, including non-bacterial and phylum-unclassified taxa
     rule phylogenetic_tree:
         """Sequence alignment, phylogentic tree assignment, rooting at midpoint
         Starts by creating a sequence alignment using MAFFT, remove any phylogenetically

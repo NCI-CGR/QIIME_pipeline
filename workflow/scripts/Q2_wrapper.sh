@@ -102,13 +102,13 @@ DATE=$(date +"%Y%m%d%H%M")
 
 cmd=""
 if [ "$cluster_mode" = '"'"local"'"' ]; then
-    cmd="conf=$config_file snakemake -p -s ${exec_dir}/Snakefile --rerun-incomplete &> ${log_dir}/Q2_${DATE}.out"
+    cmd="conf=$config_file snakemake -p -s ${exec_dir}/workflow/Snakefile --rerun-incomplete &> ${log_dir}/Q2_${DATE}.out"
 elif [ "$cluster_mode" = '"'"unlock"'"' ]; then
-    cmd="conf=$config_file snakemake -p -s ${exec_dir}/Snakefile --unlock"  # convenience unlock
+    cmd="conf=$config_file snakemake -p -s ${exec_dir}/workflow/Snakefile --unlock"  # convenience unlock
 elif [ "$cluster_mode" = '"'"dryrun"'"' ]; then  
-    cmd="conf=$config_file snakemake -n -p -s ${exec_dir}/Snakefile"  # convenience dry run
+    cmd="conf=$config_file snakemake -n -p -s ${exec_dir}/workflow/Snakefile"  # convenience dry run
 else
-    cmd="conf=$config_file snakemake -p -s ${exec_dir}/Snakefile --rerun-incomplete --cluster ${cluster_mode} --jobs $num_jobs --latency-wait ${latency} &> ${log_dir}/Q2_${DATE}.out"
+    cmd="conf=$config_file snakemake -p -s ${exec_dir}/workflow/Snakefile --rerun-incomplete --cluster ${cluster_mode} --jobs $num_jobs --latency-wait ${latency} &> ${log_dir}/Q2_${DATE}.out"
 fi
 
 echo "Command run: $cmd"

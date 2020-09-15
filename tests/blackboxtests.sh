@@ -34,7 +34,6 @@ do
     echo "exec_dir: '${myExecPath}'" >> ${outPath}/TESTconfig.yml
     echo "fastq_abs_path: '${myFqPath}'" >> ${outPath}/TESTconfig.yml
     echo "temp_dir: '${tempPath}'" >> ${outPath}/TESTconfig.yml
-    echo "denoise_method: 'dada2'" >> ${outPath}/TESTconfig.yml
     echo "dada2_denoise:" >> ${outPath}/TESTconfig.yml
     echo "  trim_left_forward: 0" >> ${outPath}/TESTconfig.yml
     echo "  trim_left_reverse: 0" >> ${outPath}/TESTconfig.yml
@@ -51,7 +50,7 @@ do
     echo "sampling_depth: 10000" >> ${outPath}/TESTconfig.yml
     echo "max_depth: 54000" >> ${outPath}/TESTconfig.yml
     echo "classify_method: 'classify-sklearn'" >> ${outPath}/TESTconfig.yml
-    echo "cluster_mode: 'qsub -q xlong.q -V -j y -S /bin/bash -o ${outPath}/logs/ -pe by_node {threads}'" >> ${outPath}/TESTconfig.yml
+    echo "cluster_mode: 'qsub -q seq-calling.q -V -j y -S /bin/bash -o ${outPath}/logs/ -pe by_node {threads}'" >> ${outPath}/TESTconfig.yml
     echo "num_jobs: 100" >> ${outPath}/TESTconfig.yml
     echo "latency: 120" >> ${outPath}/TESTconfig.yml
     echo "metadata_manifest: '${myExecPath}/tests/input/test_12_samples.txt'" >> ${outPath}/TESTconfig.yml
@@ -104,13 +103,13 @@ sed -i "s/qiime2_version: '2017.11'/qiime2_version: '2019.1'/" ${myOutPath}_${mo
 sed -i 's/scikit_0.19.1_q2_2017.11\/gg-13-8-99-nb-classifier.qza/scikit_0.20.2_q2_2019.1\/gg-13-8-99-nb-classifier.qza/' ${myOutPath}_${mode}/TESTconfig.yml
 sed -i 's/scikit_0.19.1_q2_2017.11\/silva-119-99-nb-classifier.qza/scikit_0.20.2_q2_2019.1\/silva-132-99-nb-classifier.qza/' ${myOutPath}_${mode}/TESTconfig.yml
 
-module load sge perl/5.18.0 miniconda/3 python3/3.6.3
+module load sge perl/5.18.0 miniconda/3 python3/3.6.3 git bbmap jdk/15
 unset module
 
 for i in "${MODES[@]}"
 do
     outPath="${myOutPath}_${i}/"
-    cmd="qsub -q xlong.q -V -j y -S /bin/sh -o ${outPath} ${myExecPath}/Q2_wrapper.sh ${outPath}/TESTconfig.yml"
+    cmd="qsub -q seq-calling.q -V -j y -S /bin/sh -o ${outPath} ${myExecPath}/workflow/scripts/Q2_wrapper.sh ${outPath}/TESTconfig.yml"
     sleep 10
     echo "Command run: $cmd"
     eval "$cmd"
