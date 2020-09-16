@@ -1,0 +1,9 @@
+# This file may be used to create an environment using:
+# $ conda create --name <env> --file <this file>
+# $ conda create --name <env> -c qiime2/label/r2019.1 --file <this file>
+bbmap=38.86
+git=2.23.0
+java-jdk=7.0.91
+perl=5.30.3
+python=3.6.11
+qiime2=2019.1

@@ -1,0 +1,309 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Welcome to CGR QIIME2 Microbiome Pipeline’s documentation! &#8212; CGR QIIME2 Microbiome Pipeline 2.2.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="welcome-to-cgr-qiime2-microbiome-pipeline-s-documentation">
+<h1>Welcome to CGR QIIME2 Microbiome Pipeline’s documentation!<a class="headerlink" href="#welcome-to-cgr-qiime2-microbiome-pipeline-s-documentation" title="Permalink to this headline">¶</a></h1>
+<p>This is the Cancer Genomics Research Laboratory’s (CGR) microbiome analysis pipeline. This pipeline utilizes <a class="reference external" href="https://qiime2.org/">QIIME2</a> to classify sequence data, calculate relative abundance, and perform alpha- and beta-diversity analysis.</p>
+<div class="toctree-wrapper compound">
+</div>
+</div>
+<div class="section" id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p><strong>Dependencies</strong></p>
+<ul class="simple">
+<li><p>QIIME2 2017.11 or 2019.1</p></li>
+<li><p>perl/5.18.0+</p></li>
+<li><p>python3/3.6</p></li>
+<li><p>conda4.5+</p></li>
+<li><p>jdk/7+</p></li>
+<li><p>bbmap38</p></li>
+<li><p>Snakemake5+</p></li>
+</ul>
+</div>
+<div class="section" id="getting-started">
+<h2>Getting started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h2>
+<p><strong>Input requirements</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">config.yaml</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">run_pipeline.sh</span></code></p></li>
+<li><p>Manifest file</p>
+<ul>
+<li><p>For external (non-CGR-produced data) runs, the following columns are required: <code class="docutils literal notranslate"><span class="pre">#SampleID</span> <span class="pre">Run-ID</span>&#160; <span class="pre">Project-ID</span>&#160; <span class="pre">fq1</span> <span class="pre">fq2</span></code></p></li>
+<li><p>For internal runs, the following columns are required: <code class="docutils literal notranslate"><span class="pre">#SampleID</span> <span class="pre">Run-ID</span>&#160; <span class="pre">Project-ID</span></code></p></li>
+<li><p>See the template manifest files in <code class="docutils literal notranslate"><span class="pre">config/</span></code> in this repo for examples</p></li>
+</ul>
+</li>
+</ul>
+<p><strong>To run the pipeline</strong></p>
+<ul>
+<li><p>For CGR production runs:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Create a project directory that includes the NP ID</p></li>
+<li><p>Within that directory, create a directory for the initial run: <code class="docutils literal notranslate"><span class="pre">YYYYMMDD_initial_run/</span></code></p></li>
+<li><p>Move the input requirements listed above to <code class="docutils literal notranslate"><span class="pre">YYYYMMDD_initial_run/</span></code></p></li>
+<li><p>Execute <code class="docutils literal notranslate"><span class="pre">run_pipeline.sh</span></code></p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div>
+<div class="section" id="configuration-details">
+<h2>Configuration details<a class="headerlink" href="#configuration-details" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">metadata_manifest:</span></code> full path to manifest file</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">out_dir:</span></code> full path to desired output directory (note that CGR production runs are stored at <cite>/DCEG/Projects/Microbiome/Analysis/</cite>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">exec_dir:</span></code> full path to pipeline (e.g. Snakefile)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fastq_abs_path:</span></code> full path to fastqs</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">temp_dir:</span></code> full path to temp/scratch space</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">qiime2_version:</span></code> only two versions permitted (2017.11 or 2019.1)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">reference_db:</span></code> list classifiers (1+) to be used for taxonomic classification; be sure to match trained classifiers with correct qiime version</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cluster_mode:</span></code> options are <code class="docutils literal notranslate"><span class="pre">'qsub/sbatch/etc</span> <span class="pre">...'</span></code>, <code class="docutils literal notranslate"><span class="pre">'local'</span></code>, <code class="docutils literal notranslate"><span class="pre">'dryrun'</span></code>, <code class="docutils literal notranslate"><span class="pre">'unlock'</span></code></p>
+<blockquote>
+<div><blockquote>
+<div><ul class="simple">
+<li><p>Example for cgems: <code class="docutils literal notranslate"><span class="pre">'qsub</span> <span class="pre">-q</span> <span class="pre">long.q</span> <span class="pre">-V</span> <span class="pre">-j</span> <span class="pre">y</span> <span class="pre">-S</span> <span class="pre">/bin/bash</span> <span class="pre">-o</span> <span class="pre">/path/to/project/directory/logs/</span> <span class="pre">-pe</span> <span class="pre">by_node</span> <span class="pre">{threads}'</span></code></p></li>
+</ul>
+</div></blockquote>
+<ul>
+<li><p>When running on an HPC, it is important to:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Set the shell (<code class="docutils literal notranslate"><span class="pre">-S</span> <span class="pre">/bin/bash</span></code> above)</p></li>
+<li><p>Set the environment (<code class="docutils literal notranslate"><span class="pre">-V</span></code> above to export environemnt variables to job environments)</p></li>
+<li><p>Allocate the appropriate number of parallel resources via <code class="docutils literal notranslate"><span class="pre">{threads}</span></code>, which links the number of threads requested by the job scheduler to the number of threads specified in the snakemake rule (<code class="docutils literal notranslate"><span class="pre">-pe</span> <span class="pre">by_node</span> <span class="pre">{threads}</span></code> above)</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</div>
+<div class="section" id="workflow-summary">
+<h2>Workflow summary<a class="headerlink" href="#workflow-summary" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic">
+<li><p>Manifest management:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Manifest provided in config.yaml is checked for compliance with QIIME2 specifications</p></li>
+<li><p>Per-flow cell manifests are created</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>Symlink fastqs to be viewable by DCEG PIs</p></li>
+<li><p>Import and demultiplex fastqs</p></li>
+<li><p>For external data only, fix any unmatched paired reads (can be generated by fastq QC process)</p></li>
+<li><p>Denoise</p></li>
+<li><p>Merge feature and sequence tables across flow cells; drop samples with zero reads</p></li>
+<li><p>Build multiple sequence alignment, then build rooted and unrooted phylogenetic trees</p></li>
+<li><p>Perform alpha- and beta-diversity analysis, rarefaction, and taxonomic classification</p></li>
+</ol>
+</div>
+<div class="section" id="example-output-directory-structure">
+<h2>Example output directory structure<a class="headerlink" href="#example-output-directory-structure" title="Permalink to this headline">¶</a></h2>
+<p>Within parent directory <code class="docutils literal notranslate"><span class="pre">&lt;out_dir&gt;/</span></code> defined in <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code>
+TODO: Needs updating!</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.
+├── config_mock-20.yml
+├── denoising
+│   ├── feature_tables
+│   │   ├── merged_filtered.qza
+│   │   ├── merged_filtered.qzv
+│   │   ├── merged.qza
+│   │   └── mock_runID_2020.qza
+│   ├── sequence_tables
+│   │   ├── merged.qza
+│   │   ├── merged.qzv
+│   │   └── mock_runID_2020.qza
+│   └── stats
+│       ├── mock_runID_2020.qza
+│       └── mock_runID_2020.qzv
+├── diversity_core_metrics
+├── fastqs
+│   ├── mock-20_R1.fastq.gz -&gt; /path/to/originals/mock-20/mock-forward-read.fastq.gz
+│   └── mock-20_R2.fastq.gz -&gt; /path/to/originals/mock-20/mock-reverse-read.fastq.gz
+├── import_and_demultiplex
+│   ├── mock_runID_2020.qza
+│   └── mock_runID_2020.qzv
+├── logs
+│   ├── Q2_202002061005.out
+│   └── ...
+├── manifests
+│   ├── manifest_qiime2.tsv
+│   └── mock_runID_2020_Q2_manifest.txt
+├── manifest.txt
+├── phylogenetics
+│   ├── masked_msa.qza
+│   ├── msa.qza
+│   ├── rooted_tree.qza
+│   └── unrooted_tree.qza
+├── Q2_wrapper.sh.o3040063
+├── run_pipeline.sh
+├── run_times
+└── taxonomic_classification
+    ├── barplots_classify-sklearn_gg-13-8-99-nb-classifier.qzv
+    ├── classify-sklearn_gg-13-8-99-nb-classifier.qza
+    ├── classify-sklearn_gg-13-8-99-nb-classifier.qzv
+    └── classify-sklearn_silva-132-99-nb-classifier.qza
+</pre></div>
+</div>
+</div>
+<div class="section" id="qc-report">
+<h2>QC report<a class="headerlink" href="#qc-report" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="input-requirements">
+<h2>Input requirements<a class="headerlink" href="#input-requirements" title="Permalink to this headline">¶</a></h2>
+<p>The manifest requirements for the report are the same as for the pipeline itself; however, including the following in your manifest will result in a more informative QC report:</p>
+<ul class="simple">
+<li><p>To be detected as blanks, water blanks and no-template control sample IDs must contain the string “water” or “ntc” in the “#SampleID” column; this is not case sensitive.</p></li>
+<li><p>“Source PCR Plate” column: header is case insensitive, can have spaces or not.  For the report, only the first characters preceding an underscore in this column will be preserved; this strips CGR’s well ID from the string.</p></li>
+<li><p>“Sample Type” column: header is case insensitive, can have spaces or not.  Populate with any string values that define useful categories, e.g. water, NTC_control, blank, study sample, qc, etc.</p></li>
+<li><p>“External ID” column: header is case insensitive, can have spaces or not.  This column is used at CGR to map IDs of received samples to the LIMS-generated IDs we use internally.  For technical replicates, the sample ID will be unique (as required by QIIME), but the external ID can be the same to link the samples for comparison in the report.</p></li>
+<li><p>Note that the report assumes that the sequencer ID is the second underscore-delimited field in the run ID; this may not be meaningful if your run ID does not conform.</p></li>
+</ul>
+</div>
+<div class="section" id="running-the-report">
+<h2>Running the report<a class="headerlink" href="#running-the-report" title="Permalink to this headline">¶</a></h2>
+<p>For CGR production runs, after the pipeline completes, generate a QC report using the Jupyter notebook in the <code class="docutils literal notranslate"><span class="pre">report/</span></code> directory.</p>
+<ul class="simple">
+<li><p>Open the notebook (see below for details) and change the <cite>proj_dir</cite> variable in section 1.1</p></li>
+<li><p>Run the complete notebook</p></li>
+<li><p>Save the report as html with the code hidden (see below for details)</p></li>
+</ul>
+</div>
+<div class="section" id="running-jupyter-notebooks-at-cgr">
+<h2>Running jupyter notebooks at CGR<a class="headerlink" href="#running-jupyter-notebooks-at-cgr" title="Permalink to this headline">¶</a></h2>
+<p>To run jupyter notebooks on the CGR HPC, login to the cluster, navigate to the notebook, then run the following.  You can set the port to anything above 8000.</p>
+<dl class="simple">
+<dt>::</dt><dd><p>module load python3
+jupyter notebook –no-browser –port=8080</p>
+</dd>
+</dl>
+<p>Then, on your local machine, run the following to open up an ssh tunnel:</p>
+<dl class="simple">
+<dt>::</dt><dd><p>ssh -N -L 8080:localhost:8080 &lt;username&#64;cluster.domain&gt;</p>
+</dd>
+</dl>
+<p>Finally, open your browser to the URL given by the <code class="docutils literal notranslate"><span class="pre">jupyter</span> <span class="pre">notebook</span></code> command above (<code class="docutils literal notranslate"><span class="pre">https://localhost:8080/?token=&lt;token&gt;</span></code>).</p>
+</div>
+<div class="section" id="to-save-the-report">
+<h2>To save the report<a class="headerlink" href="#to-save-the-report" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Clone the following repo: <code class="docutils literal notranslate"><span class="pre">https://github.com/ihuston/jupyter-hide-code-html</span></code></p></li>
+<li><p>Run in terminal: <code class="docutils literal notranslate"><span class="pre">jupyter</span> <span class="pre">nbconvert</span> <span class="pre">--to</span> <span class="pre">html</span> <span class="pre">--template</span> <span class="pre">jupyter-hide-code-html/clean_output.tpl</span> <span class="pre">path/to/CGR_16S_Microbiome_QC_Report.ipynb</span></code></p></li>
+<li><p>Name the above file <code class="docutils literal notranslate"><span class="pre">NP###_pipeline_run_folder_QC_report.html</span></code> and place it in the directory with the pipeline output</p></li>
+</ul>
+</div>
+<div class="section" id="for-report-development">
+<h2>For report development<a class="headerlink" href="#for-report-development" title="Permalink to this headline">¶</a></h2>
+<p>Jupyter notebooks are stored as JSON with metadata, which can result in very messy diffs/merge requests in version control.  Please do the following to create a clean python script version of the notebook to be used in diffs.</p>
+<ul class="simple">
+<li><p>After making and testing changes, Kernel &gt; Restart &amp; Clear Output</p></li>
+<li><p>Run in terminal: <code class="docutils literal notranslate"><span class="pre">jupyter</span> <span class="pre">nbconvert</span> <span class="pre">--to</span> <span class="pre">script</span> <span class="pre">CGR_16S_Microbiome_QC_Report.ipynb</span></code></p></li>
+<li><p>Add and commit both <code class="docutils literal notranslate"><span class="pre">CGR_16S_Microbiome_QC_Report.ipynb</span></code> AND <code class="docutils literal notranslate"><span class="pre">CGR_16S_Microbiome_QC_Report.py</span></code></p></li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="#">CGR QIIME2 Microbiome Pipeline</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2020, Leidos Biomedical Research, Inc..
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 3.2.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
