@@ -28,8 +28,8 @@ rule dada2_denoise:
             --verbose \
             --p-n-threads {threads} \
             --i-demultiplexed-seqs {input.qza} \
-            --o-table {output.tab} \
-            --o-representative-sequences {output.seq} \
+            --o-table {output.features} \
+            --o-representative-sequences {output.seqs} \
             --p-trim-left-f {params.trim_l_f} \
             --p-trim-left-r {params.trim_l_r} \
             --p-trunc-len-f {params.trun_len_f} \
