@@ -1,0 +1,276 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Example output directory structure &mdash; CGR QIIME2 Microbiome Pipeline 2.2.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Input requirements" href="../qc_report/input_requirements.html" />
+    <link rel="prev" title="Workflow summary" href="workflow_summary.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> CGR QIIME2 Microbiome Pipeline
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Installation:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation/inst.html">Installation</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Getting Started:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="input_requirements.html">Input requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configuration_details.html">Configuration details</a></li>
+<li class="toctree-l1"><a class="reference internal" href="workflow_summary.html">Workflow summary</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Example output directory structure</a></li>
+</ul>
+<p class="caption"><span class="caption-text">QC Report:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../qc_report/input_requirements.html">Input requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../qc_report/run_report.html">Running the report</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../qc_report/save_report.html">To save the report</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Developer Documentation:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../dev_docs/report.html">For report development</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">CGR QIIME2 Microbiome Pipeline</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Example output directory structure</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/getting_started/example_output_structure.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="example-output-directory-structure">
+<h1>Example output directory structure<a class="headerlink" href="#example-output-directory-structure" title="Permalink to this headline">¶</a></h1>
+<p>Within parent directory <code class="docutils literal notranslate"><span class="pre">&lt;out_dir&gt;/</span></code> defined in <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code>
+TODO: Needs updating!</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>.
+├── config_mock-20.yml
+├── denoising
+│   ├── feature_tables
+│   │   ├── merged_filtered.qza
+│   │   ├── merged_filtered.qzv
+│   │   ├── merged.qza
+│   │   └── mock_runID_2020.qza
+│   ├── sequence_tables
+│   │   ├── merged.qza
+│   │   ├── merged.qzv
+│   │   └── mock_runID_2020.qza
+│   └── stats
+│       ├── mock_runID_2020.qza
+│       └── mock_runID_2020.qzv
+├── diversity_core_metrics
+├── fastqs
+│   ├── mock-20_R1.fastq.gz -&gt; /path/to/originals/mock-20/mock-forward-read.fastq.gz
+│   └── mock-20_R2.fastq.gz -&gt; /path/to/originals/mock-20/mock-reverse-read.fastq.gz
+├── import_and_demultiplex
+│   ├── mock_runID_2020.qza
+│   └── mock_runID_2020.qzv
+├── logs
+│   ├── Q2_202002061005.out
+│   └── ...
+├── manifests
+│   ├── manifest_qiime2.tsv
+│   └── mock_runID_2020_Q2_manifest.txt
+├── manifest.txt
+├── phylogenetics
+│   ├── masked_msa.qza
+│   ├── msa.qza
+│   ├── rooted_tree.qza
+│   └── unrooted_tree.qza
+├── Q2_wrapper.sh.o3040063
+├── run_pipeline.sh
+├── run_times
+└── taxonomic_classification
+    ├── barplots_classify-sklearn_gg-13-8-99-nb-classifier.qzv
+    ├── classify-sklearn_gg-13-8-99-nb-classifier.qza
+    ├── classify-sklearn_gg-13-8-99-nb-classifier.qzv
+    └── classify-sklearn_silva-132-99-nb-classifier.qza
+</pre></div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../qc_report/input_requirements.html" class="btn btn-neutral float-right" title="Input requirements" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="workflow_summary.html" class="btn btn-neutral float-left" title="Workflow summary" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Leidos Biomedical Research, Inc.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
