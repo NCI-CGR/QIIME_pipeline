@@ -464,8 +464,8 @@ if not Q2_2017:
                 --verbose \
                 --p-n-threads {threads} \
                 --i-demultiplexed-seqs {input.qza} \
-                --o-table {output.tab} \
-                --o-representative-sequences {output.seq} \
+                --o-table {output.features} \
+                --o-representative-sequences {output.seqs} \
                 --o-denoising-stats {output.stats} \
                 --p-trim-left-f {params.trim_l_f} \
                 --p-trim-left-r {params.trim_l_r} \
@@ -522,11 +522,11 @@ rule merge_feature_tables:
         out_dir + 'run_times/merge_feature_tables/merge_feature_tables.tsv'
     run:
         if len(RUN_IDS) == 1:
-            shell('cp {input.tables} {output}')
+            shell('cp {input.feature_tables} {output}')
         elif Q2_2017:
-            shell('bash {params.e}workflow/scripts/q2_2017_table_merge.sh {params.tp} {output} {input.tables}')
+            shell('bash {params.e}workflow/scripts/q2_2017_table_merge.sh {params.tp} {output} {input.feature_tables}')
         else:
-            l = '--i-tables ' + ' --i-tables '.join(input.tables)
+            l = '--i-tables ' + ' --i-tables '.join(input.feature_tables)
             shell('qiime feature-table merge ' + l + ' --o-merged-table {output}')
 
 rule merge_sequence_tables:
@@ -537,7 +537,7 @@ rule merge_sequence_tables:
     NOTE: limited scalability due to cli character limit.
     """
     input:
-        tables = expand(out_dir + 'denoising/sequence_tables/{runID}.qza', runID=RUN_IDS),
+        seqs = expand(out_dir + 'denoising/sequence_tables/{runID}.qza', runID=RUN_IDS),
         q2_manifest = out_dir + 'manifests/manifest_qiime2.tsv'
     output:
         out_dir + 'denoising/sequence_tables/merged.qza'
@@ -549,11 +549,11 @@ rule merge_sequence_tables:
         out_dir + 'run_times/merge_sequence_tables/merge_sequence_tables.tsv'
     run:
         if len(RUN_IDS) == 1:
-            shell('cp {input.tables} {output}')
+            shell('cp {input.seqs} {output}')
         elif Q2_2017:
-            shell('bash {params.e}workflow/scripts/q2_2017_table_merge.sh {params.tp} {output} {input.tables}')
+            shell('bash {params.e}workflow/scripts/q2_2017_table_merge.sh {params.tp} {output} {input.seqs}')
         else:
-            l = '--i-data ' + ' --i-data '.join(input.tables)
+            l = '--i-data ' + ' --i-data '.join(input.seqs)
             shell('qiime feature-table merge-seqs ' + l + ' --o-merged-data {output}')
 
 if not Q2_2017:
@@ -654,19 +654,19 @@ if not Q2_2017:
             'qiime feature-table summarize \
                 --i-table {input.qza1} \
                 --o-visualization {output.qzv1} \
-                --m-sample-metadata-file {input.q2_man} && \
+                --m-sample-metadata-file {input.q2_manifest} && \
             qiime feature-table summarize \
                 --i-table {input.qza2} \
                 --o-visualization {output.qzv2} \
-                --m-sample-metadata-file {input.q2_man} && \
+                --m-sample-metadata-file {input.q2_manifest} && \
             qiime feature-table summarize \
                 --i-table {input.qza3} \
                 --o-visualization {output.qzv3} \
-                --m-sample-metadata-file {input.q2_man} && \
+                --m-sample-metadata-file {input.q2_manifest} && \
             qiime feature-table summarize \
                 --i-table {input.qza4} \
                 --o-visualization {output.qzv4} \
-                --m-sample-metadata-file {input.q2_man}'
+                --m-sample-metadata-file {input.q2_manifest}'
 
     rule apply_filters_to_sequence_tables:
         input:
@@ -743,7 +743,7 @@ rule feature_table_visualization:
         'qiime feature-table summarize \
             --i-table {input.qza} \
             --o-visualization {output} \
-            --m-sample-metadata-file {input.q2_man}'
+            --m-sample-metadata-file {input.q2_manifest}'
 
 rule taxonomic_classification:
     """Classify reads by taxon using a fitted classifier
@@ -982,7 +982,7 @@ if not Q2_2017:
             out_dir + 'run_times/remove_non_bacterial_taxa_sequence_table/{ref}.tsv'
         shell:
             'qiime feature-table filter-seqs \
-                --i-data {input.seq_table} \
+                --i-data {input.seqs} \
                 --i-table {input.bacterial_features} \
                 --o-filtered-data {output}'
 
@@ -998,7 +998,7 @@ if not Q2_2017:
             'qiime feature-table summarize \
                 --i-table {input.features} \
                 --o-visualization {output.features} \
-                --m-sample-metadata-file {input.q2_man} && \
+                --m-sample-metadata-file {input.q2_manifest} && \
             qiime feature-table tabulate-seqs \
                 --i-data {input.seqs} \
                 --o-visualization {output.seqs}'
@@ -1089,7 +1089,7 @@ rule alpha_beta_diversity:
             --i-phylogeny {input.rooted_tree} \
             --i-table {input.features} \
             --p-sampling-depth {params.samp_depth} \
-            --m-metadata-file {input.q2_man} \
+            --m-metadata-file {input.q2_manifest} \
             --o-rarefied-table {output.rare} \
             --o-faith-pd-vector {output.faith} \
             --o-observed-otus-vector {output.obs} \
@@ -1156,7 +1156,7 @@ rule alpha_rarefaction:
             --i-table {input.features} \
             --i-phylogeny {input.rooted} \
             --p-max-depth {params.m_depth} \
-            --m-metadata-file {input.q2_man} \
+            --m-metadata-file {input.q2_manifest} \
             --o-visualization {output}'
 
 rule convert_feature_table_to_biom:
