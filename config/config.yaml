@@ -11,7 +11,7 @@ metadata_manifest: '/path/to/manifest.txt'
 
 ## Directories
 out_dir: '/path/to/project/directory/'
-exec_dir: '/path/to/QIIME_pipeline/workflow/'
+exec_dir: '/path/to/QIIME_pipeline/'
 fastq_abs_path: '/path/to/fastqs/'  # internal runs only
 temp_dir: '/path/to/scratch/'
 
