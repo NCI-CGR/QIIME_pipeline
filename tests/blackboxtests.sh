@@ -50,7 +50,7 @@ do
     echo "sampling_depth: 10000" >> ${outPath}/TESTconfig.yml
     echo "max_depth: 54000" >> ${outPath}/TESTconfig.yml
     echo "classify_method: 'classify-sklearn'" >> ${outPath}/TESTconfig.yml
-    echo "cluster_mode: 'qsub -q seq-calling.q -V -j y -S /bin/bash -o ${outPath}/logs/ -pe by_node {threads}'" >> ${outPath}/TESTconfig.yml
+    echo "cluster_mode: 'qsub -q long.q -V -j y -S /bin/bash -o ${outPath}/logs/ -pe by_node {threads}'" >> ${outPath}/TESTconfig.yml
     echo "num_jobs: 100" >> ${outPath}/TESTconfig.yml
     echo "latency: 120" >> ${outPath}/TESTconfig.yml
     echo "metadata_manifest: '${myExecPath}/tests/input/test_12_samples.txt'" >> ${outPath}/TESTconfig.yml
@@ -109,7 +109,7 @@ unset module
 for i in "${MODES[@]}"
 do
     outPath="${myOutPath}_${i}/"
-    cmd="qsub -q seq-calling.q -V -j y -S /bin/sh -o ${outPath} ${myExecPath}/workflow/scripts/Q2_wrapper.sh ${outPath}/TESTconfig.yml"
+    cmd="qsub -q long.q -V -j y -S /bin/sh -o ${outPath} ${myExecPath}/workflow/scripts/Q2_wrapper.sh ${outPath}/TESTconfig.yml"
     sleep 10
     echo "Command run: $cmd"
     eval "$cmd"
