@@ -209,6 +209,8 @@ if not Q2_2017:
             expand(out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
             expand(out_dir + 'denoising/stats/{runID}.qzv', runID=RUN_IDS),
             out_dir + 'denoising/feature_tables/feature-table.from_biom.txt',
+            out_dir + 'read_feature_and_sample_filtering/feature_tables/1_remove_samples_with_low_read_count.qzv',
+            out_dir + 'read_feature_and_sample_filtering/sequence_tables/1_remove_samples_with_low_read_count.qzv',
             directory(expand(out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}_data_files', ref=refDict.keys())),
             expand(out_dir + 'taxonomic_classification_bacteria_only/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
             expand(out_dir + 'bacteria_only/feature_tables/merged_{ref}.qzv', ref=refDict.keys())#,
@@ -222,6 +224,8 @@ else:
             out_dir + 'denoising/sequence_tables/merged.qzv',
             expand(out_dir + 'diversity_core_metrics/{ref}/alpha_diversity_metadata.qzv', ref=refDict.keys()),
             expand(out_dir + 'diversity_core_metrics/{ref}/rarefaction.qzv', ref=refDict.keys()),
+            out_dir + 'read_feature_and_sample_filtering/feature_tables/1_remove_samples_with_low_read_count.qzv',
+            out_dir + 'read_feature_and_sample_filtering/sequence_tables/1_remove_samples_with_low_read_count.qzv',
             expand(out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
             expand(out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
             expand(out_dir + 'taxonomic_classification_bacteria_only/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys())
