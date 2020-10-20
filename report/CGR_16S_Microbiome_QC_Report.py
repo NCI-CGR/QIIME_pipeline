@@ -27,7 +27,7 @@
 #     <a href="#1.3&nbsp;&nbsp;Parameters">1.3&nbsp;&nbsp;Parameters</a><br>
 #     <a href="#1.4&nbsp;&nbsp;Dependency-versions">1.4&nbsp;&nbsp;Dependency versions</a><br>
 #   </ul>
-#   <a href="#2&nbsp;&nbsp;Samples-included-in-the-project">2&nbsp;&nbsp;Samples included in the projec<br>
+#   <a href="#2&nbsp;&nbsp;Samples-included-in-the-project">2&nbsp;&nbsp;Samples included in the project<br>
 #   <a href="#3&nbsp;&nbsp;QC-checks">3&nbsp;&nbsp;QC checks</a><br>
 #   <ul>
 #     <a href="#3.1&nbsp;&nbsp;Read-trimming">3.1&nbsp;&nbsp;Read trimming</a><br>
@@ -74,8 +74,8 @@
 # In[ ]:
 
 
-proj_dir='/DCEG/CGF/Bioinformatics/Production/Bari/long_term_stability_study_RKnight/20200811_initial_run/'
-ref_db='silva-132-99-nb-classifier'
+proj_dir='/DCEG/Projects/Microbiome/Analysis/Project_NP0539-MB1/20201016_dev_test'
+ref_db='silva-132-99-515-806-nb-classifier'
 
 
 # In[ ]:
@@ -189,7 +189,7 @@ get_ipython().system('grep -A4 "dada2_denoise" *.yml')
 
 # After error correction, chimera removal, removal of phiX sequences, and the four-step filtering defined above, the remaining reads are used for taxonomic classification.  We are performing classification with a naive Bayes classifier trained on the SILVA 99% OTUs database that includes only the V4 region (defined by the 515F/806R primer pair).  This data is located at `taxonomic_classification/barplots_classify-sklearn_silva-132-99-515-806-nb-classifier.qzv`.  Please use [QIIME's viewer](https://view.qiime2.org/) for a more detailed interactive plot.
 # 
-# The plots below show the "level 1" taxonomic classification.  The first set of plots show relative abundances; the second show absolute.  Plots are split into sets of 1000 samples per plot.
+# The plots below show the "level 1" taxonomic classification.  The first set of plots show relative abundances; the second show absolute.  Plots are split into sets of ~500 samples per plot.
 # 
 # Note that reads are being classified using a database of predominantly bacterial sequences, so human reads, for example, will generally be in the "Unclassified" category rather than "Eukaryota."  Non-bacterial reads can indicate host (human) or other contamination. 
 
@@ -204,7 +204,6 @@ get_ipython().system('unzip -q -d taxonomic_classification/rpt_silva taxonomic_c
 
 f = glob.glob('taxonomic_classification/rpt_silva/*/data/level-1.csv')
 df_l1 = pd.read_csv(f[0])
-df_l1 = df_l1.drop(columns=['Lane'])  # specific for this run; numeric cols need to be droppped
 df_l1 = df_l1.rename(columns = {'index':'Sample'})
 df_l1 = df_l1.set_index('Sample')
 df_l1 = df_l1.select_dtypes(['number']).dropna(axis=1, how='all')
@@ -214,11 +213,20 @@ df_l1_rel = df_l1.div(df_l1.sum(axis=1), axis=0) * 100
 # In[ ]:
 
 
-def split_df(df, num_rows = 1000): 
+def split_df(df, max_rows = 500): 
     split_dfs = list()
-    num_dfs = len(df) // num_rows + 1
-    for i in range(num_dfs):
-        split_dfs.append(df[i*num_rows:(i+1)*num_rows])
+    rows = df.shape[0]
+    n = rows % max_rows
+    last_rows = True
+    for i in range(0, rows, max_rows):
+        # if the last remainder of the rows is less than half the max value, 
+        # just combine it with the second-to-last plot
+        # otherwise it looks weird
+        if i in range(rows-max_rows*2,rows-max_rows) and n <= (max_rows // 2):
+            split_dfs.append(df.iloc[i:i+max_rows+n])
+            last_rows = False
+        elif last_rows:
+            split_dfs.append(df.iloc[i:i+max_rows])
     return split_dfs
     # need to split very large datasets so rendering doesn't get weird
 
@@ -240,7 +248,7 @@ for i in df_rel_list:
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.5),ncol=4,fontsize=52)
     ax.set_ylabel('Relative frequency (%)',fontsize=52)
     ax.set_title('Taxonomic classification, level 1',fontsize=52)
-    ax.set_yticklabels(ax.get_yticks(), size = 40)
+    ax.set_yticklabels(ax.get_yticks(), size=40)
     plt.show()
 
 
@@ -254,7 +262,7 @@ for i in df_list:
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.5),ncol=4,fontsize=52)
     ax.set_ylabel('Absolute frequency',fontsize=52)
     ax.set_title('Taxonomic classification, level 1',fontsize=52)
-    ax.set_yticklabels(ax.get_yticks(), size = 40)
+    ax.set_yticklabels(ax.get_yticks(), size=40)
     plt.show()
 
 
@@ -320,7 +328,6 @@ get_ipython().system('unzip -q -d taxonomic_classification_bacteria_only/rpt_sil
 f = glob.glob('taxonomic_classification_bacteria_only/rpt_silva/*/data/level-1.csv')
 df_l1b = pd.read_csv(f[0])
 df_l1b = df_l1b.rename(columns = {'index':'Sample'})
-df_l1b = df_l1b.drop(columns=['Lane'])  # specific for this run; numeric cols need to be droppped
 df_l1b = df_l1b.set_index('Sample')
 df_l1b = df_l1b.select_dtypes(['number']).dropna(axis=1, how='all')
 df_l1b_rel = df_l1b.div(df_l1b.sum(axis=1), axis=0) * 100
@@ -331,12 +338,14 @@ df_l1b_rel = df_l1b.div(df_l1b.sum(axis=1), axis=0) * 100
 
 for i in split_df(df_l1b_rel):
     plt.figure(dpi=200)
+    plt.rcParams["xtick.labelsize"] = 12
     pal = sns.color_palette("Accent")
     ax = i.sort_values('D_0__Bacteria').plot.bar(stacked=True, color=pal, figsize=(60,7), width=1, edgecolor='white', ax=plt.gca())
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.5),ncol=4,fontsize=52)
     ax.set_ylabel('Relative frequency (%)',fontsize=52)
+    ax.set_xlabel('Sample',fontsize=12)
     ax.set_title('Taxonomic classification, level 1',fontsize=52)
-    ax.set_yticklabels(ax.get_yticks(), size = 40)
+    ax.set_yticklabels(ax.get_yticks(), size=40)
     plt.show()
 
 
@@ -346,11 +355,14 @@ for i in split_df(df_l1b_rel):
 for i in split_df(df_l1b):
     plt.figure(dpi=200)
     pal = sns.color_palette("Accent")
+    plt.rcParams["xtick.labelsize"] = 12
     ax = i.sort_values('D_0__Bacteria').plot.bar(stacked=True, color=pal, figsize=(60,7), width=1, edgecolor='white', ax=plt.gca())
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.5),ncol=4,fontsize=52)
     ax.set_ylabel('Absolute frequency',fontsize=52)
+    ax.set_xlabel('Sample',fontsize=12)
     ax.set_title('Taxonomic classification, level 1',fontsize=52)
-    ax.set_yticklabels(ax.get_yticks(), size = 40)
+    ax.set_yticklabels(ax.get_yticks(), size=40)
+    ax.set_xticklabels(ax.get_xticklabels(), rotation=90, ha="center", size=12)
     plt.show()
 
 
@@ -615,7 +627,7 @@ get_ipython().system('unzip -q -d bacteria_only/feature_tables/rpt_merged_{ref_d
 # In[ ]:
 
 
-df_features_per_samples = pd.read_csv(glob.glob('bacteria_only/feature_tables/rpt_merged_{ref_db}_qzv/*/data/sample-frequency-detail.csv')[0],sep=",",header=None,index_col=0)
+df_features_per_samples = pd.read_csv(glob.glob('bacteria_only/feature_tables/rpt_merged_' + ref_db + '_qzv/*/data/sample-frequency-detail.csv')[0],sep=",",header=None,index_col=0)
 if 'externalid' in manifest.columns:
     df_features_per_samples = df_features_per_samples.join(manifest[['externalid']]).set_index('externalid')
 sample_ttl = len(df_features_per_samples.index)
@@ -652,6 +664,7 @@ df_rarify_tidy = df_rarify.reset_index().drop(columns=['Samples_excluded','Perce
 df_rarify_tidy.columns = ['Sampling_depth','Var','Percent_retained']
 df_rarify_tidy['Var'] = df_rarify_tidy['Var'].str.replace('Percent_retained_s','S')
 plt.figure(dpi=120)
+plt.rcParams["xtick.labelsize"] = 12
 ax = sns.lineplot(x="Sampling_depth", y="Percent_retained", hue="Var",data=df_rarify_tidy)
 handles, labels = ax.get_legend_handles_labels()
 ax.legend(handles=handles[1:], labels=labels[1:], loc='center left', bbox_to_anchor=(1, 0.5))
@@ -717,7 +730,7 @@ def format_alpha_data(metric, csv):
 
 
 mpl.rcParams['figure.max_open_warning'] = 40
-files = glob.glob('diversity_core_metrics/{ref_db}/rpt_rarefaction/*/data/*.csv')
+files = glob.glob('diversity_core_metrics/' + ref_db + '/rpt_rarefaction/*/data/*.csv')
 for f in files:
     b = os.path.basename(f).split('.')[0]
     df = format_alpha_data(b, f)
@@ -796,7 +809,7 @@ warnings.filterwarnings("ignore", message="The result contains negative eigenval
 def plot_pcoas(metric):
     mpl.rcParams['figure.dpi'] = 100
     mpl.rcParams['figure.figsize'] = 9, 6
-    df = pd.read_csv(glob.glob('diversity_core_metrics/{ref_db}/rpt_' + metric + '_dist/*/data/distance-matrix.tsv')[0],sep='\t',index_col=0)
+    df = pd.read_csv(glob.glob('diversity_core_metrics/' + ref_db + '/rpt_' + metric + '_dist/*/data/distance-matrix.tsv')[0],sep='\t',index_col=0)
     sample_ids = df.index.values
     dist = df.to_numpy()
     dm = DistanceMatrix(dist, sample_ids)
