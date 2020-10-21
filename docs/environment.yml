@@ -1,0 +1,7 @@
+name: qiime2-2019.1_cgr
+channels:
+  - bioconda
+  - defaults
+  - conda-forge
+prefix: /home/ballewbj/.conda/envs/qiime2-2019.1_cgr
+
