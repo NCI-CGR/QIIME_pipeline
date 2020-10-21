@@ -187,7 +187,7 @@ get_ipython().system('grep -A4 "dada2_denoise" *.yml')
 
 # <h3 id="3.2&nbsp;&nbsp;Proportion-of-non-bacterial-reads">3.2&nbsp;&nbsp;Proportion of non-bacterial reads</h3>
 
-# After error correction, chimera removal, removal of phiX sequences, and the four-step filtering defined above, the remaining reads are used for taxonomic classification.  We are performing classification with a naive Bayes classifier trained on the SILVA 99% OTUs database that includes only the V4 region (defined by the 515F/806R primer pair).  This data is located at `taxonomic_classification/barplots_classify-sklearn_silva-132-99-515-806-nb-classifier.qzv`.  Please use [QIIME's viewer](https://view.qiime2.org/) for a more detailed interactive plot.
+# After error correction, chimera removal, removal of phiX sequences, and the four-step filtering defined above, the remaining reads are used for taxonomic classification.  We are performing classification with a naive Bayes classifier trained on the SILVA 99% OTUs database that includes only the V4 region (defined by the 515F/806R primer pair).  This data is located at `taxonomic_classification/silva-132-99-515-806-nb-classifier/barplots.qzv`.  Please use [QIIME's viewer](https://view.qiime2.org/) for a more detailed interactive plot.
 # 
 # The plots below show the "level 1" taxonomic classification.  The first set of plots show relative abundances; the second show absolute.  Plots are split into sets of ~500 samples per plot.
 # 
@@ -196,7 +196,7 @@ get_ipython().system('grep -A4 "dada2_denoise" *.yml')
 # In[ ]:
 
 
-get_ipython().system('unzip -q -d taxonomic_classification/rpt_silva taxonomic_classification/barplots_classify-sklearn_{ref_db}.qzv')
+get_ipython().system('unzip -q -d taxonomic_classification/rpt_silva taxonomic_classification/{ref_db}/barplots.qzv')
 
 
 # In[ ]:
@@ -314,12 +314,12 @@ else:
 
 # Best practices indicate we should filter these reads regardless of the degree to which we observe them.  The plots below show the "level 1" classification after non-bacterial read removal.
 # 
-# This data is located at `taxonomic_classification_bacteria_only/barplots_classify-sklearn_silva-132-99-515-806-nb-classifier.qzv`.  Please use [QIIME's viewer](https://view.qiime2.org/) for a more detailed interactive plot.
+# This data is located at `taxonomic_classification_bacteria_only/silva-132-99-515-806-nb-classifier/barplots.qzv`.  Please use [QIIME's viewer](https://view.qiime2.org/) for a more detailed interactive plot.
 
 # In[ ]:
 
 
-get_ipython().system('unzip -q -d taxonomic_classification_bacteria_only/rpt_silva taxonomic_classification_bacteria_only/barplots_classify-sklearn_{ref_db}.qzv')
+get_ipython().system('unzip -q -d taxonomic_classification_bacteria_only/rpt_silva taxonomic_classification_bacteria_only/{ref_db}/barplots.qzv')
 
 
 # In[ ]:
@@ -621,7 +621,7 @@ else:
 # In[ ]:
 
 
-get_ipython().system('unzip -q -d bacteria_only/feature_tables/rpt_merged_{ref_db}_qzv bacteria_only/feature_tables/merged_{ref_db}.qzv')
+get_ipython().system('unzip -q -d bacteria_only/feature_tables/rpt_merged_{ref_db}_qzv bacteria_only/feature_tables/{ref_db}/merged.qzv')
 
 
 # In[ ]:
