@@ -74,7 +74,7 @@
 # In[ ]:
 
 
-proj_dir='/DCEG/Projects/Microbiome/Analysis/Project_NP0539-MB1/20201016_dev_test'
+proj_dir='/DCEG/Projects/Microbiome/Analysis/Project_NP0453_MB2_and_3/20201020_dev_test'
 ref_db='silva-132-99-515-806-nb-classifier'
 
 
@@ -312,7 +312,7 @@ else:
 
 # ## Non-bacterial read removal
 
-# Best practices indicate we should filter these reads regardless of the degree to which we observe them.  The plots below show the "level 1" classification after non-bacterial read removal.
+# Best practices indicate we should filter these reads regardless of the degree to which we observe them.  The plots below show the "level 1" classification after removal of non-bacterial reads and reads without a phylum classification.
 # 
 # This data is located at `taxonomic_classification_bacteria_only/silva-132-99-515-806-nb-classifier/barplots.qzv`.  Please use [QIIME's viewer](https://view.qiime2.org/) for a more detailed interactive plot.
 
@@ -690,7 +690,7 @@ get_ipython().system('grep "sampling_depth" *.yml')
 # - __Shannon diversity index:__ Calculates richness and diversity using a natural logarithm; accounts for both abundance and evenness of the taxa present; more sensitive to species richness than evenness
 # - __Faith's phylogenetic diversity:__ Measure of biodiversity that incorporates phylogenetic difference between species via sum of length of branches
 # 
-# Note that while the phylogenetic tree is constructed including non-bacterial reads, alpha diversity analysis is performed after non-bacterial read exclusion.
+# Note that both phylogenetic tree construction and alpha diversity analysis are performed after non-bacterial read exclusion.
 
 # In[ ]:
 
