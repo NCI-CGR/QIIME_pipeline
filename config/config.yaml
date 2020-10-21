@@ -39,8 +39,8 @@ min_num_samples_per_feature: 1
 sampling_depth: 10000
 max_depth: 54000
 reference_db:  # change based on qiime version
-- '/path/to/refDatabases/eg/scikit_0.20.2_q2_2019.1/gg-13-8-99-nb-classifier.qza'
-- '/path/to/refDatabases/eg/scikit_0.20.2_q2_2019.1/silva-132-99-nb-classifier.qza'
+- '/path/to/refDatabases/eg/scikit_0.20.2_q2_2019.1/gg-13-8-99-515-806-nb-classifier.qza'
+- '/path/to/refDatabases/eg/scikit_0.20.2_q2_2019.1/silva-132-99-515-806-nb-classifier.qza'
 
 ## Cluster submission parameters
 cluster_mode: 'qsub ...'  # options are 'qsub/sbatch/etc ...', 'local', 'dryrun', 'unlock'
