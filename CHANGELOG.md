@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Exposed the "min fold parent over abundance" parameter for DADA2 denoising within QIIME.  The default value is 1, so set to 1 if you need pipeline output analyzed in the same way as before this change.  Increasing this value will decrease the stringency of chimera removal.
 - Q2_wrapper.sh will now emit the "commit-ish" description of the pipeline version being run (e.g. v2.0 for tagged releases, or v2.0-5-g26a4da8 for unreleased versions). 
-- Extract flat text files from denoising/feature_tables/merged.qza, denoising/sequence_tables/merged.qza, and taxonomic_classification/barplots_<...>.qzv (for 2019.1 only; not supported for 2017.11)
+- Extract flat text files from denoising/feature_tables/merged.qza, denoising/sequence_tables/merged.qza, taxonomic_classification/barplots_<...>.qzv, and taxonomic_classification_bacteria_only/barplots_<...>.qzv (for 2019.1 only; not supported for 2017.11)
 - Added user-configurable options for filtering of samples, features, reads (for 2019.1 only; not supported for 2017.11)
 - Filtered non-bacterial reads and bacterial reads without a phylum-level classification ("bacteria_only" directories) (for 2019.1 only; not supported for 2017.11)
 - QIITA data with non-conformant fastq headers are now automatically fixed
@@ -16,11 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Input fastqs must be gzipped
-- Changed project directory structure to conform to Snakemake recommendations
+- Changed project and output directory structure to conform to Snakemake recommendations
 - Moved 2017.11-specific rules to sub-workflow
 
 ### Removed
 - Removed conditional DADA2 selection framework (no plans for alterinatives in the near future)
+- Removed un-implemented config option to change classification mode (defaults to sklearn)
 
 ### Fixed
 - Alleviated scalabilty issue in creating QIIME2 manifests

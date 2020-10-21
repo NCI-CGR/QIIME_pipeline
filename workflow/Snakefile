@@ -62,7 +62,6 @@ min_num_reads_per_feature = config['min_num_reads_per_feature']
 min_num_samples_per_feature = config['min_num_samples_per_feature']
 sampling_depth = config['sampling_depth']
 max_depth = config['max_depth']
-classify_method = config['classify_method']
 REF_DB = config['reference_db']
 trim_left_f = config['dada2_denoise']['trim_left_forward']
 trim_left_r = config['dada2_denoise']['trim_left_reverse']
@@ -205,15 +204,17 @@ if not Q2_2017:
             out_dir + 'denoising/sequence_tables/merged.qzv',
             expand(out_dir + 'diversity_core_metrics/{ref}/alpha_diversity_metadata.qzv', ref=refDict.keys()),
             expand(out_dir + 'diversity_core_metrics/{ref}/rarefaction.qzv', ref=refDict.keys()),
-            expand(out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
-            expand(out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
+            expand(out_dir + 'taxonomic_classification/{ref}/taxa.qzv', ref=refDict.keys()),
+            # expand(out_dir + 'taxonomic_classification/{ref}/barplots.qzv', ref=refDict.keys()),
             expand(out_dir + 'denoising/stats/{runID}.qzv', runID=RUN_IDS),
             out_dir + 'denoising/feature_tables/feature-table.from_biom.txt',
+            expand(out_dir + 'bacteria_only/feature_tables/{ref}/feature-table.from_biom.txt', ref=refDict.keys()),
             out_dir + 'read_feature_and_sample_filtering/feature_tables/1_remove_samples_with_low_read_count.qzv',
             out_dir + 'read_feature_and_sample_filtering/sequence_tables/1_remove_samples_with_low_read_count.qzv',
-            directory(expand(out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}_data_files', ref=refDict.keys())),
-            expand(out_dir + 'taxonomic_classification_bacteria_only/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
-            expand(out_dir + 'bacteria_only/feature_tables/merged_{ref}.qzv', ref=refDict.keys())#,
+            expand(out_dir + 'taxonomic_classification/{ref}/barplots_data_files/level-7.csv', ref=refDict.keys()),
+            expand(out_dir + 'taxonomic_classification_bacteria_only/{ref}/barplots_data_files/level-7.csv', ref=refDict.keys()),
+            # expand(out_dir + 'taxonomic_classification_bacteria_only/{ref}/barplots.qzv', ref=refDict.keys()),
+            expand(out_dir + 'bacteria_only/feature_tables/{ref}/merged.qzv', ref=refDict.keys())#,
 else:
     rule all:
         input:
@@ -226,9 +227,9 @@ else:
             expand(out_dir + 'diversity_core_metrics/{ref}/rarefaction.qzv', ref=refDict.keys()),
             out_dir + 'read_feature_and_sample_filtering/feature_tables/1_remove_samples_with_low_read_count.qzv',
             out_dir + 'read_feature_and_sample_filtering/sequence_tables/1_remove_samples_with_low_read_count.qzv',
-            expand(out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
-            expand(out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys()),
-            expand(out_dir + 'taxonomic_classification_bacteria_only/barplots_' + classify_method + '_{ref}.qzv', ref=refDict.keys())
+            expand(out_dir + 'taxonomic_classification/{ref}/taxa.qzv', ref=refDict.keys()),
+            expand(out_dir + 'taxonomic_classification/{ref}/barplots.qzv', ref=refDict.keys()),
+            expand(out_dir + 'taxonomic_classification_bacteria_only/{ref}/barplots.qzv', ref=refDict.keys())
 
 # TODO: think about adding check for minimum reads count per sample per flow cell (need more than 1 sample per flow cell passing min threshold for tab/rep seq creation) - either see if we can include via LIMS in the manifest, or use samtools(?)
 
@@ -775,19 +776,18 @@ rule taxonomic_classification:
         seqs = out_dir + 'denoising/sequence_tables/merged.qza' if Q2_2017 else out_dir + 'read_feature_and_sample_filtering/sequence_tables/4_remove_samples_with_low_feature_count.qza',
         ref = get_ref_full_path
     output:
-        temp(out_dir + 'taxonomic_classification/' + classify_method + '_{ref}_orig.qza')
+        temp(out_dir + 'taxonomic_classification/{ref}/orig.qza')
     params:
-        c_method = classify_method
+        c_method = "classify-sklearn"
     benchmark:
         out_dir + 'run_times/taxonomic_classification/{ref}.tsv'
     threads: 8
-    run:
-        if classify_method == 'classify-sklearn':
-            shell('qiime feature-classifier {params.c_method} \
-                --p-n-jobs {threads} \
-                --i-classifier {input.ref} \
-                --i-reads {input.seqs} \
-                --o-classification {output}')
+    shell:
+        'qiime feature-classifier {params.c_method} \
+            --p-n-jobs {threads} \
+            --i-classifier {input.ref} \
+            --i-reads {input.seqs} \
+            --o-classification {output}'
 
 rule bacterial_taxonomic_classification:
     """Classify reads by taxon using a fitted classifier
@@ -812,30 +812,29 @@ rule bacterial_taxonomic_classification:
     reference database before choosing the top N hits, not the first N hits.
     """
     input:
-        seqs = out_dir + 'denoising/sequence_tables/merged.qza' if Q2_2017 else out_dir + 'bacteria_only/sequence_tables/merged_{ref}.qza',
+        seqs = out_dir + 'denoising/sequence_tables/merged.qza' if Q2_2017 else out_dir + 'bacteria_only/sequence_tables/{ref}/merged.qza',
         ref = get_ref_full_path
     output:
-        temp(out_dir + 'taxonomic_classification_bacteria_only/' + classify_method + '_{ref}_orig.qza')
+        temp(out_dir + 'taxonomic_classification_bacteria_only/{ref}/orig.qza')
     params:
-        c_method = classify_method
+        c_method = "classify-sklearn"
     benchmark:
         out_dir + 'run_times/bacterial_taxonomic_classification/{ref}.tsv'
     threads: 8
-    run:
-        if classify_method == 'classify-sklearn':
-            shell('qiime feature-classifier {params.c_method} \
-                --p-n-jobs {threads} \
-                --i-classifier {input.ref} \
-                --i-reads {input.seqs} \
-                --o-classification {output}')
+    shell:
+        'qiime feature-classifier {params.c_method} \
+            --p-n-jobs {threads} \
+            --i-classifier {input.ref} \
+            --i-reads {input.seqs} \
+            --o-classification {output}'
 
 rule fix_trailing_spaces:  ####### 2017.11 - Error: no such option: --input-path
     input:
-        out_dir + '{tax_dir}/' + classify_method + '_{ref}_orig.qza'
+        out_dir + '{tax_dir}/{ref}/orig.qza'
     output:
         o1 = temp(out_dir + '{tax_dir}/{ref}/taxonomy.tsv'),
         o2 = temp(out_dir + '{tax_dir}/{ref}/taxonomy_fixed.tsv'),
-        o3 = out_dir + '{tax_dir}/' + classify_method + '_{ref}.qza'
+        o3 = out_dir + '{tax_dir}/{ref}/taxa.qza'
     params:
         out_dir + '{tax_dir}/{ref}'
     benchmark:
@@ -858,9 +857,9 @@ rule taxonomic_class_visualization:
     SS: may want to change name of rule so that "class" since class =/ taxonomic "class"
     """
     input:
-        out_dir + '{tax_dir}/' + classify_method + '_{ref}.qza'
+        out_dir + '{tax_dir}/{ref}/taxa.qza'
     output:
-        out_dir + '{tax_dir}/' + classify_method + '_{ref}.qzv'
+        out_dir + '{tax_dir}/{ref}/taxa.qzv'
     benchmark:
         out_dir + 'run_times/taxonomic_class_visualization/{tax_dir}_{ref}.tsv'
     shell:
@@ -878,10 +877,10 @@ rule taxonomic_class_plots:
     """
     input:
         seqs = out_dir + 'denoising/feature_tables/merged.qza' if Q2_2017 else out_dir + 'read_feature_and_sample_filtering/feature_tables/4_remove_samples_with_low_feature_count.qza',
-        tax = out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qza',
+        tax = out_dir + 'taxonomic_classification/{ref}/taxa.qza',
         manifest = out_dir + 'manifests/manifest_qiime2.tsv'
     output:
-        out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}.qzv'
+        out_dir + 'taxonomic_classification/{ref}/barplots.qzv'
     benchmark:
         out_dir + 'run_times/taxonomic_class_plots/{ref}.tsv'
     shell:
@@ -900,11 +899,11 @@ rule bacterial_taxonomic_class_plots:
     SS: may want to change name of rule so that "class" since class =/ taxonomic "class"
     """
     input:
-        seqs = out_dir + 'bacteria_only/feature_tables/merged_{ref}.qza',
-        tax = out_dir + 'taxonomic_classification_bacteria_only/' + classify_method + '_{ref}.qza',
+        seqs = out_dir + 'bacteria_only/feature_tables/{ref}/merged.qza',
+        tax = out_dir + 'taxonomic_classification_bacteria_only/{ref}/taxa.qza',
         manifest = out_dir + 'manifests/manifest_qiime2.tsv'
     output:
-        out_dir + 'taxonomic_classification_bacteria_only/barplots_' + classify_method + '_{ref}.qzv'
+        out_dir + 'taxonomic_classification_bacteria_only/{ref}/barplots.qzv'
     benchmark:
         out_dir + 'run_times/bacterial_taxonomic_class_plots/{ref}.tsv'
     shell:
@@ -913,6 +912,28 @@ rule bacterial_taxonomic_class_plots:
             --i-taxonomy {input.tax} \
             --m-metadata-file {input.manifest} \
             --o-visualization {output}'
+
+rule convert_taxonomy_to_tsv:
+    """ Convert taxonomy classifcation .qza to .tsv
+    Convert taxonomy bar plot qzv to .csv for all 7 levels
+    Note that this feature is not provided for 2017 runs.
+    """
+    input:
+        taxonomy_qza = out_dir + '{tax_dir}/{ref}/taxa.qza',
+        taxonomy_bar_plots = out_dir + '{tax_dir}/{ref}/barplots.qzv'
+    output:
+        out_dir + '{tax_dir}/{ref}/barplots_data_files/level-1.csv',
+        out_dir + '{tax_dir}/{ref}/barplots_data_files/level-2.csv',
+        out_dir + '{tax_dir}/{ref}/barplots_data_files/level-3.csv',
+        out_dir + '{tax_dir}/{ref}/barplots_data_files/level-4.csv',
+        out_dir + '{tax_dir}/{ref}/barplots_data_files/level-5.csv',
+        out_dir + '{tax_dir}/{ref}/barplots_data_files/level-6.csv',
+        out_dir + '{tax_dir}/{ref}/barplots_data_files/level-7.csv'
+    params:
+        d = out_dir + '{tax_dir}/{ref}/barplots_data_files'
+    shell:
+        'qiime tools export --input-path {input.taxonomy_qza} --output-path {params.d}; \
+        qiime tools export --input-path {input.taxonomy_bar_plots} --output-path {params.d}'
 
 rule remove_non_bacterial_taxa_feature_table_pt1:
     """Remove taxa with non bacterial sequences and bacteria with unannotated phyla
@@ -927,9 +948,9 @@ rule remove_non_bacterial_taxa_feature_table_pt1:
     """
     input:
         seqs = out_dir + 'denoising/feature_tables/merged.qza' if Q2_2017 else out_dir + 'read_feature_and_sample_filtering/feature_tables/4_remove_samples_with_low_feature_count.qza',
-        tax = out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qza'
+        tax = out_dir + 'taxonomic_classification/{ref}/taxa.qza'
     output:
-        temp(out_dir + 'bacteria_only/feature_tables/pt1_merged_{ref}.qza')
+        temp(out_dir + 'bacteria_only/feature_tables/{ref}/pt1_merged.qza')
     benchmark:
         out_dir + 'run_times/remove_non_bacterial_taxa_feature_table_pt1/{ref}.tsv'
     shell:
@@ -955,10 +976,10 @@ rule remove_non_bacterial_taxa_feature_table_pt2:
     be inappropriate (or at least presumptuous) to collapse these at species level."
     """
     input:
-        features = out_dir + 'bacteria_only/feature_tables/pt1_merged_{ref}.qza',
-        tax = out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qza'
+        features = out_dir + 'bacteria_only/feature_tables/{ref}/pt1_merged.qza',
+        tax = out_dir + 'taxonomic_classification/{ref}/taxa.qza'
     output:
-        out_dir + 'bacteria_only/feature_tables/merged_{ref}.qza'
+        out_dir + 'bacteria_only/feature_tables/{ref}/merged.qza'
     benchmark:
         out_dir + 'run_times/remove_non_bacterial_taxa_feature_table_pt2/{ref}.tsv'
     shell:
@@ -978,10 +999,10 @@ if not Q2_2017:
         NOTE: This is necessary for downstream unweighted unifrac weird cluster issue.
         """
         input:
-            bacterial_features = out_dir + 'bacteria_only/feature_tables/merged_{ref}.qza',
+            bacterial_features = out_dir + 'bacteria_only/feature_tables/{ref}/merged.qza',
             seqs = out_dir + 'denoising/sequence_tables/merged.qza'
         output:
-            out_dir + 'bacteria_only/sequence_tables/merged_{ref}.qza'
+            out_dir + 'bacteria_only/sequence_tables/{ref}/merged.qza'
         benchmark:
             out_dir + 'run_times/remove_non_bacterial_taxa_sequence_table/{ref}.tsv'
         shell:
@@ -992,12 +1013,12 @@ if not Q2_2017:
 
     rule bacteria_only_table_visualization:
         input:
-            features = out_dir + 'bacteria_only/feature_tables/merged_{ref}.qza',
-            seqs = out_dir + 'bacteria_only/sequence_tables/merged_{ref}.qza',
+            features = out_dir + 'bacteria_only/feature_tables/{ref}/merged.qza',
+            seqs = out_dir + 'bacteria_only/sequence_tables/{ref}/merged.qza',
             q2_manifest = out_dir + 'manifests/manifest_qiime2.tsv'
         output:
-            features = out_dir + 'bacteria_only/feature_tables/merged_{ref}.qzv',
-            seqs = out_dir + 'bacteria_only/sequence_tables/merged_{ref}.qzv'
+            features = out_dir + 'bacteria_only/feature_tables/{ref}/merged.qzv',
+            seqs = out_dir + 'bacteria_only/sequence_tables/{ref}/merged.qzv'
         shell:
             'qiime feature-table summarize \
                 --i-table {input.features} \
@@ -1064,7 +1085,7 @@ rule alpha_beta_diversity:
     """
     input:
         rooted_tree = out_dir + 'phylogenetics/rooted_tree.qza',
-        features = out_dir + 'bacteria_only/feature_tables/merged_{ref}.qza',
+        features = out_dir + 'bacteria_only/feature_tables/{ref}/merged.qza',
         q2_manifest = out_dir + 'manifests/manifest_qiime2.tsv'
     output:
         rare = out_dir + 'diversity_core_metrics/{ref}/rarefied_table.qza',
@@ -1146,7 +1167,7 @@ rule alpha_rarefaction:
      TODO: --p-steps INTEGER RANGE         [default: 10]
     """
     input:
-        features = out_dir + 'bacteria_only/feature_tables/merged_{ref}.qza',
+        features = out_dir + 'bacteria_only/feature_tables/{ref}/merged.qza',
         rooted = out_dir + 'phylogenetics/rooted_tree.qza',
         q2_manifest = out_dir + 'manifests/manifest_qiime2.tsv'
     output:
@@ -1182,18 +1203,21 @@ rule convert_feature_table_to_biom:
         biom convert -i {output.table_dada2_biom} -o {output.table_dada2_biom_tsv} --to-tsv; \
         qiime tools export --input-path {input.repseq_dada2_qza} --output-path {params.out2}'
 
-
-rule convert_taxonomy_to_tsv:
-    """ Convert taxonomy classifcation .qza to .tsv
-    Convert taxonomy bar plot qzv to .csv for all 7 levels
+rule convert_bacteria_only_feature_table_to_biom:
+    """ Convert feature table to biom format well as feature data to tsv
     Note that this feature is not provided for 2017 runs.
-    Consider including all csvs in output to allow built-in error handling?
     """
     input:
-        taxonomy_qza = out_dir + 'taxonomic_classification/' + classify_method + '_{ref}.qza',
-        taxonomy_bar_plots = out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}.qzv'
+        table_dada2_qza = out_dir + 'bacteria_only/feature_tables/{ref}/merged.qza',
+        repseq_dada2_qza = out_dir + 'bacteria_only/sequence_tables/{ref}/merged.qza'
     output:
-        d = directory(out_dir + 'taxonomic_classification/barplots_' + classify_method + '_{ref}_data_files')
+        table_dada2_biom = out_dir + 'bacteria_only/feature_tables/{ref}/feature-table.biom',
+        table_dada2_biom_tsv = out_dir + 'bacteria_only/feature_tables/{ref}/feature-table.from_biom.txt',
+        repseq_dada2_tsv = out_dir + 'bacteria_only/sequence_tables/{ref}/dna-sequences.fasta'
+    params:
+        out1 = out_dir + 'bacteria_only/feature_tables/{ref}/',
+        out2 = out_dir + 'bacteria_only/sequence_tables/{ref}/'
     shell:
-        'qiime tools export --input-path {input.taxonomy_qza} --output-path {output.d}; \
-        qiime tools export --input-path {input.taxonomy_bar_plots} --output-path {output.d}'
+        'qiime tools export --input-path {input.table_dada2_qza} --output-path {params.out1}; \
+        biom convert -i {output.table_dada2_biom} -o {output.table_dada2_biom_tsv} --to-tsv; \
+        qiime tools export --input-path {input.repseq_dada2_qza} --output-path {params.out2}'
