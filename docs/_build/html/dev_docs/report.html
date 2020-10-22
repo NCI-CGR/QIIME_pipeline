@@ -171,7 +171,12 @@
 <p>Jupyter notebooks are stored as JSON with metadata, which can result in very messy diffs/merge requests in version control.  Please do the following to create a clean python script version of the notebook to be used in diffs.</p>
 <ul class="simple">
 <li><p>After making and testing changes, Kernel &gt; Restart &amp; Clear Output</p></li>
-<li><p>Run in terminal: <code class="docutils literal notranslate"><span class="pre">jupyter</span> <span class="pre">nbconvert</span> <span class="pre">--to</span> <span class="pre">script</span> <span class="pre">CGR_16S_Microbiome_QC_Report.ipynb</span></code></p></li>
+<li><p>Run in terminal:</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">jupyter</span> <span class="n">nbconvert</span> <span class="o">--</span><span class="n">to</span> <span class="n">script</span> <span class="n">CGR_16S_Microbiome_QC_Report</span><span class="o">.</span><span class="n">ipynb</span>
+</pre></div>
+</div>
+<ul class="simple">
 <li><p>Add and commit both <code class="docutils literal notranslate"><span class="pre">CGR_16S_Microbiome_QC_Report.ipynb</span></code> AND <code class="docutils literal notranslate"><span class="pre">CGR_16S_Microbiome_QC_Report.py</span></code></p></li>
 </ul>
 </div>

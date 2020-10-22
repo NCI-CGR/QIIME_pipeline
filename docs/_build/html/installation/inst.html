@@ -37,7 +37,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Input requirements" href="../getting_started/input_requirements.html" />
-    <link rel="prev" title="Welcome to CGR QIIME2 Microbiome Pipeline’s documentation!" href="../index.html" /> 
+    <link rel="prev" title="CGR QIIME2 Microbiome Pipeline Documentation" href="../index.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -169,16 +169,19 @@
             
   <div class="section" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
-<p><strong>Dependencies</strong></p>
-<ul class="simple">
-<li><p>QIIME2 2017.11 or 2019.1</p></li>
-<li><p>perl/5.18.0+</p></li>
-<li><p>python3/3.6</p></li>
-<li><p>conda4.5+</p></li>
-<li><p>jdk/7+</p></li>
-<li><p>bbmap38</p></li>
-<li><p>Snakemake5+</p></li>
-</ul>
+<p>You will need git and <a class="reference external" href="https://docs.conda.io/">conda</a> or miniconda in your path.</p>
+<p>Create a conda environment that contains all the required dependencies (including QIIME2-2019.1):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">--</span><span class="n">name</span> <span class="o">&lt;</span><span class="n">env</span><span class="o">&gt;</span> <span class="o">--</span><span class="n">file</span> <span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
+</pre></div>
+</div>
+<p>or:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">--</span><span class="n">name</span> <span class="o">&lt;</span><span class="n">env</span><span class="o">&gt;</span> <span class="o">--</span><span class="n">file</span> <span class="n">environment</span><span class="o">.</span><span class="n">yml</span>
+</pre></div>
+</div>
+<p>Then, clone a copy of this pipeline:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">http</span><span class="p">:</span><span class="o">//</span><span class="mf">10.133</span><span class="o">.</span><span class="mf">130.114</span><span class="o">/</span><span class="n">wmy</span><span class="o">/</span><span class="n">QIIME_pipeline</span><span class="o">.</span><span class="n">git</span>
+</pre></div>
+</div>
 </div>
 
 
@@ -192,7 +195,7 @@
         <a href="../getting_started/input_requirements.html" class="btn btn-neutral float-right" title="Input requirements" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="../index.html" class="btn btn-neutral float-left" title="Welcome to CGR QIIME2 Microbiome Pipeline’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../index.html" class="btn btn-neutral float-left" title="CGR QIIME2 Microbiome Pipeline Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

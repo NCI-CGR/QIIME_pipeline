@@ -11,17 +11,17 @@ Running jupyter notebooks at CGR
 --------------------------------
 
 To run jupyter notebooks on the CGR HPC, login to the cluster, navigate to the notebook, then run the following.  You can set the port to anything above 8000.
-
 ::
-    module load python3
-    jupyter notebook --no-browser --port=8080
+
+  module load python3
+  jupyter notebook --no-browser --port=8080
 
 
 
 Then, on your local machine, run the following to open up an ssh tunnel:
-
 ::
-    ssh -N -L 8080:localhost:8080 <username@cluster.domain>
+
+  ssh -N -L 8080:localhost:8080 <username@cluster.domain>
 
 
 Finally, open your browser to the URL given by the ``jupyter notebook`` command above (``https://localhost:8080/?token=<token>``).

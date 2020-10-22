@@ -174,23 +174,21 @@
 <h1>Running the report<a class="headerlink" href="#running-the-report" title="Permalink to this headline">¶</a></h1>
 <p>For CGR production runs, after the pipeline completes, generate a QC report using the Jupyter notebook in the <code class="docutils literal notranslate"><span class="pre">report/</span></code> directory.</p>
 <ul class="simple">
-<li><p>Open the notebook (see below for details) and change the <cite>proj_dir</cite> variable in section 1.1</p></li>
+<li><p>Open the notebook (see below for details) and change the <code class="docutils literal notranslate"><span class="pre">proj_dir</span></code> variable in section 1.1</p></li>
 <li><p>Run the complete notebook</p></li>
 <li><p>Save the report as html with the code hidden (see below for details)</p></li>
 </ul>
 <div class="section" id="running-jupyter-notebooks-at-cgr">
 <h2>Running jupyter notebooks at CGR<a class="headerlink" href="#running-jupyter-notebooks-at-cgr" title="Permalink to this headline">¶</a></h2>
 <p>To run jupyter notebooks on the CGR HPC, login to the cluster, navigate to the notebook, then run the following.  You can set the port to anything above 8000.</p>
-<dl class="simple">
-<dt>::</dt><dd><p>module load python3
-jupyter notebook –no-browser –port=8080</p>
-</dd>
-</dl>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">module</span> <span class="n">load</span> <span class="n">python3</span>
+<span class="n">jupyter</span> <span class="n">notebook</span> <span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">browser</span> <span class="o">--</span><span class="n">port</span><span class="o">=</span><span class="mi">8080</span>
+</pre></div>
+</div>
 <p>Then, on your local machine, run the following to open up an ssh tunnel:</p>
-<dl class="simple">
-<dt>::</dt><dd><p>ssh -N -L 8080:localhost:8080 &lt;username&#64;cluster.domain&gt;</p>
-</dd>
-</dl>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ssh</span> <span class="o">-</span><span class="n">N</span> <span class="o">-</span><span class="n">L</span> <span class="mi">8080</span><span class="p">:</span><span class="n">localhost</span><span class="p">:</span><span class="mi">8080</span> <span class="o">&lt;</span><span class="n">username</span><span class="nd">@cluster</span><span class="o">.</span><span class="n">domain</span><span class="o">&gt;</span>
+</pre></div>
+</div>
 <p>Finally, open your browser to the URL given by the <code class="docutils literal notranslate"><span class="pre">jupyter</span> <span class="pre">notebook</span></code> command above (<code class="docutils literal notranslate"><span class="pre">https://localhost:8080/?token=&lt;token&gt;</span></code>).</p>
 </div>
 </div>

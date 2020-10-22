@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to CGR QIIME2 Microbiome Pipeline's documentation!
-==========================================================
+CGR QIIME2 Microbiome Pipeline Documentation
+============================================
 
 This is the Cancer Genomics Research Laboratory's (CGR) microbiome analysis pipeline. This pipeline utilizes `QIIME2 <https://qiime2.org/>`_ to classify sequence data, calculate relative abundance, and perform alpha- and beta-diversity analysis.
 

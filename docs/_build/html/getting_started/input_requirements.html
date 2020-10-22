@@ -169,14 +169,25 @@
             
   <div class="section" id="input-requirements">
 <h1>Input requirements<a class="headerlink" href="#input-requirements" title="Permalink to this headline">¶</a></h1>
-<ul class="simple">
+<ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">config.yaml</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">run_pipeline.sh</span></code></p></li>
 <li><p>Manifest file</p>
-<ul>
-<li><p>For external (non-CGR-produced data) runs, the following columns are required: <code class="docutils literal notranslate"><span class="pre">#SampleID</span> <span class="pre">Run-ID</span>&#160; <span class="pre">Project-ID</span>&#160; <span class="pre">fq1</span> <span class="pre">fq2</span></code></p></li>
-<li><p>For internal runs, the following columns are required: <code class="docutils literal notranslate"><span class="pre">#SampleID</span> <span class="pre">Run-ID</span>&#160; <span class="pre">Project-ID</span></code></p></li>
+<ul class="simple">
+<li><p>For external (non-CGR-produced data) runs, the following columns are required:</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#SampleID Run-ID  Project-ID  fq1 fq2</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>For internal runs, the following columns are required:</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#SampleID Run-ID  Project-ID</span>
+</pre></div>
+</div>
+<ul class="simple">
 <li><p>See the template manifest files in <code class="docutils literal notranslate"><span class="pre">config/</span></code> in this repo for examples</p></li>
+<li><p>Note that including additional information in the manifest file will help to generate a more informative report.  Please see the QC report section below for more details.</p></li>
 </ul>
 </li>
 </ul>
