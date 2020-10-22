@@ -1,12 +1,16 @@
 Installation
 ============
 
-**Dependencies**
+You will need git and `conda <https://docs.conda.io/>`_ or miniconda in your path.
 
-* QIIME2 2017.11 or 2019.1
-* perl/5.18.0+
-* python3/3.6
-* conda4.5+
-* jdk/7+
-* bbmap38
-* Snakemake5+
+Create a conda environment that contains all the required dependencies (including QIIME2-2019.1).
+
+``conda create --name <env> --file requirements.txt``
+
+or
+
+``conda create --name <env> --file environment.yml``
+
+Then, clone a copy of this pipeline:
+
+``git clone http://10.133.130.114/wmy/QIIME_pipeline.git``
