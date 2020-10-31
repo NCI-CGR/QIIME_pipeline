@@ -86,7 +86,7 @@ bbversion.sh || die "bbtools not detected."
 # emit pipeline version
 echo ""
 echo "CGR QIIME pipeline version:"
-git -C "${exec_dir}" describe 2> /dev/null || die "Unable to determine pipeline version information."
+git --git-dir "${exec_dir}/.git" describe 2> /dev/null || die "Unable to determine pipeline version information."
 echo ""
 
 # export temp directory (otherwise defaults to /tmp)
