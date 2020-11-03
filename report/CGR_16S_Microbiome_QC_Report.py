@@ -105,7 +105,7 @@ get_ipython().system('ls')
 # In[ ]:
 
 
-get_ipython().system('cat *.yml')
+get_ipython().system('cat *.y[a]*ml')
 
 
 # <h3 id="1.4&nbsp;&nbsp;Dependency-versions">1.4&nbsp;&nbsp;Dependency versions</h3>
@@ -182,7 +182,7 @@ for i in m.columns:
 # In[ ]:
 
 
-get_ipython().system('grep -A4 "dada2_denoise" *.yml')
+get_ipython().system('grep -A4 "dada2_denoise" *.y[a]*ml')
 
 
 # <h3 id="3.2&nbsp;&nbsp;Proportion-of-non-bacterial-reads">3.2&nbsp;&nbsp;Proportion of non-bacterial reads</h3>
@@ -451,7 +451,7 @@ else:
 # In[ ]:
 
 
-get_ipython().system('grep "min_num_" *.yml')
+get_ipython().system('grep "min_num_" *.y[a]*ml')
 
 
 # Four sequential filtering steps are applied as follows:
@@ -676,7 +676,7 @@ plt.show()
 # In[ ]:
 
 
-get_ipython().system('grep "sampling_depth" *.yml')
+get_ipython().system('grep "sampling_depth" *.y[a]*ml')
 
 
 # <h2 id="5&nbsp;&nbsp;Alpha-diversity">5&nbsp;&nbsp;Alpha diversity</h2>
