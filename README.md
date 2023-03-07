@@ -127,6 +127,10 @@ For CGR production runs, after the pipeline completes, generate a QC report usin
 - Run the complete notebook
 - Save the report as html with the code hidden (see below for details)
 
+Update on 3/7/2023: 
+1. Fix issues related to alpha diversity plots.
+2. Update on taxa plots of different sample categories.
+
 
 ### Running jupyter notebooks at CGR
 

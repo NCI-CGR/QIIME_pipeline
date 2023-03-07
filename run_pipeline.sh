@@ -16,10 +16,10 @@
 
 set -euo pipefail
 
-. /etc/profile.d/modules.sh; module load sge miniconda/3 
+#. /etc/profile.d/modules.sh; module load sge miniconda/3 
 unset module
 
-cmd="qsub -q long.q -V -j y -S /bin/sh -cwd path_to_pipeline/workflow/scripts/Q2_wrapper.sh ${PWD}/config.yaml"
+cmd="qsub -q long.q -V -j y -S /bin/sh -cwd Q2_wrapper.sh ${PWD}/config/config.yaml"
 echo "Command run: $cmd"
 eval "$cmd"
 
