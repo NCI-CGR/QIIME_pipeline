@@ -7,16 +7,16 @@
 #     Y. Wan
 
 ## Manifest
-metadata_manifest: '/path/to/manifest.txt'
+metadata_manifest: '/DCEG/Projects/Microbiome/Analysis/Project_32789/new_manifest.txt'
 
 ## Directories
-out_dir: '/path/to/project/directory/'
-exec_dir: '/path/to/QIIME_pipeline/'
-fastq_abs_path: '/path/to/fastqs/'  # internal runs only
-temp_dir: '/path/to/scratch/'
+out_dir: '/DCEG/Projects/Microbiome/Analysis/Project_32789/run_041723'
+exec_dir: '/DCEG/Projects/Microbiome/Analysis/Project_32789/QIIME_pipeline'
+fastq_abs_path: '/DCEG/CGF/Sequencing/Illumina/MiSeq/PostRun_Analysis/Data/'  # internal runs only
+temp_dir: '/scratch/wany'
 
 ## Run type
-data_source: 'internal'  # 'external' or 'internal' (to CGR)
+data_source: 'external'  # 'external' or 'internal' (to CGR)
   # for external data, require an additional metadata columns called "fq1" and "fq2" with full path and file names for R1 and R2 fastqs (do they need to be zipped?)
 
 ## QIIME version
@@ -39,11 +39,10 @@ min_num_samples_per_feature: 1
 sampling_depth: 10000
 max_depth: 54000
 reference_db:  # change based on qiime version
-- '/path/to/refDatabases/eg/scikit_0.20.2_q2_2019.1/gg-13-8-99-515-806-nb-classifier.qza'
-- '/path/to/refDatabases/eg/scikit_0.20.2_q2_2019.1/silva-132-99-515-806-nb-classifier.qza'
+- '/DCEG/CGF/Bioinformatics/Production/Microbiome/refDatabases/scikit_0.20.2_q2_2019.1/silva-132-99-515-806-nb-classifier.qza'
 
 ## Cluster submission parameters
-cluster_mode: 'qsub ...'  # options are 'qsub/sbatch/etc ...', 'local', 'dryrun', 'unlock'
+cluster_mode: 'qsub -q seq-calling.q -V -j y -S /bin/bash -o /DCEG/Projects/Microbiome/Analysis/Project_32789/logs/ -pe by_node {threads}'
   # SGE example:    qsub -q myqueue.q -V -j y -S /bin/bash -o /path/to/project/directory/logs/ -pe by_node {threads}
   # slurm example:  sbatch --mem=64g --time=24:00:00 --output=/path/to/project/directory/logs/slurm-%j.out --cpus-per-task={threads}
 num_jobs: 10
