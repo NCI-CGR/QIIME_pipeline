@@ -1,0 +1,49 @@
+# CGR QIIME2 pipeline for microbiome analysis.
+# 
+# AUTHORS:
+#     S. Sevilla Chill
+#     W. Zhou
+#     B. Ballew
+#     Y. Wan
+
+## Manifest
+metadata_manifest: '/DCEG/Projects/Microbiome/Analysis/Project_32789/manifest_report.txt'
+
+## Directories
+out_dir: '/DCEG/Projects/Microbiome/Analysis/Project_32789/run_041723'
+exec_dir: '/DCEG/Projects/Microbiome/Analysis/Project_32789/QIIME_pipeline'
+fastq_abs_path: '/DCEG/CGF/Sequencing/Illumina/MiSeq/PostRun_Analysis/Data/'  # internal runs only
+temp_dir: '/scratch/wany'
+
+## Run type
+data_source: 'external'  # 'external' or 'internal' (to CGR)
+  # for external data, require an additional metadata columns called "fq1" and "fq2" with full path and file names for R1 and R2 fastqs (do they need to be zipped?)
+
+## QIIME version
+qiime2_version: '2019.1'  # 2017.11 or 2019.1
+
+## Analysis parameters
+dada2_denoise:
+  trim_left_forward: 0
+  trim_left_reverse: 0
+  truncate_length_forward: 0
+  truncate_length_reverse: 0
+  min_fold_parent_over_abundance: 2.0
+phred_score: 33
+demux_param: 'paired_end_demux'
+input_type: 'SampleData[PairedEndSequencesWithQuality]'
+min_num_features_per_sample: 1  # TODO: enforce a minimum of 1 
+min_num_reads_per_sample: 1
+min_num_reads_per_feature: 1
+min_num_samples_per_feature: 1
+sampling_depth: 10000
+max_depth: 54000
+reference_db:  # change based on qiime version
+- '/DCEG/CGF/Bioinformatics/Production/Microbiome/refDatabases/scikit_0.20.2_q2_2019.1/silva-132-99-515-806-nb-classifier.qza'
+
+## Cluster submission parameters
+cluster_mode: 'qsub -q all.q -V -j y -S /bin/bash -o /DCEG/Projects/Microbiome/Analysis/Project_32789/run_041723/logs/ -pe by_node {threads}'
+  # SGE example:    qsub -q myqueue.q -V -j y -S /bin/bash -o /path/to/project/directory/logs/ -pe by_node {threads}
+  # slurm example:  sbatch --mem=64g --time=24:00:00 --output=/path/to/project/directory/logs/slurm-%j.out --cpus-per-task={threads}
+num_jobs: 10
+latency: 60

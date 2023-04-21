@@ -1,2 +1,0 @@
-#SampleID	Run-ID	Project-ID	fq1	fq2
-Sample1	180112_M01354_0104_000000000-BFN3F	Proj00153	/path/to/r1.fastq	/path/to/r2.fastq
