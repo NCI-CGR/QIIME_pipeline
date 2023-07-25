@@ -62,7 +62,7 @@ qiime2_version=$(awk '($0~/^qiime2_version/){print $2}' "$config_file" | sed "s/
 if [ "$qiime2_version" != "2017.11" ] && [ "$qiime2_version" != "2019.1" ]; then
     die "QIIME2 version ${qiime2_version} is not supported.  Please select 2017.11 or 2019.1."
 elif [ "$qiime2_version" == "2019.1" ]; then
-    source activate qiime2-"${qiime2_version}_cgr"
+    #source activate qiime2-"${qiime2_version}_cgr"
     qiime --version | head -n1
 elif [ "$qiime2_version" == "2017.11" ]; then
     source activate qiime2-"${qiime2_version}"
