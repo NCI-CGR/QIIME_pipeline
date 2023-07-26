@@ -25,8 +25,7 @@ This is the Cancer Genomics Research Laboratory's (CGR) microbiome analysis pipe
 A. Production run: Copy `run_pipeline.sh` and `config.yaml` to your directory, edit as needed, then execute the script.
 B. For dev/testing only: Copy and edit `config.yaml`, then run the snakefile directly, e.g.:
 ```
-module load perl/5.18.0 python3/3.6.3 miniconda/3 jdk/15 bbmap
-source activate qiime2-2019.1
+module load slurm singularity perl/5.36 bbmap python3/3.10.2 
 conf=${PWD}/config.yml snakemake -s /path/to/pipeline/Snakefile
 ```
 
@@ -37,7 +36,7 @@ conf=${PWD}/config.yml snakemake -s /path/to/pipeline/Snakefile
 - exec_dir: full path to pipeline (e.g. Snakefile)
 - fastq_abs_path: full path to fastqs
 - temp_dir: full path to temp/scratch space
-- qiime2_version: only two versions permitted (2017.11 or 2019.1)
+- qiime2_sif: singularity image for qiime2_2019.1
 - reference_db: list classifiers (1+) to be used for taxonomic classification; be sure to match trained classifiers with correct qiime version
 - cluster_mode: options are `'qsub/sbatch/etc ...'`, `'local'`, `'dryrun'`, `'unlock'`
   - Example for cgems: `'qsub -q long.q -V -j y -S /bin/bash -o /path/to/project/directory/logs/ -pe by_node {threads}'`
@@ -65,47 +64,71 @@ conf=${PWD}/config.yml snakemake -s /path/to/pipeline/Snakefile
 TODO: Needs updating!
 ```
 .
-├── config_mock-20.yml
+├── LICENSE.md
+├── README.md
+├── bacteria_only
+│   ├── feature_tables
+│   └── sequence_tables
+├── config
+│   └── config.yaml
+├── config.yaml
 ├── denoising
 │   ├── feature_tables
-│   │   ├── merged_filtered.qza
-│   │   ├── merged_filtered.qzv
-│   │   ├── merged.qza
-│   │   └── mock_runID_2020.qza
 │   ├── sequence_tables
-│   │   ├── merged.qza
-│   │   ├── merged.qzv
-│   │   └── mock_runID_2020.qza
 │   └── stats
-│       ├── mock_runID_2020.qza
-│       └── mock_runID_2020.qzv
 ├── diversity_core_metrics
 ├── fastqs
-│   ├── mock-20_R1.fastq.gz -> /path/to/originals/mock-20/mock-forward-read.fastq.gz
-│   └── mock-20_R2.fastq.gz -> /path/to/originals/mock-20/mock-reverse-read.fastq.gz
 ├── import_and_demultiplex
-│   ├── mock_runID_2020.qza
-│   └── mock_runID_2020.qzv
 ├── logs
-│   ├── Q2_202002061005.out
-│   └── ...
+│   ├── slurm-136008.out
+│   ├── ...
+│   └── slurm-136610.out
 ├── manifests
-│   ├── manifest_qiime2.tsv
-│   └── mock_runID_2020_Q2_manifest.txt
-├── manifest.txt
+│   └── manifest_qiime2.tsv
 ├── phylogenetics
 │   ├── masked_msa.qza
 │   ├── msa.qza
 │   ├── rooted_tree.qza
 │   └── unrooted_tree.qza
-├── Q2_wrapper.sh.o3040063
+├── read_feature_and_sample_filtering
+│   ├── feature_tables
+│   └── sequence_tables
+├── report
 ├── run_pipeline.sh
 ├── run_times
-└── taxonomic_classification
-    ├── barplots_classify-sklearn_gg-13-8-99-nb-classifier.qzv
-    ├── classify-sklearn_gg-13-8-99-nb-classifier.qza
-    ├── classify-sklearn_gg-13-8-99-nb-classifier.qzv
-    └── classify-sklearn_silva-132-99-nb-classifier.qza
+├── snakemake-136007.err
+├── snakemake-136007.out
+├── taxonomic_classification
+│   ├── gg-13-8-99-515-806-nb-classifier
+│   │   ├── barplots.qzv
+│   │   ├── barplots_data_files
+│   │   │   └── taxonomy.tsv
+│   │   ├── taxa.qza
+│   │   └── taxa.qzv
+│   └── silva-132-99-515-806-nb-classifier
+│       ├── barplots.qzv
+│       ├── barplots_data_files
+│       │   └── taxonomy.tsv
+│       ├── taxa.qza
+│       └── taxa.qzv
+├── taxonomic_classification_bacteria_only
+│   ├── gg-13-8-99-515-806-nb-classifier
+│   │   ├── barplots.qzv
+│   │   ├── barplots_data_files
+│   │   │   └── taxonomy.tsv
+│   │   └── taxa.qza
+│   └── silva-132-99-515-806-nb-classifier
+│       ├── barplots.qzv
+│       ├── barplots_data_files
+│       │   └── taxonomy.tsv
+│       └── taxa.qza
+└── workflow
+    ├── Snakefile
+    ├── rules
+    └── scripts
+        ├── Q2Manifest.pl
+        ├── Q2Manifest.t
+        └── qQ2_wrapper.sh
 ```
 
 ## QC report

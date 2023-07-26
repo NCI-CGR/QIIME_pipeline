@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2023-07-26
+### changed 
+- on CCAD: updated module load and job submission in the pipeline to reflect the transition from the SGE cluster to the SLURM cluster
+- use singularity image `qiime2_2019.1.sif` to replace `conda active qiime2-2019.1` (there are some issues with installing qiime2-2019.1 through conda). The Snakefile rules were updated accordingly
+- for "rule merge_feature_tables" and "rule merge_sequence_tables", the python codes were replaced with shell commands 
+- removed qiime2-2017.11 from the pipeline
+- replaced `phred_score` and `demux_param` with `input_format`
+
 ## [2.2.1] - 2020-11-2
 ### Fixed
 - QC report can now support either `yml` or `yaml` file endings

@@ -3,10 +3,10 @@
 # CGR QIIME2 pipeline for microbiome analysis.
 # 
 # AUTHORS:
-#     Y. Wan
-#     S. Sevilla Chill
 #     W. Zhou
 #     B. Ballew
+#     Y. Wan
+#     S. Sevilla Chill
 # 
 # TO RUN:
 #     Have perl and conda in $PATH
@@ -16,10 +16,12 @@
 
 set -euo pipefail
 
-. /etc/profile.d/modules.sh; module load sge miniconda/3 
+. /etc/profile.d/modules.sh; module load slurm singularity bbmap python3  
+
 unset module
 
-cmd="qsub -q long.q -V -j y -S /bin/sh -cwd path_to_pipeline/workflow/scripts/Q2_wrapper.sh ${PWD}/config.yaml"
+#cmd="qsub -q long.q -V -j y -S /bin/sh -cwd path_to_pipeline/workflow/scripts/Q2_wrapper.sh ${PWD}/config.yaml"
+cmd="sbatch -p myqueueq --mem 32g --cpus-per-task=8 --time 24:00:00 -o snakemake-%j.out -e snakemake-%j.err /path_to_pipeline/workflow/scripts/Q2_wrapper.sh ${PWD}/config.yaml"
 echo "Command run: $cmd"
 eval "$cmd"
 

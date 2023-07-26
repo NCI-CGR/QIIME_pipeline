@@ -1,10 +1,10 @@
 # CGR QIIME2 pipeline for microbiome analysis.
 # 
 # AUTHORS:
-#     S. Sevilla Chill
 #     W. Zhou
 #     B. Ballew
 #     Y. Wan
+#     S. Sevilla Chill
 
 ## Manifest
 metadata_manifest: '/path/to/manifest.txt'
@@ -20,7 +20,7 @@ data_source: 'internal'  # 'external' or 'internal' (to CGR)
   # for external data, require an additional metadata columns called "fq1" and "fq2" with full path and file names for R1 and R2 fastqs (do they need to be zipped?)
 
 ## QIIME version
-qiime2_version: '2019.1'  # 2017.11 or 2019.1
+qiime2_sif: 'path/to/qiime2_2019.1.sif'
 
 ## Analysis parameters
 dada2_denoise:
@@ -29,9 +29,8 @@ dada2_denoise:
   truncate_length_forward: 0
   truncate_length_reverse: 0
   min_fold_parent_over_abundance: 2.0
-phred_score: 33
-demux_param: 'paired_end_demux'
 input_type: 'SampleData[PairedEndSequencesWithQuality]'
+input_format: 'PairedEndFastqManifestPhred33' 
 min_num_features_per_sample: 1  # TODO: enforce a minimum of 1 
 min_num_reads_per_sample: 1
 min_num_reads_per_feature: 1
@@ -39,11 +38,11 @@ min_num_samples_per_feature: 1
 sampling_depth: 10000
 max_depth: 54000
 reference_db:  # change based on qiime version
-- '/path/to/refDatabases/eg/scikit_0.20.2_q2_2019.1/gg-13-8-99-515-806-nb-classifier.qza'
-- '/path/to/refDatabases/eg/scikit_0.20.2_q2_2019.1/silva-132-99-515-806-nb-classifier.qza'
+- '/path/to/refDatabases/gg-13-8-99-515-806-nb-classifier.qza'
+- '/path/to/refDatabases/silva-132-99-515-806-nb-classifier.qza'
 
 ## Cluster submission parameters
-cluster_mode: 'qsub ...'  # options are 'qsub/sbatch/etc ...', 'local', 'dryrun', 'unlock'
+cluster_mode: 'sbatch -p myqueue --mem=64g --time=24:00:00 --output=/path/to/project/directory/logs/slurm-%j.out --cpus-per-task={threads}'
   # SGE example:    qsub -q myqueue.q -V -j y -S /bin/bash -o /path/to/project/directory/logs/ -pe by_node {threads}
   # slurm example:  sbatch --mem=64g --time=24:00:00 --output=/path/to/project/directory/logs/slurm-%j.out --cpus-per-task={threads}
 num_jobs: 10
