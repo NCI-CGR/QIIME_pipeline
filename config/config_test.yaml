@@ -1,17 +1,15 @@
 # CGR QIIME2 pipeline for microbiome analysis.
 # 
-# AUTHORS:
-#     S. Sevilla Chill
+# # AUTHORS:
 #     W. Zhou
-#     B. Ballew
 #     Y. Wan
 
 ## Manifest
-metadata_manifest: '/DCEG/Projects/Microbiome/Analysis/Project_32789/manifest_report.txt'
+metadata_manifest: '/DCEG/Projects/Microbiome/Analysis/Project_33449_NP0610-MB1/Github/QIIME_pipeline/tests/input/external_test.txt'
 
 ## Directories
-out_dir: '/DCEG/Projects/Microbiome/Analysis/Project_32789/run_041723'
-exec_dir: '/DCEG/Projects/Microbiome/Analysis/Project_32789/QIIME_pipeline'
+out_dir: '/DCEG/Projects/Microbiome/Analysis/Project_33449_NP0610-MB1/Github/QIIME_pipeline/tests/run_080123'
+exec_dir: '/DCEG/Projects/Microbiome/Analysis/Project_33449_NP0610-MB1/Github/QIIME_pipeline'
 fastq_abs_path: '/DCEG/CGF/Sequencing/Illumina/MiSeq/PostRun_Analysis/Data/'  # internal runs only
 temp_dir: '/scratch/wany'
 
@@ -42,7 +40,7 @@ reference_db:  # change based on qiime version
 - '/DCEG/CGF/Bioinformatics/Production/Microbiome/refDatabases/scikit_0.20.2_q2_2019.1/silva-132-99-515-806-nb-classifier.qza'
 
 ## Cluster submission parameters
-cluster_mode: 'qsub -q all.q -V -j y -S /bin/bash -o /DCEG/Projects/Microbiome/Analysis/Project_32789/run_041723/logs/ -pe by_node {threads}'
+cluster_mode: 'qsub -q seq-calling.q -V -j y -S /bin/bash -o /DCEG/Projects/Microbiome/Analysis/Project_32789/logs/ -pe by_node {threads}'
   # SGE example:    qsub -q myqueue.q -V -j y -S /bin/bash -o /path/to/project/directory/logs/ -pe by_node {threads}
   # slurm example:  sbatch --mem=64g --time=24:00:00 --output=/path/to/project/directory/logs/slurm-%j.out --cpus-per-task={threads}
 num_jobs: 10
