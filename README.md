@@ -38,12 +38,8 @@ conf=${PWD}/config.yml snakemake -s /path/to/pipeline/Snakefile
 - temp_dir: full path to temp/scratch space
 - qiime2_sif: singularity image for qiime2_2019.1
 - reference_db: list classifiers (1+) to be used for taxonomic classification; be sure to match trained classifiers with correct qiime version
-- cluster_mode: options are `'qsub/sbatch/etc ...'`, `'local'`, `'dryrun'`, `'unlock'`
-  - Example for cgems: `'qsub -q long.q -V -j y -S /bin/bash -o /path/to/project/directory/logs/ -pe by_node {threads}'`
-  - When running on an HPC, it is important to:
-    - Set the shell (`-S /bin/bash` above)
-    - Set the environment (`-V` above to export environemnt variables to job environments)
-    - Allocate the appropriate number of parallel resources via `{threads}`, which links the number of threads requested by the job scheduler to the number of threads specified in the snakemake rule (-pe by_node `{threads}` above)
+- cluster_mode: options are `'sbatch/etc ...'`, `'local'`, `'dryrun'`, `'unlock'`
+  - Example for ccad2: `'sbatch -p bigmemq --mem=100g --time=24:00:00 --output=/path/to/project/directory/logs/slurm-%j.out --cpus-per-task={threads}'`
 
 ## Workflow summary
 
