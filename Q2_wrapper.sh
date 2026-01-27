@@ -59,16 +59,16 @@ cluster_mode='"'$(echo "$cluster_line" | awk -F\' '($0~/^cluster_mode/){print $2
 qiime2_version=$(awk '($0~/^qiime2_version/){print $2}' "$config_file" | sed "s/['\"]//g")
 
 # only allow tested and confirmed versions of Q2
-if [ "$qiime2_version" != "2017.11" ] && [ "$qiime2_version" != "2019.1" ]; then
-    die "QIIME2 version ${qiime2_version} is not supported.  Please select 2017.11 or 2019.1."
-elif [ "$qiime2_version" == "2019.1" ]; then
+#if [ "$qiime2_version" != "2017.11" ] && [ "$qiime2_version" != "2019.1" ]; then
+#    die "QIIME2 version ${qiime2_version} is not supported.  Please select 2017.11 or 2019.1."
+#elif [ "$qiime2_version" == "2019.1" ]; then
     #source activate qiime2-"${qiime2_version}_cgr"
-    qiime --version | head -n1
-elif [ "$qiime2_version" == "2017.11" ]; then
-    source activate qiime2-"${qiime2_version}"
-    qiime --version | head -n1
-    . /etc/profile.d/modules.sh; module load python3/3.6.3 git bbmap perl jdk  # temporary until we deprecate 2017
-fi
+#    qiime --version | head -n1
+#elif [ "$qiime2_version" == "2017.11" ]; then
+#    source activate qiime2-"${qiime2_version}"
+#    qiime --version | head -n1
+#    . /etc/profile.d/modules.sh; module load python3/3.6.3 git bbmap perl jdk  # temporary until we deprecate 2017
+#fi
 
 # TODO: enforce minimal version requirements
 ##### Not really needed if everything's in a conda env, is it?
@@ -113,7 +113,7 @@ elif [ "$cluster_mode" = '"'"unlock"'"' ]; then
 elif [ "$cluster_mode" = '"'"dryrun"'"' ]; then  
     cmd="conf=$config_file snakemake -n -p -s ${exec_dir}/workflow/Snakefile"  # convenience dry run
 else
-    cmd="conf=$config_file snakemake -p -s ${exec_dir}/workflow/Snakefile --rerun-incomplete --cluster ${cluster_mode} --jobs $num_jobs --latency-wait ${latency} &> ${log_dir}/Q2_${DATE}.out"
+    cmd="conf=$config_file snakemake -p -s ${exec_dir}/workflow/Snakefile.new --rerun-incomplete --cluster ${cluster_mode} --jobs $num_jobs --latency-wait ${latency} &> ${log_dir}/Q2_${DATE}.out"
 fi
 
 echo "Command run: $cmd"
