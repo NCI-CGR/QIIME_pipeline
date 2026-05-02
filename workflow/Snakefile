@@ -334,7 +334,7 @@ if not cgr_data:
         benchmark:
             out_dir + 'run_times/fix_unpaired_reads/{sample}.tsv'
         shell:
-            'repair.sh in1={input.fq1} in2={input.fq2} out1={params.fq1} out2={params.fq2} outs={params.single} repair;'
+            'repair.sh in1={input.fq1} in2={input.fq2} out1={params.fq1} out2={params.fq2} outs={params.single} repair overwrite=t;'
             'gzip {params.fq1};'
             'gzip {params.fq2};'
             'gzip {params.single}'
@@ -957,7 +957,7 @@ rule remove_non_bacterial_taxa_feature_table_pt1:
         'qiime taxa filter-table \
             --i-table {input.seqs} \
             --i-taxonomy {input.tax} \
-            --p-include "D_0__Bacteria;D_1,k__Bacteria; p__" \
+            --p-include "D_0__Bacteria;D_1,k__Bacteria; p__,d__Bacteria; p__,d__Bacteria;p__" \
             --o-filtered-table {output}'
 
 rule remove_non_bacterial_taxa_feature_table_pt2:
@@ -987,7 +987,7 @@ rule remove_non_bacterial_taxa_feature_table_pt2:
             --i-table {input.features} \
             --i-taxonomy {input.tax} \
             --p-mode exact \
-            --p-exclude "k__Bacteria; p__" \
+            --p-exclude "k__Bacteria; p__,d__Bacteria; p__,d__Bacteria;p__" \
             --o-filtered-table {output}'
 
 if not Q2_2017:
@@ -1104,7 +1104,10 @@ rule alpha_beta_diversity:
         jac_emp = out_dir + 'diversity_core_metrics/{ref}/jaccard_emperor.qzv',
         bc_dist = out_dir + 'diversity_core_metrics/{ref}/bray-curtis_dist.qza',
         bc_pcoa = out_dir + 'diversity_core_metrics/{ref}/bray-curtis_pcoa.qza',
-        bc_emp = out_dir + 'diversity_core_metrics/{ref}/bray-curtis_emperor.qzv'
+        bc_emp = out_dir + 'diversity_core_metrics/{ref}/bray-curtis_emperor.qzv',
+        gen_dist = out_dir + 'diversity_core_metrics/{ref}/generalized_unifrac_dist.qza',
+        gen_pcoa = out_dir + 'diversity_core_metrics/{ref}/generalized_unifrac_pcoa.qza',
+        gen_emp = out_dir + 'diversity_core_metrics/{ref}/generalized_unifrac_emperor.qzv'
     params:
         samp_depth = sampling_depth
     benchmark:
@@ -1117,7 +1120,7 @@ rule alpha_beta_diversity:
             --m-metadata-file {input.q2_manifest} \
             --o-rarefied-table {output.rare} \
             --o-faith-pd-vector {output.faith} \
-            --o-observed-otus-vector {output.obs} \
+            --o-observed-features-vector {output.obs} \
             --o-shannon-vector {output.shan} \
             --o-evenness-vector {output.even} \
             --o-unweighted-unifrac-distance-matrix {output.unw_dist} \
@@ -1131,7 +1134,19 @@ rule alpha_beta_diversity:
             --o-jaccard-emperor {output.jac_emp} \
             --o-bray-curtis-distance-matrix {output.bc_dist} \
             --o-bray-curtis-pcoa-results {output.bc_pcoa} \
-            --o-bray-curtis-emperor {output.bc_emp}'
+            --o-bray-curtis-emperor {output.bc_emp} && \
+        qiime diversity beta-phylogenetic \
+            --i-table {output.rare} \
+            --i-phylogeny {input.rooted_tree} \
+            --p-metric generalized_unifrac \
+            --o-distance-matrix {output.gen_dist} && \
+        qiime diversity pcoa \
+            --i-distance-matrix {output.gen_dist} \
+            --o-pcoa {output.gen_pcoa} && \
+        qiime emperor plot \
+            --i-pcoa {output.gen_pcoa} \
+            --m-metadata-file {input.q2_manifest} \
+            --o-visualization {output.gen_emp}'
 
 rule alpha_diversity_visualization:
     """Metadata visualization wtih alpha diversity metrics

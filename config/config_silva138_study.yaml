@@ -1,0 +1,39 @@
+# CGR QIIME2 pipeline for microbiome analysis - STUDY ONLY (SILVA 138)
+## Manifest
+metadata_manifest: '/DCEG/Projects/Microbiome/16S_Short_Read/Project_33104_MR_0440/manifest_study_update_silva138.txt'
+
+## Directories
+out_dir: '/DCEG/Projects/Microbiome/16S_Short_Read/Project_33104_MR_0440/run_silva138_study'
+exec_dir: '/DCEG/Projects/Microbiome/16S_Short_Read/Project_33104_MR_0440/QIIME_pipeline'
+fastq_abs_path: '/DCEG_Archive/CGR/Sequencing/Illumina/MiSeq/PostRun_Analysis/Data/'
+temp_dir: '/scratch/wany'
+
+## Run type
+data_source: 'external'
+
+## QIIME version
+qiime2_version: '2024.5'
+
+## Analysis parameters
+dada2_denoise:
+  trim_left_forward: 0
+  trim_left_reverse: 0
+  truncate_length_forward: 0
+  truncate_length_reverse: 0
+  min_fold_parent_over_abundance: 2.0
+phred_score: 33
+demux_param: 'paired_end_demux'
+input_type: 'SampleData[PairedEndSequencesWithQuality]'
+min_num_features_per_sample: 1 
+min_num_reads_per_sample: 1
+min_num_reads_per_feature: 1
+min_num_samples_per_feature: 1
+sampling_depth: 20000
+max_depth: 40000
+reference_db:
+- '/DCEG/Projects/Microbiome/16S_Short_Read/Project_33104_MR_0440/refDatabases/scikit_1.4.2_q2_2024.5/silva-138-99-seqs-515-806-nb-classifier.qza'
+
+## Cluster submission parameters
+cluster_mode: 'sbatch --mem=128g --time=12:00:00 --cpus-per-task={threads} --output=/DCEG/Projects/Microbiome/16S_Short_Read/Project_33104_MR_0440/run_silva138_study/logs/slurm-%j.out'
+num_jobs: 10
+latency: 60

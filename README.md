@@ -131,6 +131,12 @@ Update on 3/7/2023:
 1. Fix issues related to alpha diversity plots.
 2. Update on taxa plots of different sample categories.
 
+Update on 5/2/2026:
+1. Added support for SILVA 138 taxonomic classification and pipeline execution scripts.
+2. Updated Snakefile to compute and output Generalized UniFrac distance metrics.
+3. Included new configuration templates (`config_silva138_full.yaml`, `config_silva138_study.yaml`) and wrapper scripts.
+
+
 
 ### Running jupyter notebooks at CGR
 
